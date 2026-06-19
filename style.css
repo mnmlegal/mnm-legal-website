@@ -1,1 +1,95 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
+body{
+    font-family: Arial, sans-serif;
+    background:#0b0b0b;
+    color:white;
+    line-height:1.6;
+}
+
+.hero{
+    height:100vh;
+    background:linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)),
+    url('https://images.unsplash.com/photo-1589829545856-d10d557cf95f');
+    background-size:cover;
+    background-position:center;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+}
+
+.overlay h1{
+    font-size:4rem;
+    color:#d4af37;
+    margin-bottom:20px;
+}
+
+.overlay p{
+    font-size:1.4rem;
+    margin-bottom:30px;
+}
+
+.btn{
+    display:inline-block;
+    margin:10px;
+    padding:12px 25px;
+    background:#d4af37;
+    color:black;
+    text-decoration:none;
+    font-weight:bold;
+    border-radius:5px;
+}
+
+.btn:hover{
+    background:white;
+}
+
+section{
+    padding:70px 10%;
+}
+
+h2{
+    text-align:center;
+    color:#d4af37;
+    margin-bottom:30px;
+    font-size:2rem;
+}
+
+.about p,
+.contact p{
+    max-width:900px;
+    margin:auto;
+    text-align:center;
+    margin-bottom:15px;
+}
+
+.service-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+}
+
+.card{
+    background:#161616;
+    padding:25px;
+    text-align:center;
+    border:1px solid #d4af37;
+    border-radius:10px;
+    transition:0.3s;
+}
+
+.card:hover{
+    transform:translateY(-5px);
+}
+
+footer{
+    background:#000;
+    text-align:center;
+    padding:20px;
+    color:#d4af37;
+}
