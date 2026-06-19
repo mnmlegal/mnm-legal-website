@@ -1,357 +1,444 @@
-```css
+/* =========================
+   MNM LEGAL ASSOCIATES
+   PREMIUM GOLD EDITION
+========================= */
 *{
 margin:0;
 padding:0;
 box-sizing:border-box;
 }
-
 html{
 scroll-behavior:smooth;
 }
-
 body{
 font-family:'Poppins',sans-serif;
-background:#0b0b0b;
+background:#0a0a0a;
 color:#ffffff;
-line-height:1.8;
 overflow-x:hidden;
+line-height:1.8;
 }
-
-/* NAVBAR */
-
+/* =========================
+   SCROLLBAR
+========================= */
+::-webkit-scrollbar{
+width:8px;
+}
+::-webkit-scrollbar-track{
+background:#111;
+}
+::-webkit-scrollbar-thumb{
+background:#d4af37;
+border-radius:10px;
+}
+/* =========================
+   NAVBAR
+========================= */
 .navbar{
 position:sticky;
 top:0;
-z-index:1000;
+z-index:9999;
 display:flex;
 justify-content:space-between;
 align-items:center;
 padding:15px 8%;
-background:rgba(10,10,10,.95);
-backdrop-filter:blur(10px);
-border-bottom:1px solid #d4af37;
+background:rgba(0,0,0,.95);
+backdrop-filter:blur(15px);
+border-bottom:1px solid rgba(212,175,55,.4);
 }
-
 .logo-area{
 display:flex;
 align-items:center;
-gap:12px;
+gap:15px;
 }
-
 .logo-area img{
-height:60px;
+height:80px;
 width:auto;
+filter:drop-shadow(0 0 12px rgba(212,175,55,.5));
 }
-
-.logo-area span{
-font-size:22px;
-font-weight:600;
+.logo-area h3{
 color:#d4af37;
+font-size:22px;
+margin:0;
 }
-
+.logo-area span{
+font-size:13px;
+color:#ccc;
+}
 .nav-links{
 display:flex;
 list-style:none;
 gap:30px;
 }
-
 .nav-links a{
 text-decoration:none;
-color:#fff;
+color:white;
 font-weight:500;
 transition:.3s;
 }
-
 .nav-links a:hover{
 color:#d4af37;
 }
-
-/* HERO */
-
+/* =========================
+   HERO
+========================= */
 .hero{
 min-height:100vh;
-
 background:
 linear-gradient(
-rgba(0,0,0,.65),
-rgba(0,0,0,.65)
+rgba(0,0,0,.75),
+rgba(0,0,0,.75)
 ),
 url("images/wall.PNG");
-
 background-size:cover;
 background-position:center center;
-background-repeat:no-repeat;
-
 display:flex;
 justify-content:center;
 align-items:center;
 text-align:center;
 padding:40px;
 }
-
 .hero-overlay{
 max-width:900px;
 }
-
 .hero h1{
 font-family:'Playfair Display',serif;
-font-size:68px;
+font-size:80px;
 color:#d4af37;
 margin-bottom:15px;
+text-shadow:0 0 20px rgba(212,175,55,.3);
 }
-
-.tagline{
+.hero h2{
 font-size:28px;
-font-weight:600;
 margin-bottom:20px;
+font-weight:600;
 }
-
-.subtext{
+.hero-text{
 font-size:18px;
 max-width:800px;
 margin:auto;
+color:#ddd;
 }
-
 .hero-buttons{
 margin-top:35px;
 }
-
 .btn{
 display:inline-block;
 padding:14px 30px;
-margin:10px;
-border-radius:8px;
+border-radius:10px;
 text-decoration:none;
 font-weight:600;
+margin:8px;
 transition:.3s;
-background:#ffffff;
+background:#fff;
 color:#000;
 }
-
 .btn:hover{
 transform:translateY(-4px);
 }
-
 .gold{
 background:#d4af37;
 color:#000;
 }
-
-/* SECTION */
-
+/* =========================
+   SECTION
+========================= */
 section{
-padding:90px 8%;
+padding:100px 8%;
 }
-
-h2{
+.section-heading{
+text-align:center;
+margin-bottom:50px;
+}
+.section-heading h2{
 font-family:'Playfair Display',serif;
-font-size:48px;
-text-align:center;
-margin-bottom:30px;
+font-size:50px;
 color:#d4af37;
-}
-
-.about p{
-max-width:1000px;
-margin:auto;
-text-align:center;
 margin-bottom:15px;
 }
-
-/* TEAM */
-
-.team-grid{
+.section-heading p{
+max-width:700px;
+margin:auto;
+color:#ccc;
+}
+/* =========================
+   ABOUT
+========================= */
+.about-content{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:50px;
+align-items:center;
+}
+.about-text ul{
+margin-top:20px;
+padding-left:20px;
+}
+.about-text li{
+margin-bottom:10px;
+}
+.about-image img{
+width:100%;
+border-radius:20px;
+border:2px solid #d4af37;
+}
+/* =========================
+   ADVOCATES
+========================= */
+.advocate-grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
 gap:35px;
-margin-top:40px;
 }
-
-.member-card{
-background:#161616;
-border:1px solid #d4af37;
-border-radius:15px;
+.advocate-card{
+background:#131313;
+border:1px solid rgba(212,175,55,.4);
+border-radius:20px;
 overflow:hidden;
-text-align:center;
 transition:.3s;
 }
-
-.member-card:hover{
+.advocate-card:hover{
+transform:translateY(-8px);
+box-shadow:0 0 30px rgba(212,175,55,.15);
+}
+.advocate-card img{
+width:100%;
+height:500px;
+object-fit:cover;
+object-position:center top;
+display:block;
+}
+.advocate-info{
+padding:25px;
+text-align:center;
+}
+.advocate-info h3{
+color:#d4af37;
+font-size:28px;
+margin-bottom:10px;
+}
+.qualification{
+font-weight:600;
+margin-bottom:10px;
+}
+.phone{
+margin-top:15px;
+font-size:18px;
+font-weight:600;
+color:#d4af37;
+}
+.advocate-buttons{
+margin-top:20px;
+}
+/* =========================
+   PRACTICE AREA
+========================= */
+.practice-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:20px;
+}
+.practice-card{
+background:#131313;
+padding:35px 20px;
+text-align:center;
+border-radius:15px;
+border:1px solid rgba(212,175,55,.4);
+transition:.3s;
+}
+.practice-card:hover{
 transform:translateY(-6px);
 }
-
-.member-card img{
-width:100%;
-height:auto;
-display:block;
-background:#111;
-}
-
-.member-card h3{
-margin-top:20px;
+.practice-card i{
+font-size:35px;
 color:#d4af37;
-font-size:24px;
-}
-
-.member-card p{
-padding:0 25px 20px;
-}
-
-/* PRACTICE AREAS */
-
-.service-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-gap:20px;
-}
-
-.card{
-background:#161616;
-border:1px solid #d4af37;
-padding:25px;
-border-radius:12px;
-text-align:center;
-transition:.3s;
-font-size:16px;
-}
-
-.card i{
-font-size:30px;
-color:#d4af37;
-margin-bottom:12px;
-}
-
-.card:hover{
-transform:translateY(-5px);
-}
-
-/* GALLERY */
-
-.gallery-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-gap:20px;
-}
-
-.gallery-grid img{
-width:100%;
-height:auto;
-display:block;
-border-radius:12px;
-border:2px solid #d4af37;
-background:#111;
-padding:6px;
-transition:.3s;
-}
-
-.gallery-grid img:hover{
-transform:scale(1.02);
-}
-
-/* CONTACT */
-
-.contact-box{
-max-width:900px;
-margin:auto;
-text-align:center;
-background:#161616;
-padding:45px;
-border-radius:15px;
-border:1px solid #d4af37;
-}
-
-.contact-box p{
 margin-bottom:15px;
 }
-
-/* MAP */
-
-.map-section{
-padding:80px 8%;
+.practice-card h3{
+font-size:18px;
 }
-
-.map-section iframe{
+/* =========================
+   SERVICES
+========================= */
+.service-posters{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
+gap:25px;
+}
+.service-posters img{
 width:100%;
 border-radius:15px;
+border:2px solid #d4af37;
 }
-
-/* WHATSAPP */
-
+/* =========================
+   GALLERY
+========================= */
+.gallery-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+gap:20px;
+}
+.gallery-grid img{
+width:100%;
+height:300px;
+object-fit:cover;
+border-radius:15px;
+border:2px solid #d4af37;
+transition:.3s;
+}
+.gallery-grid img:hover{
+transform:scale(1.03);
+}
+/* =========================
+   CONTACT
+========================= */
+.contact-container{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+gap:25px;
+}
+.contact-card{
+background:#131313;
+padding:30px;
+border-radius:15px;
+border:1px solid rgba(212,175,55,.4);
+}
+.contact-card h3{
+color:#d4af37;
+margin-bottom:15px;
+}
+/* =========================
+   MAP
+========================= */
+.map-section iframe{
+box-shadow:0 0 25px rgba(212,175,55,.15);
+}
+/* =========================
+   CTA
+========================= */
+.cta-section{
+background:#111;
+text-align:center;
+}
+.cta-content h2{
+font-size:50px;
+color:#d4af37;
+margin-bottom:15px;
+}
+/* =========================
+   FOOTER
+========================= */
+footer{
+background:#000;
+padding:70px 8% 30px;
+border-top:1px solid rgba(212,175,55,.4);
+}
+.footer-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:35px;
+}
+.footer-grid h3{
+color:#d4af37;
+margin-bottom:15px;
+}
+.footer-grid ul{
+list-style:none;
+}
+.footer-grid li{
+margin-bottom:10px;
+}
+.footer-grid a{
+text-decoration:none;
+color:#ccc;
+}
+.footer-grid a:hover{
+color:#d4af37;
+}
+.footer-bottom{
+text-align:center;
+margin-top:40px;
+padding-top:20px;
+border-top:1px solid rgba(255,255,255,.1);
+color:#999;
+}
+/* =========================
+   FLOATING ICONS
+========================= */
+.youtube,
+.instagram,
 .whatsapp{
 position:fixed;
-bottom:25px;
-right:25px;
-width:65px;
-height:65px;
-background:#25D366;
+right:20px;
+width:60px;
+height:60px;
 border-radius:50%;
 display:flex;
 justify-content:center;
 align-items:center;
-font-size:32px;
+font-size:26px;
 color:white;
 text-decoration:none;
-z-index:999;
-box-shadow:0 0 20px rgba(0,0,0,.4);
+z-index:99999;
+box-shadow:0 0 15px rgba(0,0,0,.3);
 }
-
-/* FOOTER */
-
-footer{
-background:#000;
-padding:50px 20px;
-text-align:center;
-border-top:1px solid #d4af37;
+.youtube{
+bottom:170px;
+background:#ff0000;
 }
-
-footer h3{
-color:#d4af37;
-margin-bottom:12px;
-font-size:26px;
+.instagram{
+bottom:95px;
+background:#e1306c;
 }
-
-footer p{
-margin-bottom:8px;
+.whatsapp{
+bottom:20px;
+background:#25d366;
 }
-
-/* MOBILE */
-
+/* =========================
+   MOBILE
+========================= */
 @media(max-width:768px){
-
 .navbar{
 flex-direction:column;
 gap:15px;
 }
-
 .nav-links{
 flex-wrap:wrap;
 justify-content:center;
 gap:15px;
 }
-
+.logo-area{
+flex-direction:column;
+text-align:center;
+}
+.logo-area img{
+height:70px;
+}
 .hero h1{
 font-size:42px;
 }
-
-.tagline{
+.hero h2{
 font-size:20px;
 }
-
-.subtext{
+.hero-text{
 font-size:15px;
 }
-
-h2{
+.section-heading h2{
 font-size:34px;
 }
-
-.team-grid{
+.about-content{
 grid-template-columns:1fr;
 }
-
-.logo-area span{
-font-size:18px;
+.advocate-card img{
+height:400px;
 }
-
+.cta-content h2{
+font-size:34px;
 }
-```
+.youtube,
+.instagram,
+.whatsapp{
+width:50px;
+height:50px;
+font-size:22px;
+}
+}
