@@ -24,7 +24,30 @@
 
 </head>
 
-<body>
+<script>
+
+const popup =
+document.getElementById("disclaimer-popup");
+
+const agreeBtn =
+document.getElementById("agreeBtn");
+
+if(localStorage.getItem("mnmDisclaimerAccepted")){
+popup.style.display = "none";
+}
+
+agreeBtn.addEventListener("click",()=>{
+
+localStorage.setItem(
+"mnmDisclaimerAccepted",
+"yes"
+);
+
+popup.style.display = "none";
+
+});
+
+</script>
 <body>
 
 <div id="disclaimer-popup">
