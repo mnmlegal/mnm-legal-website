@@ -917,3 +917,46 @@ body.popup-open{
 overflow:hidden;
 height:100vh;
 }
+#disclaimer-popup{
+position:fixed !important;
+top:0 !important;
+left:0 !important;
+width:100% !important;
+height:100vh !important;
+background:rgba(0,0,0,0.92) !important;
+display:flex !important;
+justify-content:center !important;
+align-items:center !important;
+z-index:999999 !important;
+padding:20px !important;
+}
+
+.disclaimer-box{
+background:#111;
+max-width:800px;
+width:100%;
+padding:30px;
+border:2px solid #d4af37;
+border-radius:12px;
+text-align:center;
+}
+
+.disclaimer-box h2{
+color:#d4af37;
+margin-bottom:20px;
+}
+
+.disclaimer-box p{
+color:white;
+line-height:1.8;
+}
+
+.disclaimer-buttons{
+margin-top:20px;
+}
+
+.disclaimer-buttons button{
+padding:12px 25px;
+margin:5px;
+cursor:pointer;
+}
