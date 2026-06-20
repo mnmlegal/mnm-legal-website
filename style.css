@@ -840,4 +840,64 @@ margin:0 auto;
 max-width:1200px;
 margin:0 auto;
 }
+/* DISCLAIMER POPUP */
 
+#disclaimer-popup{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.95);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:99999;
+padding:20px;
+}
+
+.disclaimer-box{
+max-width:850px;
+background:#111;
+border:2px solid #d4af37;
+padding:40px;
+border-radius:15px;
+text-align:center;
+color:#fff;
+}
+
+.disclaimer-box h2{
+color:#d4af37;
+margin-bottom:20px;
+}
+
+.disclaimer-box p{
+margin-bottom:20px;
+line-height:1.8;
+}
+
+.disclaimer-buttons{
+display:flex;
+justify-content:center;
+gap:15px;
+flex-wrap:wrap;
+margin-top:20px;
+}
+
+.disclaimer-buttons button{
+padding:12px 25px;
+border:none;
+cursor:pointer;
+font-weight:600;
+border-radius:8px;
+}
+
+#agreeBtn{
+background:#d4af37;
+color:#000;
+}
+
+.disclaimer-buttons button:last-child{
+background:#444;
+color:#fff;
+}
