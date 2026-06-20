@@ -696,5 +696,32 @@ text-align:center;
 }
 
 }
-```
+/* MOBILE HEADER FIX */
+
+@media (max-width:768px){
+
+.logo-area img{
+    width:45px !important;
+    height:auto;
+}
+
+.logo-text p{
+    display:none !important;
+}
+
+.logo-text h3{
+    font-size:20px !important;
+}
+
+.navbar{
+    padding:10px 15px !important;
+}
+
+.nav-links{
+    flex-direction:column !important;
+    gap:15px !important;
+    text-align:center !important;
+}
+
+}
 
