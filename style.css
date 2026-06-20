@@ -312,8 +312,17 @@ margin-bottom:15px;
    MAP
 ========================= */
 
+.map-section{
+max-width:900px;
+margin:0 auto;
+text-align:center;
+}
+
 .map-section iframe{
 width:100%;
+height:450px;
+display:block;
+margin:0 auto;
 border-radius:15px;
 }
 
