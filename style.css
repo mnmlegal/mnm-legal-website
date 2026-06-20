@@ -1,444 +1,409 @@
+```css
 /* =========================
    MNM LEGAL ASSOCIATES
-   PREMIUM GOLD EDITION
+   FINAL PREMIUM CSS
 ========================= */
+
 *{
 margin:0;
 padding:0;
 box-sizing:border-box;
 }
+
 html{
 scroll-behavior:smooth;
 }
+
 body{
 font-family:'Poppins',sans-serif;
-background:#0a0a0a;
+background:#0b0b0b;
 color:#ffffff;
-overflow-x:hidden;
 line-height:1.8;
+overflow-x:hidden;
 }
-/* =========================
-   SCROLLBAR
-========================= */
-::-webkit-scrollbar{
-width:8px;
-}
-::-webkit-scrollbar-track{
-background:#111;
-}
-::-webkit-scrollbar-thumb{
-background:#d4af37;
-border-radius:10px;
-}
+
 /* =========================
    NAVBAR
 ========================= */
+
 .navbar{
 position:sticky;
 top:0;
-z-index:9999;
+z-index:1000;
 display:flex;
 justify-content:space-between;
 align-items:center;
 padding:15px 8%;
-background:rgba(0,0,0,.95);
-backdrop-filter:blur(15px);
-border-bottom:1px solid rgba(212,175,55,.4);
+background:rgba(10,10,10,.95);
+backdrop-filter:blur(12px);
+border-bottom:1px solid #d4af37;
 }
+
 .logo-area{
 display:flex;
 align-items:center;
-gap:15px;
+gap:12px;
 }
+
 .logo-area img{
-height:80px;
+height:60px;
 width:auto;
-filter:drop-shadow(0 0 12px rgba(212,175,55,.5));
 }
-.logo-area h3{
-color:#d4af37;
-font-size:22px;
-margin:0;
-}
+
 .logo-area span{
-font-size:13px;
-color:#ccc;
+font-size:22px;
+font-weight:600;
+color:#d4af37;
 }
+
 .nav-links{
 display:flex;
 list-style:none;
-gap:30px;
+gap:25px;
 }
+
 .nav-links a{
 text-decoration:none;
-color:white;
+color:#fff;
 font-weight:500;
 transition:.3s;
 }
+
 .nav-links a:hover{
 color:#d4af37;
 }
+
 /* =========================
    HERO
 ========================= */
+
 .hero{
 min-height:100vh;
+
 background:
 linear-gradient(
-rgba(0,0,0,.75),
-rgba(0,0,0,.75)
+rgba(0,0,0,.65),
+rgba(0,0,0,.65)
 ),
-url("images/wall.PNG");
+url("images/hero-bg.jpg");
+
 background-size:cover;
-background-position:center center;
+background-position:center;
+background-repeat:no-repeat;
+
 display:flex;
 justify-content:center;
 align-items:center;
 text-align:center;
-padding:40px;
+padding:30px;
 }
+
 .hero-overlay{
 max-width:900px;
 }
+
 .hero h1{
 font-family:'Playfair Display',serif;
-font-size:80px;
+font-size:70px;
 color:#d4af37;
 margin-bottom:15px;
-text-shadow:0 0 20px rgba(212,175,55,.3);
 }
-.hero h2{
+
+.tagline{
 font-size:28px;
-margin-bottom:20px;
 font-weight:600;
+margin-bottom:20px;
 }
-.hero-text{
+
+.subtext{
 font-size:18px;
 max-width:800px;
 margin:auto;
-color:#ddd;
 }
+
 .hero-buttons{
 margin-top:35px;
 }
+
 .btn{
 display:inline-block;
 padding:14px 30px;
-border-radius:10px;
+margin:8px;
+border-radius:8px;
 text-decoration:none;
 font-weight:600;
-margin:8px;
 transition:.3s;
-background:#fff;
+background:#ffffff;
 color:#000;
 }
+
 .btn:hover{
 transform:translateY(-4px);
 }
+
 .gold{
 background:#d4af37;
 color:#000;
 }
+
 /* =========================
    SECTION
 ========================= */
+
 section{
-padding:100px 8%;
+padding:90px 8%;
 }
-.section-heading{
-text-align:center;
-margin-bottom:50px;
-}
-.section-heading h2{
+
+h2{
 font-family:'Playfair Display',serif;
-font-size:50px;
+font-size:48px;
 color:#d4af37;
+text-align:center;
+margin-bottom:30px;
+}
+
+.about p{
+max-width:1000px;
+margin:auto;
+text-align:center;
 margin-bottom:15px;
 }
-.section-heading p{
-max-width:700px;
-margin:auto;
-color:#ccc;
-}
+
 /* =========================
-   ABOUT
+   TEAM
 ========================= */
-.about-content{
+
+.team-grid{
 display:grid;
-grid-template-columns:1fr 1fr;
-gap:50px;
-align-items:center;
+grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+gap:30px;
+margin-top:40px;
 }
-.about-text ul{
-margin-top:20px;
-padding-left:20px;
-}
-.about-text li{
-margin-bottom:10px;
-}
-.about-image img{
-width:100%;
-border-radius:20px;
-border:2px solid #d4af37;
-}
-/* =========================
-   ADVOCATES
-========================= */
-.advocate-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
-gap:35px;
-}
-.advocate-card{
-background:#131313;
-border:1px solid rgba(212,175,55,.4);
-border-radius:20px;
-overflow:hidden;
-transition:.3s;
-}
-.advocate-card:hover{
-transform:translateY(-8px);
-box-shadow:0 0 30px rgba(212,175,55,.15);
-}
-.advocate-card img{
-width:100%;
-height:500px;
-object-fit:cover;
-object-position:center top;
-display:block;
-}
-.advocate-info{
-padding:25px;
-text-align:center;
-}
-.advocate-info h3{
-color:#d4af37;
-font-size:28px;
-margin-bottom:10px;
-}
-.qualification{
-font-weight:600;
-margin-bottom:10px;
-}
-.phone{
-margin-top:15px;
-font-size:18px;
-font-weight:600;
-color:#d4af37;
-}
-.advocate-buttons{
-margin-top:20px;
-}
-/* =========================
-   PRACTICE AREA
-========================= */
-.practice-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:20px;
-}
-.practice-card{
-background:#131313;
-padding:35px 20px;
-text-align:center;
+
+.member-card{
+background:#151515;
+border:1px solid #d4af37;
 border-radius:15px;
-border:1px solid rgba(212,175,55,.4);
+overflow:hidden;
+text-align:center;
 transition:.3s;
 }
-.practice-card:hover{
+
+.member-card:hover{
 transform:translateY(-6px);
 }
-.practice-card i{
-font-size:35px;
-color:#d4af37;
-margin-bottom:15px;
-}
-.practice-card h3{
-font-size:18px;
-}
-/* =========================
-   SERVICES
-========================= */
-.service-posters{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
-gap:25px;
-}
-.service-posters img{
+
+.member-card img{
 width:100%;
-border-radius:15px;
-border:2px solid #d4af37;
+height:auto;
+display:block;
 }
+
+.member-card h3{
+margin-top:20px;
+color:#d4af37;
+}
+
+.member-card p{
+padding:0 20px 15px;
+}
+
+/* =========================
+   SOCIAL ICONS
+========================= */
+
+.social-links{
+display:flex;
+justify-content:center;
+gap:15px;
+padding-bottom:20px;
+}
+
+.social-links a{
+width:42px;
+height:42px;
+display:flex;
+align-items:center;
+justify-content:center;
+background:#222;
+color:#d4af37;
+border-radius:50%;
+text-decoration:none;
+transition:.3s;
+}
+
+.social-links a:hover{
+background:#d4af37;
+color:#000;
+}
+
+/* =========================
+   SERVICES / PRACTICE
+========================= */
+
+.service-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+gap:20px;
+}
+
+.card{
+background:#151515;
+border:1px solid #d4af37;
+padding:25px;
+border-radius:12px;
+text-align:center;
+transition:.3s;
+}
+
+.card i{
+font-size:32px;
+color:#d4af37;
+}
+
+.card:hover{
+transform:translateY(-5px);
+}
+
 /* =========================
    GALLERY
 ========================= */
+
 .gallery-grid{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
 gap:20px;
 }
+
 .gallery-grid img{
 width:100%;
-height:300px;
-object-fit:cover;
-border-radius:15px;
+height:auto;
+display:block;
+border-radius:12px;
 border:2px solid #d4af37;
+background:#111;
+padding:5px;
 transition:.3s;
 }
+
 .gallery-grid img:hover{
-transform:scale(1.03);
+transform:scale(1.02);
 }
+
 /* =========================
    CONTACT
 ========================= */
-.contact-container{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-gap:25px;
-}
-.contact-card{
-background:#131313;
-padding:30px;
+
+.contact-box{
+max-width:900px;
+margin:auto;
+text-align:center;
+background:#151515;
+padding:40px;
 border-radius:15px;
-border:1px solid rgba(212,175,55,.4);
+border:1px solid #d4af37;
 }
-.contact-card h3{
-color:#d4af37;
+
+.contact-box p{
 margin-bottom:15px;
 }
+
 /* =========================
    MAP
 ========================= */
+
 .map-section iframe{
-box-shadow:0 0 25px rgba(212,175,55,.15);
+width:100%;
+border-radius:15px;
 }
+
 /* =========================
-   CTA
+   WHATSAPP
 ========================= */
-.cta-section{
-background:#111;
-text-align:center;
-}
-.cta-content h2{
-font-size:50px;
-color:#d4af37;
-margin-bottom:15px;
-}
-/* =========================
-   FOOTER
-========================= */
-footer{
-background:#000;
-padding:70px 8% 30px;
-border-top:1px solid rgba(212,175,55,.4);
-}
-.footer-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:35px;
-}
-.footer-grid h3{
-color:#d4af37;
-margin-bottom:15px;
-}
-.footer-grid ul{
-list-style:none;
-}
-.footer-grid li{
-margin-bottom:10px;
-}
-.footer-grid a{
-text-decoration:none;
-color:#ccc;
-}
-.footer-grid a:hover{
-color:#d4af37;
-}
-.footer-bottom{
-text-align:center;
-margin-top:40px;
-padding-top:20px;
-border-top:1px solid rgba(255,255,255,.1);
-color:#999;
-}
-/* =========================
-   FLOATING ICONS
-========================= */
-.youtube,
-.instagram,
+
 .whatsapp{
 position:fixed;
-right:20px;
-width:60px;
-height:60px;
+bottom:25px;
+right:25px;
+width:65px;
+height:65px;
+background:#25D366;
 border-radius:50%;
 display:flex;
 justify-content:center;
 align-items:center;
-font-size:26px;
+font-size:32px;
 color:white;
 text-decoration:none;
-z-index:99999;
-box-shadow:0 0 15px rgba(0,0,0,.3);
+z-index:999;
+box-shadow:0 0 20px rgba(0,0,0,.4);
 }
-.youtube{
-bottom:170px;
-background:#ff0000;
+
+/* =========================
+   FOOTER
+========================= */
+
+footer{
+background:#000;
+padding:50px 20px;
+text-align:center;
+border-top:1px solid #d4af37;
 }
-.instagram{
-bottom:95px;
-background:#e1306c;
+
+footer h3{
+color:#d4af37;
+margin-bottom:10px;
+font-size:28px;
 }
-.whatsapp{
-bottom:20px;
-background:#25d366;
+
+footer p{
+margin-bottom:10px;
 }
+
 /* =========================
    MOBILE
 ========================= */
+
 @media(max-width:768px){
+
 .navbar{
 flex-direction:column;
 gap:15px;
 }
+
 .nav-links{
 flex-wrap:wrap;
 justify-content:center;
-gap:15px;
+gap:12px;
 }
-.logo-area{
-flex-direction:column;
-text-align:center;
-}
-.logo-area img{
-height:70px;
-}
+
 .hero h1{
 font-size:42px;
 }
-.hero h2{
+
+.tagline{
 font-size:20px;
 }
-.hero-text{
+
+.subtext{
 font-size:15px;
 }
-.section-heading h2{
+
+h2{
 font-size:34px;
 }
-.about-content{
+
+.team-grid{
 grid-template-columns:1fr;
 }
-.advocate-card img{
-height:400px;
+
+.logo-area span{
+font-size:18px;
 }
-.cta-content h2{
-font-size:34px;
+
+.gallery-grid{
+grid-template-columns:1fr;
 }
-.youtube,
-.instagram,
-.whatsapp{
-width:50px;
-height:50px;
-font-size:22px;
+
 }
-}
+```
