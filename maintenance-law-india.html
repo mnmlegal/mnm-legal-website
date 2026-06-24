@@ -75,19 +75,9 @@ p{
 </style>
 
 </head>
-<script>
 
-const hamburger = document.querySelector(".hamburger");
-
-const navLinks = document.querySelector(".nav-links");
-
-hamburger.addEventListener("click", () => {
-    navLinks.classList.toggle("active");
-});
-
-</script>
 <body>
-    <body>
+    
     <nav class="navbar">
 
 <div class="logo-area">
@@ -137,9 +127,10 @@ hamburger.addEventListener("click", () => {
 
 </div>
 
-</body>
+
 
 <div class="article-container">
+...
 
 <a href="blog.html" class="back-btn">← Back to Blog</a>
     <img src="images/divorce-guide.jpg"
@@ -344,6 +335,15 @@ Advocate Aman Mishra is a practicing advocate based in Ahmedabad, Gujarat. He re
 
 </div>
 </div>
+<script>
+const hamburger = document.querySelector(".hamburger");
+const navLinks = document.querySelector(".nav-links");
 
+if(hamburger){
+    hamburger.addEventListener("click", () => {
+        navLinks.classList.toggle("active");
+    });
+}
+</script>
 </body>
 </html>
