@@ -1059,3 +1059,15 @@ h2{
         margin-bottom:8px !important;
     }
 }
+.logo-area{
+    text-decoration: none;
+    color: inherit;
+}
+
+.logo-area:link,
+.logo-area:visited,
+.logo-area:hover,
+.logo-area:active{
+    text-decoration: none;
+    color: inherit;
+}
