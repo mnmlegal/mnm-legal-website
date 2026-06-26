@@ -223,6 +223,8 @@ LETTERHEAD
 
     align-items:center;
 
+    gap:25px;
+
     border-bottom:3px solid #d4af37;
 
     padding-bottom:18px;
@@ -230,7 +232,6 @@ LETTERHEAD
     margin-bottom:20px;
 
 }
-
 .letterhead-left{
 
     width:170px;
