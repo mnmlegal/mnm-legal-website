@@ -95,12 +95,17 @@ maximumFractionDigits:2
 // CREATE NEW ROW
 // ==============================
 
+let serial = 1;
+
 function createRow(){
 
-const row =
-document.createElement("tr");
+serial++;
 
-row.innerHTML = `
+const row=document.createElement("tr");
+
+row.innerHTML=`
+
+<td>${serial}</td>
 
 <td>
 
@@ -155,8 +160,9 @@ invoiceBody.appendChild(row);
 
 attachEvents(row);
 
-}
+calculateInvoice();
 
+}
 // ==============================
 // ADD BUTTON
 // ==============================
