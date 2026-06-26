@@ -312,7 +312,7 @@ confirm(
 ){
 
 invoiceBody.innerHTML="";
-
+serial = 0;
 createRow();
 
 calculateInvoice();
@@ -1017,7 +1017,7 @@ document.getElementById("notes").value="Professional fees towards legal consulta
 discountInput.value=0;
 
 invoiceBody.innerHTML="";
-
+serial = 0;
 createRow();
 
 generateInvoiceNumber();
