@@ -1,1 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>MNM Admin Login</title>
+
+<link rel="stylesheet" href="style.css">
+
+<style>
+
+body{
+background:#000;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+font-family:Poppins,sans-serif;
+}
+
+.login-box{
+width:380px;
+background:#111;
+padding:40px;
+border:1px solid #d4af37;
+border-radius:15px;
+text-align:center;
+}
+
+.login-box img{
+width:80px;
+margin-bottom:20px;
+}
+
+.login-box h2{
+color:#d4af37;
+margin-bottom:30px;
+}
+
+input{
+width:100%;
+padding:14px;
+margin:10px 0;
+background:#222;
+border:1px solid #444;
+color:#fff;
+border-radius:8px;
+box-sizing:border-box;
+}
+
+button{
+width:100%;
+padding:15px;
+background:#d4af37;
+color:#000;
+font-weight:bold;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-size:16px;
+}
+
+button:hover{
+background:#f0c94b;
+}
+
+#error{
+color:red;
+margin-top:15px;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="login-box">
+
+<img src="images/logo.png">
+
+<h2>MNM Admin Panel</h2>
+
+<input type="text" id="username" placeholder="Username">
+
+<input type="password" id="password" placeholder="Password">
+
+<button onclick="login()">LOGIN</button>
+
+<p id="error"></p>
+
+</div>
+
+<script>
+
+function login(){
+
+let user=document.getElementById("username").value;
+
+let pass=document.getElementById("password").value;
+
+if(user=="admin" && pass=="MNM@2026"){
+
+localStorage.setItem("loggedIn","yes");
+
+window.location.href="dashboard.html";
+
+}else{
+
+document.getElementById("error").innerHTML="Invalid Username or Password";
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
