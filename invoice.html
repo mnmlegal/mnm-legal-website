@@ -207,3 +207,103 @@ placeholder="1000">
 Add New Item
 
 </button>
+<!-- ===========================
+TOTAL SECTION
+=========================== -->
+
+<div class="summary-box">
+
+<div class="summary-row">
+
+<span>Sub Total</span>
+
+<h3 id="subTotal">₹0</h3>
+
+</div>
+
+<div class="summary-row grand-total">
+
+<span>Total Amount</span>
+
+<h2 id="grandTotal">₹0</h2>
+
+</div>
+
+</div>
+
+<!-- ===========================
+AMOUNT IN WORDS
+=========================== -->
+
+<div class="form-group">
+
+<label>Amount in Words</label>
+
+<textarea
+id="amountWords"
+rows="2"
+readonly></textarea>
+
+</div>
+
+<!-- ===========================
+NOTES
+=========================== -->
+
+<div class="form-group">
+
+<label>Notes</label>
+
+<textarea
+id="notes"
+rows="4">
+
+Professional fee towards legal consultation / drafting / appearance.
+
+Court fees, stamp duty, government charges, travelling expenses and other out-of-pocket expenses shall be borne separately by the client unless otherwise agreed.
+
+</textarea>
+
+</div>
+
+<!-- ===========================
+BUTTONS
+=========================== -->
+
+<div class="button-group">
+
+<button id="generatePdfBtn">
+
+<i class="fa-solid fa-file-pdf"></i>
+
+Generate PDF
+
+</button>
+
+<button id="printBtn">
+
+<i class="fa-solid fa-print"></i>
+
+Print
+
+</button>
+
+<button id="clearBtn">
+
+<i class="fa-solid fa-trash"></i>
+
+Clear Form
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="invoice.js"></script>
+
+</body>
+
+</html>
