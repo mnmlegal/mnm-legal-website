@@ -1,1 +1,86 @@
+/* ======================================
+MNM LEGAL ASSOCIATES
+INVOICE GENERATOR
+====================================== */
 
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+background:#000;
+font-family:'Poppins',sans-serif;
+color:#fff;
+}
+
+/* ===========================
+HEADER
+=========================== */
+
+.invoice-header{
+background:#111;
+border-bottom:2px solid #d4af37;
+padding:20px 40px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+flex-wrap:wrap;
+}
+
+.header-left{
+display:flex;
+align-items:center;
+gap:15px;
+}
+
+.header-left img{
+width:70px;
+height:70px;
+object-fit:contain;
+}
+
+.header-left h2{
+color:#d4af37;
+font-size:28px;
+margin-bottom:5px;
+}
+
+.header-left p{
+color:#bbb;
+font-size:14px;
+}
+
+.back-btn{
+background:#d4af37;
+color:#000;
+padding:12px 20px;
+border-radius:8px;
+text-decoration:none;
+font-weight:600;
+transition:.3s;
+}
+
+.back-btn:hover{
+background:#f0c94b;
+}
+
+/* ===========================
+PAGE TITLE
+=========================== */
+
+.page-title{
+text-align:center;
+padding:40px 20px;
+}
+
+.page-title h1{
+color:#d4af37;
+font-size:38px;
+margin-bottom:10px;
+}
+
+.page-title p{
+color:#ccc;
+font-size:18px;
