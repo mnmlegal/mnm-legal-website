@@ -786,3 +786,16 @@ body {
     line-height: 1.2 !important;
   }
 }
+.invoice-footer {
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.footer-left {
+  width: 100% !important;
+  text-align: center !important;
+}
+
+.footer-left p {
+  text-align: center !important;
+}
