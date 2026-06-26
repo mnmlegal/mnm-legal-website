@@ -1,1276 +1,566 @@
-/* ==========================================================
+/* =====================================================
    MNM LEGAL ASSOCIATES
-   INVOICE GENERATOR
-   invoice.js
-   PART 1A
-   ========================================================== */
+   Invoice Generator JavaScript
+===================================================== */
 
-/* ==========================================================
-   ELEMENT REFERENCES
-========================================================== */
+/* ===========================
+   ELEMENTS
+=========================== */
 
 const invoiceNo = document.getElementById("invoiceNo");
 const invoiceDate = document.getElementById("invoiceDate");
 
-const clientName = document.getElementById("clientName");
-const clientMobile = document.getElementById("clientMobile");
-const clientAddress = document.getElementById("clientAddress");
-
 const invoiceBody = document.getElementById("invoiceBody");
-
 const addItemBtn = document.getElementById("addItemBtn");
 const clearTableBtn = document.getElementById("clearTableBtn");
-const clearInvoiceBtn = document.getElementById("clearInvoiceBtn");
 
 const discountInput = document.getElementById("discount");
-
 const subTotal = document.getElementById("subTotal");
 const grandTotal = document.getElementById("grandTotal");
 const amountWords = document.getElementById("amountWords");
 
-const notes = document.getElementById("notes");
-
 const printBtn = document.getElementById("printBtn");
-const printInvoiceBottom =
-document.getElementById("printInvoiceBottom");
+const printInvoiceBottom = document.getElementById("printInvoiceBottom");
 
-const previewBtn =
-document.getElementById("previewBtn");
+const downloadPdf = document.getElementById("downloadPdf");
+const downloadPdfBottom = document.getElementById("downloadPdfBottom");
 
-const downloadPdf =
-document.getElementById("downloadPdf");
+const previewBtn = document.getElementById("previewBtn");
+const clearInvoiceBtn = document.getElementById("clearInvoiceBtn");
 
-const downloadPdfBottom =
-document.getElementById("downloadPdfBottom");
+const loadingPopup = document.getElementById("loadingPopup");
+const successPopup = document.getElementById("successPopup");
+const errorPopup = document.getElementById("errorPopup");
+const errorMessage = document.getElementById("errorMessage");
 
-const loadingPopup =
-document.getElementById("loadingPopup");
+const closeSuccessPopup = document.getElementById("closeSuccessPopup");
+const closeErrorPopup = document.getElementById("closeErrorPopup");
 
-const successPopup =
-document.getElementById("successPopup");
+const pdfFileName = document.getElementById("pdfFileName");
 
-const errorPopup =
-document.getElementById("errorPopup");
-
-const errorMessage =
-document.getElementById("errorMessage");
-
-const closeSuccessPopup =
-document.getElementById("closeSuccessPopup");
-
-const closeErrorPopup =
-document.getElementById("closeErrorPopup");
-
-const paymentInvoiceNo =
-document.getElementById("paymentInvoiceNo");
-
-const invoicePrintArea =
-document.getElementById("invoicePrintArea");
-
-
-/* ==========================================================
-   GLOBAL VARIABLES
-========================================================== */
-
-let serial = 1;
-
-const DEFAULT_NOTE = `Professional fees towards legal consultation, drafting, appearance and other agreed legal services.
-
-Court fees, Government fees, Stamp Duty, Registration Charges, Travelling Expenses and other out-of-pocket expenses shall be borne separately unless specifically agreed.
-
-Professional fees once paid shall ordinarily not be refundable after commencement of work.`;
-
-
-/* ==========================================================
+/* ===========================
    INITIALIZE
-========================================================== */
+=========================== */
 
-window.addEventListener("DOMContentLoaded", initializeInvoice);
+setTodayDate();
+bindExistingRows();
+calculateInvoice();
 
-function initializeInvoice(){
+/* ===========================
+   DATE
+=========================== */
 
-    setTodayDate();
+function setTodayDate() {
+  if (!invoiceDate) return;
 
-    generateInvoiceNumber();
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
 
-    if(notes){
-        notes.value = DEFAULT_NOTE;
-    }
-
-    bindExistingRows();
-
-    bindGlobalEvents();
-
-    calculateInvoice();
-
+  invoiceDate.value = `${yyyy}-${mm}-${dd}`;
 }
 
-
-/* ==========================================================
-   BIND GLOBAL EVENTS
-========================================================== */
-
-function bindGlobalEvents(){
-
-    if(addItemBtn){
-
-        addItemBtn.addEventListener(
-            "click",
-            createRow
-        );
-
-    }
-
-    if(discountInput){
-
-        discountInput.addEventListener(
-            "input",
-            calculateInvoice
-        );
-
-    }
-
-}
-
-
-/* ==========================================================
-   TODAY DATE
-========================================================== */
-
-function setTodayDate(){
-
-    const today = new Date();
-
-    invoiceDate.value = today
-        .toISOString()
-        .split("T")[0];
-
-}
-
-
-/* ==========================================================
-   AUTO INVOICE NUMBER
-========================================================== */
-
-function generateInvoiceNumber(){
-
-    const today = new Date();
-
-    const yyyy = today.getFullYear();
-
-    const mm = String(
-        today.getMonth()+1
-    ).padStart(2,"0");
-
-    const dd = String(
-        today.getDate()
-    ).padStart(2,"0");
-
-    const key =
-        `mnm_invoice_${yyyy}${mm}${dd}`;
-
-    let count =
-        Number(localStorage.getItem(key)) || 0;
-
-    count++;
-
-    localStorage.setItem(key,count);
-
-    const serialNo =
-        String(count).padStart(3,"0");
-
-    invoiceNo.value =
-        `INV-${yyyy}${mm}${dd}-${serialNo}`;
-
-}
-
-
-/* ==========================================================
+/* ===========================
    MONEY FORMAT
-========================================================== */
+=========================== */
 
-function money(value){
-
-    return Number(value).toLocaleString(
-
-        "en-IN",
-
-        {
-
-            minimumFractionDigits:2,
-
-            maximumFractionDigits:2
-
-        }
-
-    );
-
+function money(value) {
+  return Number(value || 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
+/* ===========================
+   CREATE ROW
+=========================== */
 
-/* ==========================================================
-   SHOW ERROR
-========================================================== */
+function createRow() {
+  const tr = document.createElement("tr");
 
-function showError(message){
+  tr.innerHTML = `
+    <td class="serial"></td>
 
-    if(errorPopup){
+    <td>
+      <input
+        type="text"
+        class="particular"
+        placeholder="Professional Charges"
+      >
+    </td>
 
-        errorMessage.textContent = message;
+    <td>
+      <input
+        type="number"
+        class="qty"
+        value="1"
+        min="1"
+      >
+    </td>
 
-        errorPopup.style.display = "flex";
+    <td>
+      <input
+        type="number"
+        class="rate"
+        value="0"
+        min="0"
+      >
+    </td>
 
-    }
+    <td class="amount">₹0.00</td>
 
-    else{
+    <td>
+      <button type="button" class="delete-row">
+        <i class="fa-solid fa-trash"></i>
+      </button>
+    </td>
+  `;
 
-        alert(message);
-
-    }
-
+  invoiceBody.appendChild(tr);
+  bindRowEvents(tr);
+  updateSerialNumbers();
+  calculateInvoice();
 }
 
-
-/* ==========================================================
-   SHOW SUCCESS
-========================================================== */
-
-function showSuccess(){
-
-    if(successPopup){
-
-        successPopup.style.display = "flex";
-
-    }
-
-}
-
-
-/* ==========================================================
-   CLOSE POPUPS
-========================================================== */
-
-if(closeSuccessPopup){
-
-    closeSuccessPopup.onclick = function(){
-
-        successPopup.style.display="none";
-
-    };
-
-}
-
-if(closeErrorPopup){
-
-    closeErrorPopup.onclick = function(){
-
-        errorPopup.style.display="none";
-
-    };
-
-}
-
-
-/* ==========================================================
-   LOADING POPUP
-========================================================== */
-
-function showLoading(){
-
-    if(loadingPopup){
-
-        loadingPopup.style.display="flex";
-
-    }
-
-}
-
-function hideLoading(){
-
-    if(loadingPopup){
-
-        loadingPopup.style.display="none";
-
-    }
-
-}
-
-
-/* ==========================================================
-   BIND FIRST ROW
-========================================================== */
-
-function bindExistingRows(){
-
-    document
-    .querySelectorAll("#invoiceBody tr")
-    .forEach(bindRowEvents);
-
-}
-/* ==========================================================
-   ROW CREATION
-========================================================== */
-
-function createRow(){
-
-    serial++;
-
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-
-        <td class="serial">${serial}</td>
-
-        <td>
-            <input
-                type="text"
-                class="particular"
-                placeholder="Professional Charges">
-        </td>
-
-        <td>
-            <input
-                type="number"
-                class="qty"
-                value="1"
-                min="1">
-        </td>
-
-        <td>
-            <input
-                type="number"
-                class="rate"
-                value="0"
-                min="0">
-        </td>
-
-        <td class="amount">
-            ₹0.00
-        </td>
-
-        <td>
-
-            <button
-                type="button"
-                class="delete-row">
-
-                <i class="fa-solid fa-trash"></i>
-
-            </button>
-
-        </td>
-
-    `;
-
-    invoiceBody.appendChild(tr);
-
-    bindRowEvents(tr);
-
-    calculateInvoice();
-
-}
-
-
-/* ==========================================================
+/* ===========================
    ROW EVENTS
-========================================================== */
+=========================== */
 
-function bindRowEvents(row){
+function bindExistingRows() {
+  document.querySelectorAll("#invoiceBody tr").forEach((row) => {
+    bindRowEvents(row);
+  });
 
-    const qty =
-    row.querySelector(".qty");
-
-    const rate =
-    row.querySelector(".rate");
-
-    const remove =
-    row.querySelector(".delete-row");
-
-    qty.addEventListener(
-        "input",
-        calculateInvoice
-    );
-
-    rate.addEventListener(
-        "input",
-        calculateInvoice
-    );
-
-    remove.addEventListener(
-
-        "click",
-
-        function(){
-
-            if(invoiceBody.rows.length===1){
-
-                showError(
-                    "At least one invoice item is required."
-                );
-
-                return;
-
-            }
-
-            row.remove();
-
-            updateSerialNumbers();
-
-            calculateInvoice();
-
-        }
-
-    );
-
+  updateSerialNumbers();
 }
 
+function bindRowEvents(row) {
+  const qtyInput = row.querySelector(".qty");
+  const rateInput = row.querySelector(".rate");
+  const particularInput = row.querySelector(".particular");
+  const deleteBtn = row.querySelector(".delete-row");
 
-/* ==========================================================
-   UPDATE SERIAL NUMBERS
-========================================================== */
+  if (qtyInput) {
+    qtyInput.addEventListener("input", calculateInvoice);
+  }
 
-function updateSerialNumbers(){
+  if (rateInput) {
+    rateInput.addEventListener("input", calculateInvoice);
+  }
 
-    serial = 0;
+  if (particularInput) {
+    particularInput.addEventListener("input", calculateInvoice);
+  }
 
-    document
+  if (deleteBtn) {
+    deleteBtn.addEventListener("click", () => {
+      if (invoiceBody.rows.length === 1) {
+        showError("At least one invoice item is required.");
+        return;
+      }
 
-    .querySelectorAll("#invoiceBody tr")
-
-    .forEach(function(row){
-
-        serial++;
-
-        row.querySelector(".serial").textContent =
-        serial;
-
+      row.remove();
+      updateSerialNumbers();
+      calculateInvoice();
     });
-
+  }
 }
 
+/* ===========================
+   SERIAL NUMBERS
+=========================== */
 
-/* ==========================================================
-   CALCULATE INVOICE
-========================================================== */
+function updateSerialNumbers() {
+  document.querySelectorAll("#invoiceBody tr").forEach((row, index) => {
+    const serialCell = row.querySelector(".serial");
 
-function calculateInvoice(){
-
-    let subtotal = 0;
-
-    document
-
-    .querySelectorAll("#invoiceBody tr")
-
-    .forEach(function(row){
-
-        const qty =
-
-        parseFloat(
-            row.querySelector(".qty").value
-        ) || 0;
-
-        const rate =
-
-        parseFloat(
-            row.querySelector(".rate").value
-        ) || 0;
-
-        const amount =
-        qty * rate;
-
-        row.querySelector(".amount").innerHTML =
-
-        "₹" + money(amount);
-
-        subtotal += amount;
-
-    });
-
-    subTotal.innerHTML =
-    "₹" + money(subtotal);
-
-    let discount =
-
-    parseFloat(
-        discountInput.value
-    ) || 0;
-
-    if(discount < 0){
-
-        discount = 0;
-
-        discountInput.value = 0;
-
+    if (serialCell) {
+      serialCell.textContent = index + 1;
     }
-
-    let total = subtotal - discount;
-
-    if(total < 0){
-
-        total = 0;
-
-    }
-
-    grandTotal.innerHTML =
-    "₹" + money(total);
-
-    amountWords.value =
-    numberToWords(
-        Math.round(total)
-    );
-
-    if(paymentInvoiceNo){
-
-        paymentInvoiceNo.value =
-        invoiceNo.value;
-
-    }
-
+  });
 }
 
+/* ===========================
+   CALCULATION
+=========================== */
 
-/* ==========================================================
-   CLEAR ALL ITEMS
-========================================================== */
+function calculateInvoice() {
+  let subtotal = 0;
 
-if(clearTableBtn){
+  document.querySelectorAll("#invoiceBody tr").forEach((row) => {
+    const qty = parseFloat(row.querySelector(".qty")?.value) || 0;
+    const rate = parseFloat(row.querySelector(".rate")?.value) || 0;
+    const amount = qty * rate;
 
-    clearTableBtn.addEventListener(
+    const amountCell = row.querySelector(".amount");
 
-        "click",
-
-        function(){
-
-            if(
-
-                !confirm(
-                    "Remove all invoice items?"
-                )
-
-            ){
-
-                return;
-
-            }
-
-            invoiceBody.innerHTML = "";
-
-            serial = 0;
-
-            createRow();
-
-        }
-
-    );
-
-}
-
-
-/* ==========================================================
-   CLEAR COMPLETE INVOICE
-========================================================== */
-
-if(clearInvoiceBtn){
-
-    clearInvoiceBtn.addEventListener(
-
-        "click",
-
-        function(){
-
-            if(
-
-                !confirm(
-                    "Clear complete invoice?"
-                )
-
-            ){
-
-                return;
-
-            }
-
-            clientName.value = "";
-
-            clientMobile.value = "";
-
-            clientAddress.value = "";
-
-            discountInput.value = 0;
-
-            amountWords.value = "";
-
-            notes.value = DEFAULT_NOTE;
-
-            invoiceBody.innerHTML = "";
-
-            serial = 0;
-
-            generateInvoiceNumber();
-
-            createRow();
-
-            calculateInvoice();
-
-        }
-
-    );
-
-}
-/* ==========================================================
-   PART 2
-   VALIDATION + NUMBER TO WORDS
-========================================================== */
-
-/* ==========================================================
-   VALIDATE INVOICE
-========================================================== */
-
-function validateInvoice(){
-
-    if(clientName.value.trim()===""){
-
-        showError("Please enter client name.");
-
-        clientName.focus();
-
-        return false;
-
+    if (amountCell) {
+      amountCell.textContent = "₹" + money(amount);
     }
 
-    if(clientMobile.value.trim()===""){
+    subtotal += amount;
+  });
 
-        showError("Please enter mobile number.");
+  const discount = parseFloat(discountInput?.value) || 0;
+  const total = Math.max(subtotal - discount, 0);
 
-        clientMobile.focus();
+  if (subTotal) {
+    subTotal.textContent = "₹" + money(subtotal);
+  }
 
-        return false;
+  if (grandTotal) {
+    grandTotal.textContent = "₹" + money(total);
+  }
 
-    }
-
-    let hasItem=false;
-
-    document
-    .querySelectorAll("#invoiceBody tr")
-    .forEach(function(row){
-
-        const particular=
-        row.querySelector(".particular").value.trim();
-
-        const rate=
-        parseFloat(
-            row.querySelector(".rate").value
-        )||0;
-
-        if(particular!=="" && rate>0){
-
-            hasItem=true;
-
-        }
-
-    });
-
-    if(!hasItem){
-
-        showError(
-            "Please add at least one valid invoice item."
-        );
-
-        return false;
-
-    }
-
-    return true;
-
+  if (amountWords) {
+    amountWords.value = numberToWords(Math.round(total)) + " Rupees Only";
+  }
 }
 
-
-/* ==========================================================
+/* ===========================
    NUMBER TO WORDS
-   INDIAN FORMAT
-========================================================== */
+=========================== */
 
-const ones=[
+function numberToWords(num) {
+  if (num === 0) {
+    return "Zero";
+  }
 
-"",
-"One",
-"Two",
-"Three",
-"Four",
-"Five",
-"Six",
-"Seven",
-"Eight",
-"Nine",
-"Ten",
-"Eleven",
-"Twelve",
-"Thirteen",
-"Fourteen",
-"Fifteen",
-"Sixteen",
-"Seventeen",
-"Eighteen",
-"Nineteen"
+  const ones = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen"
+  ];
 
-];
+  const tens = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety"
+  ];
 
-const tens=[
-
-"",
-"",
-"Twenty",
-"Thirty",
-"Forty",
-"Fifty",
-"Sixty",
-"Seventy",
-"Eighty",
-"Ninety"
-
-];
-
-function twoDigitWords(num){
-
-    if(num<20){
-
-        return ones[num];
-
+  function convertBelowHundred(n) {
+    if (n < 20) {
+      return ones[n];
     }
 
-    return (
+    return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
+  }
 
-        tens[Math.floor(num/10)] +
+  function convertBelowThousand(n) {
+    let words = "";
 
-        (num%10
-            ? " "+ones[num%10]
-            : "")
+    if (n >= 100) {
+      words += ones[Math.floor(n / 100)] + " Hundred";
 
-    );
+      if (n % 100) {
+        words += " ";
+      }
+    }
 
+    words += convertBelowHundred(n % 100);
+
+    return words.trim();
+  }
+
+  let words = "";
+
+  const crore = Math.floor(num / 10000000);
+  num %= 10000000;
+
+  const lakh = Math.floor(num / 100000);
+  num %= 100000;
+
+  const thousand = Math.floor(num / 1000);
+  num %= 1000;
+
+  if (crore) {
+    words += convertBelowThousand(crore) + " Crore ";
+  }
+
+  if (lakh) {
+    words += convertBelowThousand(lakh) + " Lakh ";
+  }
+
+  if (thousand) {
+    words += convertBelowThousand(thousand) + " Thousand ";
+  }
+
+  if (num) {
+    words += convertBelowThousand(num);
+  }
+
+  return words.trim();
 }
 
-function threeDigitWords(num){
+/* ===========================
+   VALIDATION
+=========================== */
 
-    let str="";
+function validateInvoice() {
+  if (!invoiceNo.value.trim()) {
+    showError("Please enter invoice number.");
+    invoiceNo.focus();
+    return false;
+  }
 
-    if(num>=100){
+  if (!invoiceDate.value) {
+    showError("Please select invoice date.");
+    invoiceDate.focus();
+    return false;
+  }
 
-        str+=
+  const clientName = document.getElementById("clientName");
 
-        ones[Math.floor(num/100)] +
+  if (!clientName.value.trim()) {
+    showError("Please enter client name.");
+    clientName.focus();
+    return false;
+  }
 
-        " Hundred";
+  let hasValidItem = false;
 
-        num%=100;
+  document.querySelectorAll("#invoiceBody tr").forEach((row) => {
+    const particular = row.querySelector(".particular")?.value.trim();
+    const qty = parseFloat(row.querySelector(".qty")?.value) || 0;
+    const rate = parseFloat(row.querySelector(".rate")?.value) || 0;
 
-        if(num){
-
-            str+=" ";
-
-        }
-
+    if (particular && qty > 0 && rate > 0) {
+      hasValidItem = true;
     }
+  });
 
-    if(num){
+  if (!hasValidItem) {
+    showError("Please enter at least one valid invoice item.");
+    return false;
+  }
 
-        str+=twoDigitWords(num);
-
-    }
-
-    return str;
-
+  return true;
 }
 
-function numberToWords(number){
-
-    number=Math.floor(number);
-
-    if(number===0){
-
-        return "Zero Rupees Only";
-
-    }
-
-    let result="";
-
-    const crore=
-
-    Math.floor(number/10000000);
-
-    number%=10000000;
-
-    const lakh=
-
-    Math.floor(number/100000);
-
-    number%=100000;
-
-    const thousand=
-
-    Math.floor(number/1000);
-
-    number%=1000;
-
-    const hundred=number;
-
-    if(crore){
-
-        result+=
-
-        threeDigitWords(crore)+
-
-        " Crore ";
-
-    }
-
-    if(lakh){
-
-        result+=
-
-        threeDigitWords(lakh)+
-
-        " Lakh ";
-
-    }
-
-    if(thousand){
-
-        result+=
-
-        threeDigitWords(thousand)+
-
-        " Thousand ";
-
-    }
-
-    if(hundred){
-
-        result+=
-
-        threeDigitWords(hundred);
-
-    }
-
-    result=result.trim();
-
-    return result+" Rupees Only";
-
-}
-
-
-/* ==========================================================
-   LIVE UPDATE
-========================================================== */
-
-clientName.addEventListener(
-
-    "input",
-
-    calculateInvoice
-
-);
-
-clientMobile.addEventListener(
-
-    "input",
-
-    calculateInvoice
-
-);
-
-clientAddress.addEventListener(
-
-    "input",
-
-    calculateInvoice
-
-);
-
-
-/* ==========================================================
-   PREVENT NEGATIVE VALUES
-========================================================== */
-
-document
-
-.querySelectorAll(
-
-'.qty,.rate,#discount'
-
-)
-
-.forEach(function(input){
-
-    input.addEventListener(
-
-        "input",
-
-        function(){
-
-            if(Number(this.value)<0){
-
-                this.value=0;
-
-            }
-
-        }
-
-    );
-
-});
-
-
-/* ==========================================================
-   ENTER KEY NAVIGATION
-========================================================== */
-
-document.addEventListener(
-
-    "keydown",
-
-    function(e){
-
-        if(e.key!=="Enter"){
-
-            return;
-
-        }
-
-        const fields=[
-
-            ...document.querySelectorAll(
-
-            "input,textarea"
-
-            )
-
-        ];
-
-        const index=
-
-        fields.indexOf(
-
-            document.activeElement
-
-        );
-
-        if(index>-1){
-
-            e.preventDefault();
-
-            const next=
-
-            fields[index+1];
-
-            if(next){
-
-                next.focus();
-
-                next.select?.();
-
-            }
-
-        }
-
-    }
-
-);
-/* ==========================================================
-   PART 4
-   PRINT • PDF • PREVIEW • POPUPS
-========================================================== */
-
-/* ==========================================================
+/* ===========================
    PRINT
-========================================================== */
+=========================== */
 
-function printInvoice(){
-
-    if(!validateInvoice()) return;
-
-    window.print();
-
+function printInvoice() {
+  calculateInvoice();
+  window.print();
 }
 
-if(printBtn){
-
-    printBtn.addEventListener(
-
-        "click",
-
-        printInvoice
-
-    );
-
-}
-
-if(printInvoiceBottom){
-
-    printInvoiceBottom.addEventListener(
-
-        "click",
-
-        printInvoice
-
-    );
-
-}
-
-
-/* ==========================================================
-   PREVIEW
-========================================================== */
-
-function previewInvoice(){
-
-    if(!validateInvoice()) return;
-
-    const previewWindow =
-
-    window.open(
-
-        "",
-
-        "_blank"
-
-    );
-
-    previewWindow.document.write(`
-
-        <html>
-
-        <head>
-
-        <title>
-
-        Invoice Preview
-
-        </title>
-
-        <link
-        rel="stylesheet"
-        href="style.css">
-
-        <link
-        rel="stylesheet"
-        href="invoice.css">
-
-        </head>
-
-        <body>
-
-        ${invoicePrintArea.outerHTML}
-
-        </body>
-
-        </html>
-
-    `);
-
-    previewWindow.document.close();
-
-}
-
-if(previewBtn){
-
-    previewBtn.addEventListener(
-
-        "click",
-
-        previewInvoice
-
-    );
-
-}
-
-
-/* ==========================================================
+/* ===========================
    PDF DOWNLOAD
-========================================================== */
+=========================== */
 
-function downloadInvoicePDF(){
+function downloadInvoicePdf() {
+  if (!validateInvoice()) {
+    return;
+  }
 
-    if(!validateInvoice()) return;
+  calculateInvoice();
+  showLoading();
 
-    showLoading();
+  const element = document.getElementById("invoicePrintArea");
+  const fileName = buildPdfFileName();
 
-    const opt={
+  const options = {
+    margin: 10,
+    filename: fileName,
+    image: {
+      type: "jpeg",
+      quality: 0.98
+    },
+    html2canvas: {
+      scale: 2,
+      useCORS: true
+    },
+    jsPDF: {
+      unit: "mm",
+      format: "a4",
+      orientation: "portrait"
+    }
+  };
 
-        margin:0,
-
-        filename:
-
-        invoiceNo.value+".pdf",
-
-        image:{
-
-            type:"jpeg",
-
-            quality:1
-
-        },
-
-        html2canvas:{
-
-            scale:2,
-
-            useCORS:true,
-
-            scrollY:0
-
-        },
-
-        jsPDF:{
-
-            unit:"mm",
-
-            format:"a4",
-
-            orientation:"portrait"
-
-        }
-
-    };
-
-    html2pdf()
-
-    .set(opt)
-
-    .from(invoicePrintArea)
-
+  html2pdf()
+    .set(options)
+    .from(element)
     .save()
-
-    .then(function(){
-
-        hideLoading();
-
-        showSuccess();
-
+    .then(() => {
+      hideLoading();
+      showSuccess();
     })
-
-    .catch(function(){
-
-        hideLoading();
-
-        showError(
-
-            "Unable to generate PDF."
-
-        );
-
+    .catch(() => {
+      hideLoading();
+      showError("Unable to generate PDF. Please try again.");
     });
-
 }
 
-if(downloadPdf){
+function buildPdfFileName() {
+  const baseName = pdfFileName?.value || "MNM-Invoice";
+  const number = invoiceNo.value.trim() || "Draft";
 
-    downloadPdf.addEventListener(
-
-        "click",
-
-        downloadInvoicePDF
-
-    );
-
+  return `${baseName}-${number}.pdf`;
 }
 
-if(downloadPdfBottom){
+/* ===========================
+   PREVIEW
+=========================== */
 
-    downloadPdfBottom.addEventListener(
-
-        "click",
-
-        downloadInvoicePDF
-
-    );
-
+function previewInvoice() {
+  calculateInvoice();
+  window.print();
 }
 
+/* ===========================
+   CLEAR
+=========================== */
 
-/* ==========================================================
-   CLOSE POPUPS
-========================================================== */
+function clearTable() {
+  if (!confirm("Clear all invoice items?")) {
+    return;
+  }
 
-window.addEventListener(
+  invoiceBody.innerHTML = "";
+  createRow();
+  calculateInvoice();
+}
 
-    "click",
+function clearInvoice() {
+  if (!confirm("Clear the complete invoice?")) {
+    return;
+  }
 
-    function(e){
+  invoiceNo.value = "";
+  document.getElementById("clientName").value = "";
+  document.getElementById("clientMobile").value = "";
+  document.getElementById("clientAddress").value = "";
+  discountInput.value = "0";
 
-        if(
+  invoiceBody.innerHTML = "";
+  createRow();
 
-            e.target===successPopup
+  setTodayDate();
+  calculateInvoice();
+}
 
-        ){
+/* ===========================
+   POPUPS
+=========================== */
 
-            successPopup.style.display="none";
+function showLoading() {
+  if (loadingPopup) {
+    loadingPopup.style.display = "flex";
+  }
+}
 
-        }
+function hideLoading() {
+  if (loadingPopup) {
+    loadingPopup.style.display = "none";
+  }
+}
 
-        if(
+function showSuccess() {
+  if (successPopup) {
+    successPopup.style.display = "flex";
+  }
+}
 
-            e.target===errorPopup
+function hideSuccess() {
+  if (successPopup) {
+    successPopup.style.display = "none";
+  }
+}
 
-        ){
+function showError(message) {
+  if (errorPopup && errorMessage) {
+    errorMessage.textContent = message;
+    errorPopup.style.display = "flex";
+  } else {
+    alert(message);
+  }
+}
 
-            errorPopup.style.display="none";
+function hideError() {
+  if (errorPopup) {
+    errorPopup.style.display = "none";
+  }
+}
 
-        }
+/* ===========================
+   EVENTS
+=========================== */
 
-    }
+if (addItemBtn) {
+  addItemBtn.addEventListener("click", createRow);
+}
 
-);
+if (clearTableBtn) {
+  clearTableBtn.addEventListener("click", clearTable);
+}
 
+if (discountInput) {
+  discountInput.addEventListener("input", calculateInvoice);
+}
 
-/* ==========================================================
-   ESC KEY
-========================================================== */
+if (printBtn) {
+  printBtn.addEventListener("click", printInvoice);
+}
 
-document.addEventListener(
+if (printInvoiceBottom) {
+  printInvoiceBottom.addEventListener("click", printInvoice);
+}
 
-    "keydown",
+if (downloadPdf) {
+  downloadPdf.addEventListener("click", downloadInvoicePdf);
+}
 
-    function(e){
+if (downloadPdfBottom) {
+  downloadPdfBottom.addEventListener("click", downloadInvoicePdf);
+}
 
-        if(e.key==="Escape"){
+if (previewBtn) {
+  previewBtn.addEventListener("click", previewInvoice);
+}
 
-            if(successPopup){
+if (clearInvoiceBtn) {
+  clearInvoiceBtn.addEventListener("click", clearInvoice);
+}
 
-                successPopup.style.display="none";
+if (closeSuccessPopup) {
+  closeSuccessPopup.addEventListener("click", hideSuccess);
+}
 
-            }
+if (closeErrorPopup) {
+  closeErrorPopup.addEventListener("click", hideError);
+}
 
-            if(errorPopup){
-
-                errorPopup.style.display="none";
-
-            }
-
-        }
-
-    }
-
-);
-
-
-/* ==========================================================
-   AUTO CALCULATE ON LOAD
-========================================================== */
-
-window.addEventListener(
-
-    "load",
-
-    function(){
-
-        calculateInvoice();
-
-    }
-
-);
-
-
-/* ==========================================================
-   END OF FILE
-========================================================== */
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    hideSuccess();
+    hideError();
+    hideLoading();
+  }
+});
