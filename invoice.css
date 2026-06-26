@@ -803,3 +803,68 @@ body {
   resize: none;
   cursor: default;
 }
+@page {
+  size: A4 portrait;
+  margin: 5mm;
+}
+
+@media print {
+  html,
+  body {
+    width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .invoice-header,
+  .page-heading,
+  .bottom-actions,
+  .table-actions,
+  .loading-popup,
+  .popup-overlay,
+  button {
+    display: none !important;
+  }
+
+  #invoicePrintArea {
+    width: 200mm !important;
+    max-width: 200mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .invoice-card {
+    width: 200mm !important;
+    min-height: auto !important;
+    margin: 0 auto !important;
+    padding: 4mm 7mm !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .invoice-letterhead {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 7mm !important;
+    padding-bottom: 1.5mm !important;
+    margin-bottom: 1.5mm !important;
+  }
+
+  .letterhead-left {
+    width: 32mm !important;
+  }
+
+  .letterhead-left img {
+    width: 28mm !important;
+  }
+
+  .letterhead-right h1 {
+    font-size: 16pt !important;
+    margin-bottom: 0.5mm !important;
+  }
+
+  .letterhead-right p {
+    font-size
