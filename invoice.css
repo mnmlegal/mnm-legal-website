@@ -1,1826 +1,1006 @@
 /* ==========================================
-MNM LEGAL ASSOCIATES
-Invoice Generator V2
-Part 1/6
+   MNM LEGAL ASSOCIATES
+   Invoice Generator CSS
 ========================================== */
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
-html{
-    scroll-behavior:smooth;
+html {
+  scroll-behavior: smooth;
 }
 
-body{
-    font-family:'Poppins',sans-serif;
-    background:#f2f2f2;
-    color:#222;
-    padding:30px;
-}
-
-/* ==========================
-HEADER
-========================== */
-
-.invoice-header{
-
-    background:#111;
-
-    color:#fff;
-
-    padding:18px 35px;
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    border-radius:12px;
-
-    margin-bottom:30px;
-
-}
-
-.invoice-logo{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:18px;
-
-}
-
-.invoice-logo img{
-
-    width:70px;
-
-    height:70px;
-
-    object-fit:contain;
-
-}
-
-.invoice-logo h2{
-
-    color:#d4af37;
-
-    font-size:28px;
-
-    margin-bottom:3px;
-
-}
-
-.invoice-logo p{
-
-    color:#ccc;
-
-    font-size:15px;
-
-}
-
-.invoice-actions{
-
-    display:flex;
-
-    gap:12px;
-
+body {
+  font-family: "Poppins", sans-serif;
+  background: #f2f2f2;
+  color: #222;
+  padding: 30px;
 }
 
 /* ==========================
-BUTTONS
+   HEADER
 ========================== */
 
-.btn{
-
-    background:#d4af37;
-
-    color:#111;
-
-    border:none;
-
-    padding:12px 22px;
-
-    border-radius:8px;
-
-    cursor:pointer;
-
-    font-size:15px;
-
-    font-weight:600;
-
-    text-decoration:none;
-
-    transition:.25s;
-
-    display:inline-flex;
-
-    align-items:center;
-
-    gap:8px;
-
+.invoice-header {
+  background: #111;
+  color: #fff;
+  padding: 18px 35px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 12px;
+  margin-bottom: 30px;
 }
 
-.btn:hover{
-
-    transform:translateY(-2px);
-
-    background:#c59b19;
-
+.invoice-logo {
+  display: flex;
+  align-items: center;
+  gap: 18px;
 }
 
-.btn.secondary{
-
-    background:#444;
-
-    color:#fff;
-
+.invoice-logo img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
 }
 
-.btn.gold{
-
-    background:#d4af37;
-
+.invoice-logo h2 {
+  color: #d4af37;
+  font-size: 28px;
+  margin-bottom: 3px;
 }
 
-.btn.danger{
-
-    background:#d32f2f;
-
-    color:#fff;
-
+.invoice-logo p {
+  color: #ccc;
+  font-size: 15px;
 }
 
-.btn.whatsapp{
-
-    background:#25D366;
-
-    color:#fff;
-
+.invoice-actions {
+  display: flex;
+  gap: 12px;
 }
 
 /* ==========================
-PAGE TITLE
+   BUTTONS
 ========================== */
 
-.page-heading{
-
-    text-align:center;
-
-    margin-bottom:30px;
-
+.btn {
+  background: #d4af37;
+  color: #111;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.page-heading h1{
-
-    font-size:34px;
-
-    color:#111;
-
+.btn:hover {
+  transform: translateY(-2px);
+  background: #c59b19;
 }
 
-.page-heading p{
+.btn.secondary {
+  background: #444;
+  color: #fff;
+}
 
-    color:#666;
+.btn.secondary:hover {
+  background: #333;
+}
 
-    margin-top:6px;
+.btn.gold {
+  background: #d4af37;
+  color: #111;
+}
 
+.btn.danger {
+  background: #d32f2f;
+  color: #fff;
+}
+
+.btn.danger:hover {
+  background: #b71c1c;
 }
 
 /* ==========================
-INVOICE CARD
+   PAGE TITLE
 ========================== */
 
-.invoice-card{
+.page-heading {
+  text-align: center;
+  margin-bottom: 30px;
+}
 
-    width:210mm;
+.page-heading h1 {
+  font-size: 34px;
+  color: #111;
+}
 
-    min-height:297mm;
-
-    margin:auto;
-
-    background:#fff;
-
-    padding:20mm;
-
-    border:1px solid #ccc;
-
-    box-shadow:0 0 18px rgba(0,0,0,.08);
-
+.page-heading p {
+  color: #666;
+  margin-top: 6px;
 }
 
 /* ==========================
-LETTERHEAD
+   INVOICE PRINT AREA
 ========================== */
 
-.invoice-letterhead{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:25px;
-
-    border-bottom:3px solid #d4af37;
-
-    padding-bottom:18px;
-
-    margin-bottom:20px;
-
-}
-.letterhead-left{
-
-    width:170px;
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-}
-
-.letterhead-left img{
-
-    width:145px;
-
-    height:auto;
-
-    object-fit:contain;
-
-    display:block;
-
-}
-.letterhead-right{
-
-    flex:1;
-
-    text-align:center;
-
-}
-
-.letterhead-right h1{
-
-    font-size:30px;
-
-    color:#111;
-
-    margin-bottom:5px;
-
-    letter-spacing:1px;
-
-}
-
-.letterhead-right p{
-
-    font-size:14px;
-
-    line-height:1.7;
-
-    color:#444;
-
+#invoicePrintArea {
+  max-width: 210mm;
+  margin: auto;
+  background: #fff;
 }
 
 /* ==========================
-INVOICE TITLE
+   INVOICE CARD
 ========================== */
 
-.invoice-title{
-
-    text-align:center;
-
-    margin:25px 0;
-
+.invoice-card {
+  width: 210mm;
+  min-height: 297mm;
+  margin: auto;
+  background: #fff;
+  padding: 20mm;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.08);
+  transition: 0.3s ease;
 }
 
-.invoice-title h2{
+.invoice-card:hover {
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+}
 
-    display:inline-block;
+.invoice-card h3 {
+  font-size: 18px;
+  margin: 22px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #d4af37;
+  color: #111;
+}
 
-    border:2px solid #111;
+.invoice-card hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 22px 0;
+}
 
-    padding:8px 30px;
-
-    font-size:26px;
-
-    letter-spacing:2px;
-
+.invoice-card > *:last-child {
+  margin-bottom: 0;
 }
 
 /* ==========================
-INVOICE META
+   LETTERHEAD
 ========================== */
 
-.invoice-meta{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    gap:20px;
-
-    margin-bottom:25px;
-
+.invoice-letterhead {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  border-bottom: 3px solid #d4af37;
+  padding-bottom: 18px;
+  margin-bottom: 20px;
 }
 
-.invoice-meta label{
-
-    display:block;
-
-    font-weight:600;
-
-    margin-bottom:6px;
-
+.letterhead-left {
+  width: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.invoice-meta input{
-
-    width:240px;
-
-    border:1px solid #bbb;
-
-    padding:10px;
-
-    font-size:15px;
-
-}
-/* ==========================================
-BILL TO
-Part 2/6
-========================================== */
-
-.bill-grid{
-
-display:grid;
-
-grid-template-columns:1fr 1fr;
-
-gap:20px;
-
-margin-bottom:20px;
-
+.letterhead-left img {
+  width: 145px;
+  height: auto;
+  object-fit: contain;
+  display: block;
 }
 
-.field{
-
-margin-bottom:18px;
-
+.letterhead-right {
+  flex: 1;
+  text-align: center;
 }
 
-.field label{
+.letterhead-right h1 {
+  font-size: 30px;
+  color: #111;
+  margin-bottom: 5px;
+  letter-spacing: 1px;
+}
 
-display:block;
+.letterhead-right p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #444;
+}
 
-font-size:14px;
+/* ==========================
+   INVOICE TITLE
+========================== */
 
-font-weight:600;
+.invoice-title {
+  text-align: center;
+  margin: 25px 0;
+}
 
-margin-bottom:8px;
+.invoice-title h2 {
+  display: inline-block;
+  border: 2px solid #111;
+  padding: 8px 30px;
+  font-size: 26px;
+  letter-spacing: 2px;
+}
 
-color:#222;
+/* ==========================
+   INVOICE META
+========================== */
 
+.invoice-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.invoice-meta label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.invoice-meta input {
+  width: 240px;
+  border: 1px solid #bbb;
+  padding: 10px;
+  font-size: 15px;
+  font-family: "Poppins", sans-serif;
+}
+
+/* ==========================
+   FORM FIELDS
+========================== */
+
+.bill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.field {
+  margin-bottom: 18px;
+}
+
+.field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #222;
 }
 
 .field input,
-
 .field textarea,
-
-.field select{
-
-width:100%;
-
-padding:12px 14px;
-
-font-size:15px;
-
-font-family:'Poppins',sans-serif;
-
-border:1px solid #bdbdbd;
-
-border-radius:6px;
-
-outline:none;
-
-background:#fff;
-
-transition:.25s;
-
+.field select {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: "Poppins", sans-serif;
+  border: 1px solid #bdbdbd;
+  border-radius: 6px;
+  outline: none;
+  background: #fff;
+  transition: 0.25s ease;
 }
 
-.field textarea{
-
-resize:vertical;
-
-min-height:90px;
-
+.field textarea {
+  resize: vertical;
+  min-height: 90px;
 }
 
 .field input:focus,
-
 .field textarea:focus,
-
-.field select:focus{
-
-border-color:#d4af37;
-
-box-shadow:0 0 0 3px rgba(212,175,55,.15);
-
+.field select:focus,
+.invoice-meta input:focus {
+  border-color: #d4af37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
 }
 
-/* ==========================================
-SECTION HEADINGS
-========================================== */
+/* ==========================
+   INVOICE TABLE
+========================== */
 
-.invoice-card h3{
-
-font-size:18px;
-
-margin:22px 0 12px;
-
-padding-bottom:8px;
-
-border-bottom:2px solid #d4af37;
-
-color:#111;
-
+#invoiceTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  margin-bottom: 20px;
 }
 
-.invoice-card hr{
-
-border:none;
-
-border-top:1px solid #ddd;
-
-margin:22px 0;
-
+#invoiceTable thead {
+  background: #111;
+  color: #fff;
 }
 
-/* ==========================================
-INVOICE TABLE
-========================================== */
-
-#invoiceTable{
-
-width:100%;
-
-border-collapse:collapse;
-
-margin-top:15px;
-
-margin-bottom:20px;
-
+#invoiceTable th {
+  padding: 14px 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid #333;
 }
 
-#invoiceTable thead{
-
-background:#111;
-
-color:#fff;
-
+#invoiceTable td {
+  border: 1px solid #d9d9d9;
+  padding: 8px;
+  vertical-align: middle;
 }
 
-#invoiceTable th{
-
-padding:14px 10px;
-
-text-align:center;
-
-font-size:14px;
-
-font-weight:600;
-
-border:1px solid #333;
-
+#invoiceTable tbody tr {
+  transition: 0.2s ease;
 }
 
-#invoiceTable td{
-
-border:1px solid #d9d9d9;
-
-padding:8px;
-
-vertical-align:middle;
-
+#invoiceTable tbody tr:hover {
+  background: #faf8ef;
 }
 
-#invoiceTable tbody tr{
-
-transition:.2s;
-
+#invoiceTable td:first-child {
+  width: 60px;
+  text-align: center;
+  font-weight: 600;
 }
 
-#invoiceTable tbody tr:hover{
-
-background:#faf8ef;
-
-}
-
-#invoiceTable td:first-child{
-
-width:60px;
-
-text-align:center;
-
-font-weight:600;
-
-}
-
-#invoiceTable td:nth-child(2){
-
-min-width:320px;
-
+#invoiceTable td:nth-child(2) {
+  min-width: 320px;
 }
 
 #invoiceTable td:nth-child(3),
-
 #invoiceTable td:nth-child(4),
-
-#invoiceTable td:nth-child(5){
-
-width:110px;
-
-text-align:center;
-
+#invoiceTable td:nth-child(5) {
+  width: 110px;
+  text-align: center;
 }
 
-/* ==========================================
-TABLE INPUTS
-========================================== */
-
-#invoiceTable input{
-
-width:100%;
-
-border:none;
-
-background:transparent;
-
-padding:8px;
-
-font-size:15px;
-
-font-family:'Poppins',sans-serif;
-
-outline:none;
-
+#invoiceTable input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 8px;
+  font-size: 15px;
+  font-family: "Poppins", sans-serif;
+  outline: none;
 }
 
-#invoiceTable input[type="number"]{
-
-text-align:center;
-
+#invoiceTable input[type="number"] {
+  text-align: center;
 }
 
-.amount{
-
-font-weight:700;
-
-text-align:right;
-
-font-size:15px;
-
-padding-right:12px !important;
-
+.amount {
+  font-weight: 700;
+  text-align: right;
+  font-size: 15px;
+  padding-right: 12px !important;
 }
 
-/* ==========================================
-DELETE BUTTON
-========================================== */
+/* ==========================
+   DELETE BUTTON
+========================== */
 
-.delete-row{
-
-width:36px;
-
-height:36px;
-
-border:none;
-
-border-radius:6px;
-
-background:#d32f2f;
-
-color:#fff;
-
-cursor:pointer;
-
-transition:.25s;
-
+.delete-row {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 6px;
+  background: #d32f2f;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.25s ease;
 }
 
-.delete-row:hover{
-
-background:#b71c1c;
-
-transform:scale(1.05);
-
+.delete-row:hover {
+  background: #b71c1c;
+  transform: scale(1.05);
 }
 
-/* ==========================================
-TABLE ACTIONS
-========================================== */
+/* ==========================
+   TABLE ACTIONS
+========================== */
 
-.table-actions{
-
-display:flex;
-
-justify-content:flex-end;
-
-gap:12px;
-
-margin:15px 0 10px;
-
+.table-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin: 15px 0 10px;
 }
 
-.table-actions .btn{
-
-padding:10px 18px;
-
-font-size:14px;
-
-}
-/* ==========================================
-TOTAL SECTION
-Part 3/6
-========================================== */
-
-.invoice-total-wrapper{
-
-display:flex;
-
-justify-content:flex-end;
-
-margin:25px 0;
-
+.table-actions .btn {
+  padding: 10px 18px;
+  font-size: 14px;
 }
 
-.total-box{
+/* ==========================
+   TOTAL SECTION
+========================== */
 
-width:380px;
-
-border:2px solid #222;
-
-border-radius:8px;
-
-overflow:hidden;
-
-background:#fff;
-
+.invoice-total-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin: 25px 0;
 }
 
-.total-table{
-
-width:100%;
-
-border-collapse:collapse;
-
+.total-box {
+  width: 380px;
+  border: 2px solid #222;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
 }
 
-.total-table td{
-
-padding:14px 16px;
-
-border-bottom:1px solid #ddd;
-
-font-size:15px;
-
+.total-table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.total-table tr:last-child td{
-
-border-bottom:none;
-
+.total-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #ddd;
+  font-size: 15px;
 }
 
-.total-table td:first-child{
-
-font-weight:600;
-
-background:#fafafa;
-
-width:55%;
-
+.total-table tr:last-child td {
+  border-bottom: none;
 }
 
-.total-table td:last-child{
-
-text-align:right;
-
-font-weight:600;
-
+.total-table td:first-child {
+  font-weight: 600;
+  background: #fafafa;
+  width: 55%;
 }
 
-.total-table input{
-
-width:100%;
-
-border:none;
-
-background:transparent;
-
-text-align:right;
-
-font-size:15px;
-
-font-family:'Poppins',sans-serif;
-
-outline:none;
-
+.total-table td:last-child {
+  text-align: right;
+  font-weight: 600;
 }
 
-.grand-total-row{
-
-background:#111;
-
-color:#fff;
-
+.total-table input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: right;
+  font-size: 15px;
+  font-family: "Poppins", sans-serif;
+  outline: none;
 }
 
-.grand-total-row td{
-
-font-size:20px;
-
-font-weight:700;
-
-padding:18px 16px;
-
+.grand-total-row {
+  background: #111;
+  color: #fff;
 }
 
-#grandTotal{
-
-font-size:22px;
-
-color:#d4af37;
-
+.grand-total-row td {
+  font-size: 20px;
+  font-weight: 700;
+  padding: 18px 16px;
 }
 
-/* ==========================================
-AMOUNT IN WORDS
-========================================== */
-
-#amountWords{
-
-background:#fafafa;
-
-border:1px solid #d4af37;
-
-font-weight:500;
-
-color:#111;
-
-resize:none;
-
+#grandTotal {
+  font-size: 22px;
+  color: #d4af37;
 }
 
-/* ==========================================
-NOTES
-========================================== */
+/* ==========================
+   AMOUNT IN WORDS & NOTES
+========================== */
 
-#notes{
-
-line-height:1.8;
-
-font-size:14px;
-
-background:#fffdf5;
-
-border:1px solid #d4af37;
-
-resize:vertical;
-
+#amountWords {
+  background: #fafafa;
+  border: 1px solid #d4af37;
+  font-weight: 500;
+  color: #111;
+  resize: none;
 }
 
-/* ==========================================
-SIGNATURE SECTION
-========================================== */
+#notes {
+  line-height: 1.8;
+  font-size: 14px;
+  background: #fffdf5;
+  border: 1px solid #d4af37;
+  resize: vertical;
+}
 
-.signature-section{
+/* ==========================
+   SIGNATURE SECTION
+========================== */
 
-display:flex;
-
-justify-content:space-between;
-
-align-items:flex-end;
-
-margin-top:60px;
-
-gap:40px;
-
+.signature-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 60px;
+  gap: 40px;
 }
 
 .client-sign,
-
-.firm-sign{
-
-width:260px;
-
-text-align:center;
-
+.firm-sign {
+  width: 260px;
+  text-align: center;
 }
 
 .client-sign p,
-
-.firm-sign p{
-
-font-size:15px;
-
-font-weight:600;
-
-margin-bottom:10px;
-
-}
-
-.signature-line{
-
-border-top:2px solid #222;
-
-margin-top:50px;
-
-padding-top:10px;
-
-}
-
-.firm-sign img{
-
-max-width:180px;
-
-max-height:80px;
-
-object-fit:contain;
-
-margin-bottom:10px;
-
-}
-
-.firm-sign strong{
-
-font-size:16px;
-
-letter-spacing:.5px;
-
-}
-
-/* ==========================================
-DECLARATION
-========================================== */
-
-.invoice-declaration{
-
-margin-top:25px;
-
-padding:15px;
-
-border:1px solid #ddd;
-
-background:#fafafa;
-
-border-left:5px solid #d4af37;
-
-}
-
-.invoice-declaration p{
-
-font-size:13px;
-
-line-height:1.7;
-
-text-align:justify;
-
-color:#444;
-
-}
-
-/* ==========================================
-FOOTER
-========================================== */
-
-.invoice-footer{
-
-display:flex;
-
-justify-content:space-between;
-
-gap:30px;
-
-margin-top:30px;
-
-padding-top:15px;
-
-border-top:2px solid #d4af37;
-
-font-size:13px;
-
-line-height:1.7;
-
-}
-
-.footer-left{
-
-flex:1;
-
-}
-
-.footer-right{
-
-text-align:right;
-
-}
-
-.footer-left strong{
-
-font-size:15px;
-
-color:#111;
-
-}
-/* ==========================================
-BOTTOM ACTIONS
-Part 4/6
-========================================== */
-
-.bottom-actions{
-
-display:flex;
-
-justify-content:center;
-
-align-items:center;
-
-gap:15px;
-
-flex-wrap:wrap;
-
-margin:35px auto;
-
-}
-
-.bottom-actions .btn{
-
-min-width:180px;
-
-height:50px;
-
-font-size:15px;
-
-font-weight:600;
-
-border-radius:8px;
-
-}
-
-/* ==========================================
-WHATSAPP SECTION
-========================================== */
-
-.whatsapp-section{
-
-text-align:center;
-
-margin:30px auto 40px;
-
-padding:25px;
-
-background:#ffffff;
-
-border:2px solid #25D366;
-
-border-radius:12px;
-
-max-width:600px;
-
-}
-
-.whatsapp-section h3{
-
-font-size:22px;
-
-margin-bottom:10px;
-
-color:#111;
-
-}
-
-.whatsapp-section p{
-
-color:#666;
-
-margin-bottom:20px;
-
-line-height:1.6;
-
-}
-
-.whatsapp-section .btn{
-
-background:#25D366;
-
-color:#fff;
-
-font-size:17px;
-
-padding:14px 28px;
-
-}
-
-.whatsapp-section .btn:hover{
-
-background:#1ea952;
-
-}
-
-/* ==========================================
-LOADING POPUP
-========================================== */
-
-.loading-popup{
-
-display:none;
-
-position:fixed;
-
-top:0;
-
-left:0;
-
-width:100%;
-
-height:100%;
-
-background:rgba(0,0,0,.6);
-
-z-index:99999;
-
-justify-content:center;
-
-align-items:center;
-
-}
-
-.loading-box{
-
-background:#fff;
-
-padding:40px;
-
-border-radius:12px;
-
-text-align:center;
-
-width:320px;
-
-box-shadow:0 10px 30px rgba(0,0,0,.25);
-
-}
-
-.loading-box i{
-
-font-size:48px;
-
-color:#d4af37;
-
-margin-bottom:15px;
-
-}
-
-.loading-box p{
-
-font-size:16px;
-
-font-weight:500;
-
-color:#333;
-
-}
-
-/* ==========================================
-SUCCESS / ERROR POPUP
-========================================== */
-
-.popup-overlay{
-
-display:none;
-
-position:fixed;
-
-top:0;
-
-left:0;
-
-width:100%;
-
-height:100%;
-
-background:rgba(0,0,0,.55);
-
-justify-content:center;
-
-align-items:center;
-
-z-index:99999;
-
-}
-
-.popup-card{
-
-background:#fff;
-
-width:420px;
-
-max-width:92%;
-
-padding:35px;
-
-border-radius:14px;
-
-text-align:center;
-
-box-shadow:0 12px 35px rgba(0,0,0,.20);
-
-}
-
-.popup-card h2{
-
-margin:15px 0;
-
-font-size:26px;
-
-}
-
-.popup-card p{
-
-line-height:1.7;
-
-color:#666;
-
-margin-bottom:25px;
-
-}
-
-.success-icon{
-
-font-size:65px;
-
-color:#25D366;
-
-}
-
-.error-icon{
-
-font-size:65px;
-
-color:#d32f2f;
-
-}
-
-.popup-card .btn{
-
-min-width:140px;
-
-}
-
-/* ==========================================
-SMOOTH EFFECTS
-========================================== */
-
-button,
-
-input,
-
-textarea,
-
-select{
-
-transition:.25s ease;
-
-}
-
-button:hover{
-
-transform:translateY(-2px);
-
-}
-
-.invoice-card{
-
-transition:.30s;
-
-}
-
-.invoice-card:hover{
-
-box-shadow:0 12px 35px rgba(0,0,0,.12);
-
-}
-/* ==========================================
-RESPONSIVE DESIGN
-Part 5/6
-========================================== */
-
-/* ---------- Laptop ---------- */
-
-@media (max-width:1200px){
-
-.invoice-card{
-
-width:100%;
-
-padding:35px;
-
-}
-
-}
-
-/* ---------- Tablet ---------- */
-
-@media (max-width:992px){
-
-body{
-
-padding:15px;
-
-}
-
-.invoice-header{
-
-flex-direction:column;
-
-gap:20px;
-
-text-align:center;
-
-}
-
-.invoice-actions{
-
-flex-wrap:wrap;
-
-justify-content:center;
-
-}
-
-.invoice-letterhead{
-
-flex-direction:column;
-
-text-align:center;
-
-}
-
-.letterhead-left{
-
-width:auto;
-
-margin-bottom:15px;
-
-}
-
-.letterhead-right{
-
-text-align:center;
-
-}
-
-.invoice-meta{
-
-flex-direction:column;
-
-}
-
-.invoice-meta input{
-
-width:100%;
-
-}
-
-.bill-grid{
-
-grid-template-columns:1fr;
-
-}
-
-.invoice-total-wrapper{
-
-justify-content:center;
-
-}
-
-.signature-section{
-
-flex-direction:column;
-
-align-items:center;
-
-gap:50px;
-
-}
-
-.invoice-footer{
-
-flex-direction:column;
-
-text-align:center;
-
-}
-
-.footer-right{
-
-text-align:center;
-
-}
-
-}
-
-/* ---------- Mobile ---------- */
-
-@media (max-width:768px){
-
-body{
-
-padding:10px;
-
-}
-
-.invoice-card{
-
-padding:20px;
-
-}
-
-.invoice-logo{
-
-flex-direction:column;
-
-text-align:center;
-
-}
-
-.invoice-logo img{
-
-width:60px;
-
-}
-
-.invoice-logo h2{
-
-font-size:22px;
-
-}
-
-.page-heading h1{
-
-font-size:26px;
-
-}
-
-.invoice-title h2{
-
-font-size:20px;
-
-padding:8px 18px;
-
-}
-
-.table-actions{
-
-flex-direction:column;
-
-}
-
-.table-actions .btn{
-
-width:100%;
-
-}
-
-.bottom-actions{
-
-flex-direction:column;
-
-}
-
-.bottom-actions .btn{
-
-width:100%;
-
-}
-
-.total-box{
-
-width:100%;
-
-}
-
-.client-sign,
-
-.firm-sign{
-
-width:100%;
-
-}
-
-.whatsapp-section{
-
-padding:20px;
-
-}
-
-.popup-card{
-
-padding:25px;
-
-}
-
-}
-
-/* ---------- Small Mobile ---------- */
-
-@media (max-width:600px){
-
-#invoiceTable{
-
-display:block;
-
-overflow-x:auto;
-
-white-space:nowrap;
-
-}
-
-#invoiceTable th,
-
-#invoiceTable td{
-
-font-size:13px;
-
-padding:8px;
-
-}
-
-#invoiceTable input{
-
-font-size:13px;
-
-}
-
-.invoice-letterhead h1{
-
-font-size:22px;
-
-}
-
-.letterhead-right p{
-
-font-size:12px;
-
-}
-
-.invoice-meta{
-
-gap:12px;
-
-}
-
-.invoice-meta label{
-
-font-size:13px;
-
-}
-
-.invoice-meta input{
-
-font-size:14px;
-
-}
-
-.field input,
-
-.field textarea,
-
-.field select{
-
-font-size:14px;
-
-}
-
-.grand-total-row td{
-
-font-size:18px;
-
-}
-
-#grandTotal{
-
-font-size:20px;
-
-}
-
-}
-
-/* ---------- Extra Small ---------- */
-
-@media (max-width:420px){
-
-.invoice-card{
-
-padding:15px;
-
-}
-
-.invoice-title h2{
-
-font-size:18px;
-
+.firm-sign p {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
 }
-
-.invoice-logo h2{
 
-font-size:20px;
-
+.signature-line {
+  border-top: 2px solid #222;
+  margin-top: 50px;
+  padding-top: 10px;
 }
-
-.page-heading h1{
 
-font-size:22px;
-
+.firm-sign strong {
+  font-size: 16px;
+  letter-spacing: 0.5px;
 }
-
-.btn{
 
-font-size:14px;
+/* ==========================
+   FOOTER
+========================== */
 
-padding:10px 16px;
-
+.invoice-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  margin-top: 30px;
+  padding-top: 15px;
+  border-top: 2px solid #d4af37;
+  font-size: 13px;
+  line-height: 1.7;
 }
-
-.loading-box{
-
-width:90%;
 
+.footer-left {
+  flex: 1;
 }
 
-.popup-card{
-
-width:90%;
-
+.footer-right {
+  text-align: right;
 }
 
+.footer-left strong {
+  font-size: 15px;
+  color: #111;
 }
-/* ==========================================
-PRINT & PDF
-Part 6/6
-========================================== */
-
-@page{
-
-size:A4 portrait;
 
-margin:10mm;
+/* ==========================
+   BOTTOM ACTIONS
+========================== */
 
+.bottom-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin: 35px auto;
 }
-
-@media print{
-
-html,
-body{
-
-background:#ffffff !important;
-
-margin:0 !important;
-
-padding:0 !important;
-
-width:210mm;
-
-height:297mm;
 
+.bottom-actions .btn {
+  min-width: 180px;
+  height: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
 }
 
-/* Hide Everything */
+/* ==========================
+   POPUPS
+========================== */
 
-.invoice-header,
-.page-heading,
-.bottom-actions,
-.whatsapp-section,
 .loading-popup,
-.popup-overlay{
-
-display:none !important;
-
+.popup-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 99999;
+  justify-content: center;
+  align-items: center;
 }
 
-/* Print Area */
-
-#invoicePrintArea{
-
-display:block !important;
-
-margin:0 !important;
-
-padding:0 !important;
-
-width:100%;
-
+.popup-overlay {
+  background: rgba(0, 0, 0, 0.55);
 }
 
-/* Invoice */
-
-.invoice-card{
-
-width:190mm;
-
-min-height:auto;
-
-margin:0 auto;
-
-padding:12mm;
-
-border:none;
-
-box-shadow:none;
-
-background:#ffffff;
-
-page-break-after:avoid;
-
-page-break-before:avoid;
-
-page-break-inside:avoid;
-
+.loading-box {
+  background: #fff;
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  width: 320px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
-/* Prevent Page Break */
-
-table,
-tr,
-td,
-th,
-img,
-.signature-section,
-.invoice-total-wrapper,
-.invoice-footer,
-.invoice-declaration{
-
-page-break-inside:avoid;
-
-break-inside:avoid;
-
+.loading-box i {
+  font-size: 48px;
+  color: #d4af37;
+  margin-bottom: 15px;
 }
 
-/* Table */
-
-#invoiceTable{
-
-font-size:13px;
-
+.loading-box p {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
 }
 
-#invoiceTable th{
-
-padding:8px;
-
+.popup-card {
+  background: #fff;
+  width: 420px;
+  max-width: 92%;
+  padding: 35px;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
 }
 
-#invoiceTable td{
-
-padding:7px;
-
+.popup-card h2 {
+  margin: 15px 0;
+  font-size: 26px;
 }
 
-/* Remove Borders From Inputs */
-
-input,
-textarea,
-select{
-
-border:none !important;
-
-background:transparent !important;
-
-box-shadow:none !important;
-
-outline:none !important;
-
-padding:0 !important;
-
-color:#000 !important;
-
-resize:none;
-
+.popup-card p {
+  line-height: 1.7;
+  color: #666;
+  margin-bottom: 25px;
 }
 
-/* Hide Buttons */
-
-button{
-
-display:none !important;
-
+.success-icon {
+  font-size: 65px;
+  color: #25d366;
 }
 
-/* Text */
-
-body,
-p,
-span,
-strong,
-td,
-th,
-label{
-
-color:#000 !important;
-
+.error-icon {
+  font-size: 65px;
+  color: #d32f2f;
 }
 
-/* Letterhead */
-
-.invoice-letterhead{
-
-margin-bottom:12px;
-
-padding-bottom:12px;
-
+.popup-card .btn {
+  min-width: 140px;
 }
 
-/* Footer */
+/* ==========================
+   RESPONSIVE DESIGN
+========================== */
 
-.invoice-footer{
-
-margin-top:18px;
-
-font-size:12px;
-
+@media (max-width: 1200px) {
+  .invoice-card {
+    width: 100%;
+    padding: 35px;
+  }
 }
 
-/* Signature */
+@media (max-width: 992px) {
+  body {
+    padding: 15px;
+  }
 
-.signature-section{
+  .invoice-header {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
 
-margin-top:35px;
+  .invoice-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 
+  .invoice-letterhead {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .letterhead-left {
+    width: auto;
+    margin-bottom: 15px;
+  }
+
+  .letterhead-right {
+    text-align: center;
+  }
+
+  .invoice-meta {
+    flex-direction: column;
+  }
+
+  .invoice-meta input {
+    width: 100%;
+  }
+
+  .bill-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .invoice-total-wrapper {
+    justify-content: center;
+  }
+
+  .signature-section {
+    flex-direction: column;
+    align-items: center;
+    gap: 50px;
+  }
+
+  .invoice-footer {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .footer-right {
+    text-align: center;
+  }
 }
 
-/* Notes */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
 
-#notes{
+  .invoice-card {
+    padding: 20px;
+  }
 
-min-height:70px;
+  .invoice-logo {
+    flex-direction: column;
+    text-align: center;
+  }
 
+  .invoice-logo img {
+    width: 60px;
+  }
+
+  .invoice-logo h2 {
+    font-size: 22px;
+  }
+
+  .page-heading h1 {
+    font-size: 26px;
+  }
+
+  .invoice-title h2 {
+    font-size: 20px;
+    padding: 8px 18px;
+  }
+
+  .table-actions {
+    flex-direction: column;
+  }
+
+  .table-actions .btn,
+  .bottom-actions .btn {
+    width: 100%;
+  }
+
+  .bottom-actions {
+    flex-direction: column;
+  }
+
+  .total-box,
+  .client-sign,
+  .firm-sign {
+    width: 100%;
+  }
+
+  .popup-card {
+    padding: 25px;
+  }
 }
 
-/* Amount Words */
+@media (max-width: 600px) {
+  #invoiceTable {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
 
-#amountWords{
+  #invoiceTable th,
+  #invoiceTable td {
+    font-size: 13px;
+    padding: 8px;
+  }
 
-min-height:45px;
+  #invoiceTable input {
+    font-size: 13px;
+  }
 
+  .letterhead-right h1 {
+    font-size: 22px;
+  }
+
+  .letterhead-right p {
+    font-size: 12px;
+  }
+
+  .invoice-meta {
+    gap: 12px;
+  }
+
+  .invoice-meta label,
+  .field label {
+    font-size: 13px;
+  }
+
+  .invoice-meta input,
+  .field input,
+  .field textarea,
+  .field select {
+    font-size: 14px;
+  }
+
+  .grand-total-row td {
+    font-size: 18px;
+  }
+
+  #grandTotal {
+    font-size: 20px;
+  }
 }
 
+@media (max-width: 420px) {
+  .invoice-card {
+    padding: 15px;
+  }
+
+  .invoice-title h2 {
+    font-size: 18px;
+  }
+
+  .invoice-logo h2 {
+    font-size: 20px;
+  }
+
+  .page-heading h1 {
+    font-size: 22px;
+  }
+
+  .btn {
+    font-size: 14px;
+    padding: 10px 16px;
+  }
+
+  .loading-box,
+  .popup-card {
+    width: 90%;
+  }
 }
 
-/* ==========================================
-PDF OPTIMIZATION
-========================================== */
+/* ==========================
+   PRINT & PDF
+========================== */
 
-#invoicePrintArea{
-
-max-width:210mm;
-
-margin:auto;
-
-background:#fff;
-
+@page {
+  size: A4 portrait;
+  margin: 10mm;
 }
 
-/* ==========================================
-REMOVE EXTRA SPACING
-========================================== */
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm;
+    min-height: 297mm;
+  }
 
-.invoice-card>*:last-child{
+  .invoice-header,
+  .page-heading,
+  .bottom-actions,
+  .loading-popup,
+  .popup-overlay {
+    display: none !important;
+  }
 
-margin-bottom:0;
+  #invoicePrintArea {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+    max-width: none;
+  }
 
+  .invoice-card {
+    width: 190mm;
+    min-height: auto;
+    margin: 0 auto;
+    padding: 12mm;
+    border: none;
+    box-shadow: none;
+    background: #fff;
+    page-break-before: avoid;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  table,
+  tr,
+  td,
+  th,
+  img,
+  .signature-section,
+  .invoice-total-wrapper,
+  .invoice-footer {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  #invoiceTable {
+    font-size: 13px;
+  }
+
+  #invoiceTable th {
+    padding: 8px;
+  }
+
+  #invoiceTable td {
+    padding: 7px;
+  }
+
+  input,
+  textarea,
+  select {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    color: #000 !important;
+    resize: none;
+  }
+
+  button {
+    display: none !important;
+  }
+
+  body,
+  p,
+  span,
+  strong,
+  td,
+  th,
+  label {
+    color: #000 !important;
+  }
+
+  .invoice-letterhead {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+
+  .invoice-footer {
+    margin-top: 18px;
+    font-size: 12px;
+  }
+
+  .signature-section {
+    margin-top: 35px;
+  }
+
+  #notes {
+    min-height: 70px;
+  }
+
+  #amountWords {
+    min-height: 45px;
+  }
 }
-
-hr{
-
-margin:12px 0;
-
-}
-
-/* ==========================================
-PRINT COLORS
-========================================== */
-
-*{
-
--webkit-print-color-adjust:exact;
-
-print-color-adjust:exact;
-
-}
-
-/* ==========================================
-END
-========================================== */
