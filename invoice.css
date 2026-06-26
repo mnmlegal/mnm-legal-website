@@ -545,7 +545,6 @@ body {
 
 /* =====================================================
    PRINT / PDF ONLY - SINGLE PAGE FIX
-   This section does not affect normal page view.
 ===================================================== */
 
 @page {
@@ -557,11 +556,10 @@ body {
   html,
   body {
     width: 210mm !important;
-    height: 297mm !important;
+    min-height: 297mm !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #fff !important;
-    overflow: hidden !important;
   }
 
   .invoice-header,
@@ -577,22 +575,20 @@ body {
   #invoicePrintArea {
     width: 200mm !important;
     max-width: 200mm !important;
-    height: 287mm !important;
     margin: 0 auto !important;
     padding: 0 !important;
     background: #fff !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   .invoice-card {
     width: 200mm !important;
-    height: 287mm !important;
-    min-height: 287mm !important;
+    min-height: auto !important;
     margin: 0 auto !important;
     padding: 5mm 7mm !important;
     border: none !important;
     box-shadow: none !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   .invoice-letterhead {
@@ -676,7 +672,7 @@ body {
     line-height: 1.2 !important;
     color: #000 !important;
     resize: none !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   .invoice-card h3 {
@@ -746,11 +742,16 @@ body {
   #amountWords {
     min-height: 8mm !important;
     font-size: 8.5pt !important;
+    overflow: visible !important;
   }
 
   #notes {
-    min-height: 20mm !important;
-    font-size: 8pt !important;
+    height: auto !important;
+    min-height: 32mm !important;
+    max-height: none !important;
+    overflow: visible !important;
+    white-space: pre-wrap !important;
+    font-size: 7.5pt !important;
     line-height: 1.25 !important;
   }
 
