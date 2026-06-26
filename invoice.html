@@ -1,925 +1,310 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta charset="UTF-8">
+  <title>MNM Legal Associates | Invoice Generator</title>
+  <meta name="description" content="Professional Invoice Generator for MNM Legal Associates">
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-<title>MNM Legal Associates | Invoice Generator</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="invoice.css">
 
-<meta name="description"
-content="Professional Invoice Generator for MNM Legal Associates">
-
-<link rel="stylesheet"
-href="style.css">
-
-<link rel="stylesheet"
-href="invoice.css">
-
-<link rel="preconnect"
-href="https://fonts.googleapis.com">
-
-<link rel="preconnect"
-href="https://fonts.gstatic.com"
-crossorigin>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-rel="stylesheet">
-
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body>
-
-<!-- ==========================
-LOGIN CHECK
-========================== -->
-
-<script>
-
-if(localStorage.getItem("loggedIn")!=="yes"){
-window.location.href="login.html";
-}
-
-</script>
-
-<!-- ==========================
-HEADER
-========================== -->
-
-<header class="invoice-header">
-
-<div class="invoice-logo">
-
-<a href="dashboard.html">
-
-<img
-src="images/logo.png"
-alt="MNM Legal Associates">
-
-</a>
-
-<div>
-
-<h2>
-
-MNM LEGAL ASSOCIATES
-
-</h2>
-
-<p>
-
-Advocates & Legal Consultants
-
-</p>
-
-</div>
-
-</div>
-
-<div class="invoice-actions">
-
-<a
-href="dashboard.html"
-class="btn secondary">
-
-<i class="fa-solid fa-house"></i>
-
-Dashboard
-
-</a>
-
-<button
-type="button"
-id="printBtn"
-class="btn">
-
-<i class="fa-solid fa-print"></i>
-
-Print
-
-</button>
-
-<button
-type="button"
-id="downloadPdf"
-class="btn gold">
-
-<i class="fa-solid fa-file-pdf"></i>
-
-Download PDF
-
-</button>
-
-</div>
-
-</header>
-
-<!-- ==========================
-PAGE TITLE
-========================== -->
-
-<section class="page-heading">
-
-<h1>
-
-Invoice Generator
-
-</h1>
-
-<p>
-
-Professional Billing System
-for MNM Legal Associates
-
-</p>
-
-</section>
-
-<!-- ==========================
-PRINT AREA START
-========================== -->
-
-<div id="invoicePrintArea">
-
-
-<div class="invoice-card">
-
-<!-- LETTERHEAD -->
-
-<div class="invoice-letterhead">
-
-<div class="letterhead-left">
-
-<img src="images/letterhead-logo.png"
-alt="MNM Legal Associates">
-
-</div>
-
-<div class="letterhead-right">
-
-<h1>MNM LEGAL ASSOCIATES</h1>
-
-<p>
-Advocates & Legal Consultants
-</p>
-
-<p>
-
-Office No. 511,
-Vedmata Cooperative Housing Society,
-IOC Road,
-Chandkheda,
-Ahmedabad - 382424
-
-</p>
-
-<p>
-
-Mob :
-+91 9898172734
-
-|
-
-Email :
-mnmlegal.in@gmail.com
-  Website: www.mnmlegals.com
-
-</p>
-
-</div>
-
-</div>
-
-<hr>
-
-<div class="invoice-title">
-
-<h2>
-
-TAX INVOICE
-
-</h2>
-
-</div>
-
-<div class="invoice-meta">
-
-<div>
-
-<label>
-
-Invoice No.
-
-</label>
-
-<input
-type="text"
-id="invoiceNo"
-placeholder="Invoice Number">
-
-</div>
-
-<div>
-
-<label>
-
-Invoice Date
-
-</label>
-
-<input
-type="date"
-id="invoiceDate">
-
-</div>
-
-</div>
-
-<hr>
-
-<h3>
-
-Bill To
-
-</h3>
-
-<div class="bill-grid">
-
-<div class="field">
-
-<label>
-
-Client Name
-
-</label>
-
-<input
-type="text"
-id="clientName">
-
-</div>
-
-<div class="field">
-
-<label>
-
-Mobile Number
-
-</label>
-
-<input
-type="text"
-id="clientMobile">
-
-</div>
-
-</div>
-
-<div class="field">
-
-<label>
-
-Client Address
-
-</label>
-
-<textarea
-id="clientAddress"
-rows="3">
-
-</textarea>
-
-</div>
-
-<hr>
-
-<h3>
-
-Invoice Details
-
-</h3>
-
-<table
-id="invoiceTable">
-
-<thead>
-
-<tr>
-
-<th>
-
-Sr.
-
-</th>
-
-<th>
-
-Particular
-
-</th>
-
-<th>
-
-Qty
-
-</th>
-
-<th>
-
-Rate
-
-</th>
-
-<th>
-
-Amount
-
-</th>
-
-<th>
-
-×
-
-</th>
-
-</tr>
-
-</thead>
-
-<tbody id="invoiceBody">
-
-<tr>
-
-<td>
-
-1
-
-</td>
-
-<td>
-
-<input
-type="text"
-class="particular">
-
-</td>
-
-<td>
-
-<input
-type="number"
-class="qty"
-value="1">
-
-</td>
-
-<td>
-
-<input
-type="number"
-class="rate"
-value="0">
-
-</td>
-
-<td class="amount">
-
-₹0.00
-
-</td>
-
-<td>
-
-<button
-type="button"
-class="delete-row">
-
-<i class="fa-solid fa-trash"></i>
-
-</button>
-
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
-  <!-- ==========================
-TABLE ACTIONS
-========================== -->
-
-<div class="table-actions">
-
-<button
-type="button"
-id="addItemBtn"
-class="btn">
-
-<i class="fa-solid fa-plus"></i>
-
-Add Item
-
-</button>
-
-<button
-type="button"
-id="clearTableBtn"
-class="btn secondary">
-
-<i class="fa-solid fa-trash"></i>
-
-Clear Items
-
-</button>
-
-</div>
-
-<hr>
-
-<!-- ==========================
-TOTAL
-========================== -->
-
-<div class="invoice-total-wrapper">
-
-<div class="total-box">
-
-<table class="total-table">
-
-<tr>
-
-<td>
-
-Sub Total
-
-</td>
-
-<td id="subTotal">
-
-₹0.00
-
-</td>
-
-</tr>
-
-<tr>
-
-<td>
-
-Discount
-
-</td>
-
-<td>
-
-<input
-type="number"
-id="discount"
-value="0"
-min="0">
-
-</td>
-
-</tr>
-
-<tr class="grand-total-row">
-
-<td>
-
-<strong>
-
-Grand Total
-
-</strong>
-
-</td>
-
-<td>
-
-<strong id="grandTotal">
-
-₹0.00
-
-</strong>
-
-</td>
-
-</tr>
-
-</table>
-
-</div>
-
-</div>
-
-<hr>
-
-<!-- ==========================
-AMOUNT IN WORDS
-========================== -->
-
-<div class="field">
-
-<label>
-
-Amount in Words
-
-</label>
-
-<textarea
-id="amountWords"
-rows="2"
-readonly>
-
-</textarea>
-
-</div>
-
-<hr>
-
-<!-- ==========================
-PROFESSIONAL NOTES
-========================== -->
-
-<div class="field">
-
-<label>
-
-Notes
-
-</label>
-
-<textarea
-id="notes"
-rows="5">
-
-Professional fees towards legal consultation, drafting, appearance and other agreed legal services.
+  <script>
+    if (localStorage.getItem("loggedIn") !== "yes") {
+      window.location.href = "login.html";
+    }
+  </script>
+
+  <header class="invoice-header">
+    <div class="invoice-logo">
+      <a href="dashboard.html">
+        <img src="images/logo.png" alt="MNM Legal Associates">
+      </a>
+
+      <div>
+        <h2>MNM LEGAL ASSOCIATES</h2>
+        <p>Advocates & Legal Consultants</p>
+      </div>
+    </div>
+
+    <div class="invoice-actions">
+      <a href="dashboard.html" class="btn secondary">
+        <i class="fa-solid fa-house"></i>
+        Dashboard
+      </a>
+
+      <button type="button" id="printBtn" class="btn">
+        <i class="fa-solid fa-print"></i>
+        Print
+      </button>
+
+      <button type="button" id="downloadPdf" class="btn gold">
+        <i class="fa-solid fa-file-pdf"></i>
+        Download PDF
+      </button>
+    </div>
+  </header>
+
+  <section class="page-heading">
+    <h1>Invoice Generator</h1>
+    <p>Professional Billing System for MNM Legal Associates</p>
+  </section>
+
+  <main id="invoicePrintArea">
+    <section class="invoice-card">
+      <div class="invoice-letterhead">
+        <div class="letterhead-left">
+          <img src="images/letterhead-logo.png" alt="MNM Legal Associates">
+        </div>
+
+        <div class="letterhead-right">
+          <h1>MNM LEGAL ASSOCIATES</h1>
+          <p>Advocates & Legal Consultants</p>
+          <p>
+            Office No. 511, Vedmata Cooperative Housing Society, IOC Road,
+            Chandkheda, Ahmedabad - 382424
+          </p>
+          <p>
+            Mob: +91 9898172734 |
+            Email: mnmlegal.in@gmail.com |
+            Website: www.mnmlegal.in
+          </p>
+        </div>
+      </div>
+
+      <div class="invoice-title">
+        <h2>TAX INVOICE</h2>
+      </div>
+
+      <div class="invoice-meta">
+        <div>
+          <label for="invoiceNo">Invoice No.</label>
+          <input type="text" id="invoiceNo" placeholder="Invoice Number">
+        </div>
+
+        <div>
+          <label for="invoiceDate">Invoice Date</label>
+          <input type="date" id="invoiceDate">
+        </div>
+      </div>
+
+      <hr>
+
+      <h3>Bill To</h3>
+
+      <div class="bill-grid">
+        <div class="field">
+          <label for="clientName">Client Name</label>
+          <input type="text" id="clientName">
+        </div>
+
+        <div class="field">
+          <label for="clientMobile">Mobile Number</label>
+          <input type="text" id="clientMobile">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="clientAddress">Client Address</label>
+        <textarea id="clientAddress" rows="3"></textarea>
+      </div>
+
+      <hr>
+
+      <h3>Invoice Details</h3>
+
+      <table id="invoiceTable">
+        <thead>
+          <tr>
+            <th>Sr.</th>
+            <th>Particular</th>
+            <th>Qty</th>
+            <th>Rate</th>
+            <th>Amount</th>
+            <th>×</th>
+          </tr>
+        </thead>
+
+        <tbody id="invoiceBody">
+          <tr>
+            <td class="serial">1</td>
+            <td>
+              <input type="text" class="particular" placeholder="Professional Charges">
+            </td>
+            <td>
+              <input type="number" class="qty" value="1" min="1">
+            </td>
+            <td>
+              <input type="number" class="rate" value="0" min="0">
+            </td>
+            <td class="amount">₹0.00</td>
+            <td>
+              <button type="button" class="delete-row">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="table-actions">
+        <button type="button" id="addItemBtn" class="btn">
+          <i class="fa-solid fa-plus"></i>
+          Add Item
+        </button>
+
+        <button type="button" id="clearTableBtn" class="btn secondary">
+          <i class="fa-solid fa-trash"></i>
+          Clear Items
+        </button>
+      </div>
+
+      <hr>
+
+      <div class="invoice-total-wrapper">
+        <div class="total-box">
+          <table class="total-table">
+            <tr>
+              <td>Sub Total</td>
+              <td id="subTotal">₹0.00</td>
+            </tr>
+
+            <tr>
+              <td>
+                <label for="discount">Discount</label>
+              </td>
+              <td>
+                <input type="number" id="discount" value="0" min="0">
+              </td>
+            </tr>
+
+            <tr class="grand-total-row">
+              <td><strong>Grand Total</strong></td>
+              <td><strong id="grandTotal">₹0.00</strong></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="field">
+        <label for="amountWords">Amount in Words</label>
+        <textarea id="amountWords" rows="2" readonly></textarea>
+      </div>
+
+      <hr>
+
+      <div class="field">
+        <label for="notes">Notes</label>
+        <textarea id="notes" rows="5">Professional fees towards legal consultation, drafting, appearance and other agreed legal services.
 
 Court fees, Government fees, Stamp Duty, Registration Charges, Travelling Expenses and other out-of-pocket expenses shall be borne separately unless specifically agreed.
 
-Professional fees once paid shall ordinarily not be refundable after commencement of work.
-
-</textarea>
-
-</div>
-
-<hr>
-
-<!-- ==========================
-SIGNATURE
-========================== -->
-
-<div class="signature-section">
-
-<div class="client-sign">
-
-<p>
-
-Client Signature
-
-</p>
-
-<div class="signature-line">
-
-</div>
-
-</div>
-
-<div class="firm-sign">
-
-
-
-
-<p>
-
-<strong>
-
-FOR MNM LEGAL ASSOCIATES
-
-</strong>
-
-</p>
-
-</div>
-
-</div>
-  <hr>
-
-
-<hr>
-
-<!-- ==========================
-FOOTER
-========================== -->
-
-<div class="invoice-footer">
-
-<div class="footer-left">
-
-<p>
-
-<strong>Thank you for choosing MNM legal Associates</strong><br>
-
-
-</p>
-
-</div>
-
-<div class="footer-right">
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- END invoice-card -->
-
-</div>
-
-<!-- END invoicePrintArea -->
-
-<!-- ==========================
-BOTTOM ACTION BUTTONS
-========================== -->
-
-<div class="bottom-actions">
-
-<button
-type="button"
-id="previewBtn"
-class="btn">
-
-<i class="fa-solid fa-eye"></i>
-
-Preview
-
-</button>
-
-<button
-type="button"
-id="downloadPdfBottom"
-class="btn gold">
-
-<i class="fa-solid fa-file-pdf"></i>
-
-Download PDF
-
-</button>
-
-<button
-type="button"
-id="printInvoiceBottom"
-class="btn">
-
-<i class="fa-solid fa-print"></i>
-
-Print
-
-</button>
-
-<button
-type="button"
-id="clearInvoiceBtn"
-class="btn danger">
-
-<i class="fa-solid fa-trash"></i>
-
-Clear
-
-</button>
-
-</div>
-
-
-<!-- ==========================
-POPUPS
-========================== -->
-
-<div id="loadingPopup" class="loading-popup">
-
-<div class="loading-box">
-
-<i class="fa-solid fa-spinner fa-spin"></i>
-
-<p>Generating PDF...</p>
-
-</div>
-
-</div>
-
-<div id="successPopup" class="popup-overlay">
-
-<div class="popup-card">
-
-<i class="fa-solid fa-circle-check success-icon"></i>
-
-<h2>Invoice Generated Successfully</h2>
-
-<p>Your PDF has been generated successfully.</p>
-
-<button
-id="closeSuccessPopup"
-class="btn gold">
-
-OK
-
-</button>
-
-</div>
-
-</div>
-
-<div id="errorPopup" class="popup-overlay">
-
-<div class="popup-card">
-
-<i class="fa-solid fa-circle-xmark error-icon"></i>
-
-<h2>Error</h2>
-
-<p id="errorMessage"></p>
-
-<button
-id="closeErrorPopup"
-class="btn">
-
-Close
-
-</button>
-
-</div>
-
-</div>
-
-<a id="downloadLink" style="display:none;"></a>
-
-<input
-type="file"
-id="hiddenFile"
-style="display:none;">
-
-<script src="invoice.js"></script>
-
-
-
-
-<!-- ==========================
-LOADING POPUP
-========================== -->
-
-<div
-id="loadingPopup"
-class="loading-popup">
-
-<div class="loading-box">
-
-<i class="fa-solid fa-spinner fa-spin"></i>
-
-<p>
-
-Generating PDF...
-
-Please wait.
-
-</p>
-
-</div>
-
-</div>
-<!-- ==========================
-SUCCESS MESSAGE
-========================== -->
-
-<div id="successPopup" class="popup-overlay">
-
-<div class="popup-card">
-
-<i class="fa-solid fa-circle-check success-icon"></i>
-
-<h2>
-
-Invoice Generated Successfully
-
-</h2>
-
-<p>
-
-Your invoice has been generated successfully.
-
-You can now Print or Download the PDF.
-
-</p>
-
-
-
-</div>
-
-</div>
-
-
-</body>
-</html>
-
-<!-- ==========================
-JAVASCRIPT FILES
-========================== -->
-
-<script src="invoice.js"></script>
-
-</body>
-
-
-<!-- ==========================
-HIDDEN SETTINGS
-========================== -->
-
-<input
-type="hidden"
-id="officeName"
-value="MNM Legal Associates">
-
-<input
-type="hidden"
-id="officePhone"
-value="+91 9898172734">
-
-<input
-type="hidden"
-id="officeEmail"
-value="mnmlegal.in@gmail.com">
-
-<input
-type="hidden"
-id="officeWebsite"
-value="https://www.mnmlegal.in">
-
-<input
-type="hidden"
-id="officeAddress"
-value="Office No. 511, Vedmata Cooperative Housing Society, IOC Road, Chandkheda, Ahmedabad - 382424">
-
-<!-- ==========================
-PDF OPTIONS
-========================== -->
-
-<div id="pdfOptions" style="display:none;">
-
-<input
-type="hidden"
-id="pdfFileName"
-value="MNM-Invoice">
-
-<input
-type="hidden"
-id="pdfPageSize"
-value="a4">
-
-<input
-type="hidden"
-id="pdfOrientation"
-value="portrait">
-
-</div>
-
-<!-- ==========================
-FUTURE FEATURES PLACEHOLDER
-========================== -->
-
-<!--
-
-Future Updates
-
-✔ GST Support
-✔ Multiple Office Branches
-✔ Digital Signature Certificate
-✔ Client Database
-✔ Case Linking
-✔ Expense Management
-✔ Online Payment Gateway
-
--->
-
-<!-- ==========================
-END OF INVOICE LAYOUT
-========================== -->
-<!-- ==========================
-END OF APPLICATION
-========================== -->
-
-<!-- Future JavaScript -->
-<script src="invoice.js"></script>
-
+Professional fees once paid shall ordinarily not be refundable after commencement of work.</textarea>
+      </div>
+
+      <hr>
+
+      <div class="signature-section">
+        <div class="client-sign">
+          <p>Client Signature</p>
+          <div class="signature-line"></div>
+        </div>
+
+        <div class="firm-sign">
+          <p><strong>FOR MNM LEGAL ASSOCIATES</strong></p>
+        </div>
+      </div>
+
+      <div class="invoice-footer">
+        <div class="footer-left">
+          <p><strong>Thank you for choosing MNM Legal Associates</strong></p>
+        </div>
+
+        <div class="footer-right"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="bottom-actions">
+    <button type="button" id="previewBtn" class="btn">
+      <i class="fa-solid fa-eye"></i>
+      Preview
+    </button>
+
+    <button type="button" id="downloadPdfBottom" class="btn gold">
+      <i class="fa-solid fa-file-pdf"></i>
+      Download PDF
+    </button>
+
+    <button type="button" id="printInvoiceBottom" class="btn">
+      <i class="fa-solid fa-print"></i>
+      Print
+    </button>
+
+    <button type="button" id="clearInvoiceBtn" class="btn danger">
+      <i class="fa-solid fa-trash"></i>
+      Clear
+    </button>
+  </div>
+
+  <div id="loadingPopup" class="loading-popup">
+    <div class="loading-box">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <p>Generating PDF... Please wait.</p>
+    </div>
+  </div>
+
+  <div id="successPopup" class="popup-overlay">
+    <div class="popup-card">
+      <i class="fa-solid fa-circle-check success-icon"></i>
+      <h2>Invoice Generated Successfully</h2>
+      <p>Your invoice has been generated successfully. You can now print or download the PDF.</p>
+
+      <button type="button" id="closeSuccessPopup" class="btn gold">
+        OK
+      </button>
+    </div>
+  </div>
+
+  <div id="errorPopup" class="popup-overlay">
+    <div class="popup-card">
+      <i class="fa-solid fa-circle-xmark error-icon"></i>
+      <h2>Error</h2>
+      <p id="errorMessage"></p>
+
+      <button type="button" id="closeErrorPopup" class="btn">
+        Close
+      </button>
+    </div>
+  </div>
+
+  <a id="downloadLink" style="display:none;"></a>
+  <input type="file" id="hiddenFile" style="display:none;">
+
+  <input type="hidden" id="officeName" value="MNM Legal Associates">
+  <input type="hidden" id="officePhone" value="+91 9898172734">
+  <input type="hidden" id="officeEmail" value="mnmlegal.in@gmail.com">
+  <input type="hidden" id="officeWebsite" value="https://www.mnmlegal.in">
+  <input type="hidden" id="officeAddress" value="Office No. 511, Vedmata Cooperative Housing Society, IOC Road, Chandkheda, Ahmedabad - 382424">
+
+  <div id="pdfOptions" style="display:none;">
+    <input type="hidden" id="pdfFileName" value="MNM-Invoice">
+    <input type="hidden" id="pdfPageSize" value="a4">
+    <input type="hidden" id="pdfOrientation" value="portrait">
+  </div>
+
+  <script src="invoice.js"></script>
 </body>
 </html>
