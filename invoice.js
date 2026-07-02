@@ -604,17 +604,17 @@ function buildPremiumInvoice() {
   const total = Math.max(subtotal - discount, 0);
 
   printBox.innerHTML = `
-    <div class="premium-head">
-      <img src="images/letterhead-logo.png" alt="MNM Legal Associates">
-      <div class="premium-office">
-        <h1>MNM LEGAL ASSOCIATES</h1>
-        <div>Adv. Aman Mishra | Adv. Sonali Pandey</div>
-        <div>Office No. 511, Vedmata Cooperative Housing Society,</div> 
-        <div>IOC Road, Chandkheda, Ahmedabad, Gujarat - 382424</div>
-        <div>Mo: +91 9898172734 | +91 9579220137</div>
-        <div>Email: mnmlegal.in@gmail.com</div>
-      </div>
-    </div>
+   <div class="premium-head">
+  <img src="images/letterhead-logo.png" alt="MNM Legal Associates">
+  <div class="premium-office">
+    <h1>MNM LEGAL ASSOCIATES</h1>
+    <div>Advocates & Legal Consultants</div>
+    <div>Office No. 511, Vedmata Cooperative Housing Society, IOC Road,</div>
+    <div>Chandkheda, Ahmedabad - 382424</div>
+    <div>Mob: +91 9898172734 | Email: mnmlegal.in@gmail.com |</div>
+    <div>Website: www.mnmlegal.in</div>
+  </div>
+</div>
 
     <div class="premium-title">TAX INVOICE / PROFESSIONAL BILL</div>
 
