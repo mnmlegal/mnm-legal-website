@@ -672,19 +672,25 @@ function buildPremiumInvoice() {
   `;
 }
 if (invoiceNo) {
-  invoiceNo.addEventListener("focus", () => {
-    if (!invoiceNo.value.trim()) {
+  invoiceNo.addEventListener("blur", () => {
+    const value = invoiceNo.value.trim();
+
+    if (!value) {
       invoiceNo.value = "MNM//2026";
-    }
-  });
-
-  invoiceNo.addEventListener("input", () => {
-    let numberOnly = invoiceNo.value.replace(/\D/g, "");
-
-    if (numberOnly.length > 4) {
-      numberOnly = numberOnly.slice(0, 4);
+      return;
     }
 
-    invoiceNo.value = `MNM/${numberOnly}/2026`;
+    if (!value.startsWith("MNM/")) {
+      invoiceNo.value = `MNM/${value}/2026`;
+      return;
+    }
+
+    if (!value.endsWith("/2026")) {
+      const middle = value
+        .replace("MNM/", "")
+        .replace("/2026", "");
+
+      invoiceNo.value = `MNM/${middle}/2026`;
+    }
   });
 }
