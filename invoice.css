@@ -561,251 +561,145 @@ body {
   margin: 5mm;
 }
 
+.premium-print-invoice {
+  display: none;
+}
+
 @media print {
-  html,
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
   body {
-    width: 210mm !important;
-    margin: 0 !important;
-    padding: 0 !important;
     background: #fff !important;
+    padding: 0 !important;
   }
 
   .invoice-header,
   .page-heading,
+  #invoicePrintArea,
   .bottom-actions,
-  .table-actions,
   .loading-popup,
-  .popup-overlay,
-  button {
+  .popup-overlay {
     display: none !important;
   }
 
-  #invoicePrintArea {
-    width: 200mm !important;
-    max-width: 200mm !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-    background: #fff !important;
-    overflow: visible !important;
+  .premium-print-invoice {
+    display: block !important;
+    width: 194mm;
+    margin: 0 auto;
+    background: #fff;
+    color: #000;
+    font-family: "Times New Roman", serif;
+    font-size: 12px;
+    line-height: 1.25;
   }
 
-  .invoice-card {
-    width: 200mm !important;
-    min-height: auto !important;
-    margin: 0 auto !important;
-    padding: 4mm 7mm !important;
-    border: none !important;
-    box-shadow: none !important;
-    overflow: visible !important;
+  .premium-head {
+    display: grid;
+    grid-template-columns: 32mm 1fr;
+    gap: 8mm;
+    align-items: center;
+    border-bottom: 3px double #d4af37;
+    padding-bottom: 4px;
   }
 
-  .invoice-letterhead {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 7mm !important;
-    padding-bottom: 1.5mm !important;
-    margin-bottom: 1.5mm !important;
-    border-bottom: 2px solid #d4af37 !important;
+  .premium-head img {
+    width: 31mm;
   }
 
-  .letterhead-left {
-    width: 32mm !important;
+  .premium-office {
+    text-align: center;
+    font-weight: bold;
   }
 
-  .letterhead-left img {
-    width: 28mm !important;
+  .premium-office h1 {
+    color: #d4af37;
+    font-size: 20px;
+    margin-bottom: 2px;
   }
 
-  .letterhead-right h1 {
-    font-size: 16pt !important;
-    margin-bottom: 0.5mm !important;
+  .premium-title {
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    text-decoration: underline;
+    margin: 6px 0;
   }
 
-  .letterhead-right p {
-    font-size: 7.5pt !important;
-    line-height: 1.15 !important;
-    margin: 0 !important;
+  .premium-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 10px;
   }
 
-  .invoice-title {
-    margin: 1.5mm 0 !important;
+  .premium-billto h3 {
+    font-size: 15px;
+    margin-bottom: 8px;
   }
 
-  .invoice-title h2 {
-    font-size: 11pt !important;
-    padding: 1mm 8mm !important;
+  .premium-billto p {
+    margin-bottom: 4px;
   }
 
-  .invoice-meta {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 8mm !important;
-    margin-bottom: 1.5mm !important;
+  .premium-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 14px;
   }
 
-  .invoice-meta > div {
-    width: 48% !important;
+  .premium-table th,
+  .premium-table td {
+    border: 1px solid #000;
+    padding: 5px;
+    vertical-align: top;
   }
 
-  .bill-grid {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8mm !important;
-    margin-bottom: 0 !important;
+  .premium-table th {
+    text-align: center;
+    font-weight: bold;
+    font-size: 12px;
   }
 
-  .field {
-    margin-bottom: 1.2mm !important;
+  .premium-table td:nth-child(1),
+  .premium-table td:nth-child(3),
+  .premium-table td:nth-child(4),
+  .premium-table td:nth-child(5) {
+    text-align: center;
   }
 
-  .invoice-meta label,
-  .field label {
-    font-size: 8pt !important;
-    margin-bottom: 0.5mm !important;
-  }
-
-  .invoice-meta input,
-  .field input,
-  .field textarea,
-  #invoiceTable input,
-  .total-table input {
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    outline: none !important;
-    padding: 0 !important;
-    font-size: 8pt !important;
-    line-height: 1.15 !important;
-    color: #000 !important;
-    resize: none !important;
-    overflow: visible !important;
-  }
-
-  #clientAddress {
-    min-height: 12mm !important;
-    height: 12mm !important;
-  }
-
-  .invoice-card h3 {
-    font-size: 10pt !important;
-    margin: 1.5mm 0 1mm !important;
-    padding-bottom: 0.7mm !important;
-  }
-
-  .invoice-card hr {
-    margin: 1.5mm 0 !important;
-  }
-
-  #invoiceTable {
-    display: table !important;
-    width: 100% !important;
-    margin: 1.5mm 0 !important;
-    white-space: normal !important;
-  }
-
-  #invoiceTable th {
-    font-size: 7.5pt !important;
-    padding: 1.3mm !important;
-    background: #111 !important;
-    color: #fff !important;
-  }
-
-  #invoiceTable td {
-    font-size: 7.5pt !important;
-    padding: 1.2mm !important;
-  }
-
-  #invoiceTable td:first-child {
-    width: 10mm !important;
-  }
-
-  #invoiceTable td:nth-child(2) {
-    min-width: auto !important;
-    width: 80mm !important;
-  }
-
-  #invoiceTable td:nth-child(3),
-  #invoiceTable td:nth-child(4),
-  #invoiceTable td:nth-child(5) {
-    width: 22mm !important;
-  }
-
-  .invoice-total-wrapper {
-    margin: 1.5mm 0 !important;
-  }
-
-  .total-box {
-    width: 68mm !important;
-    border-radius: 0 !important;
-  }
-
-  .total-table td {
-    font-size: 8pt !important;
-    padding: 1.4mm 2.2mm !important;
-  }
-
-  .grand-total-row td,
-  #grandTotal {
-    font-size: 9pt !important;
-  }
-
-  #amountWords {
-    min-height: 6mm !important;
-    height: 6mm !important;
-    font-size: 8pt !important;
-    overflow: visible !important;
-  }
-
-  #notes {
-    height: auto !important;
-    min-height: 22mm !important;
-    max-height: none !important;
-    overflow: visible !important;
-    white-space: pre-wrap !important;
-    font-size: 7.2pt !important;
-    line-height: 1.18 !important;
-  }
-
-  .signature-section {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    margin-top: 2mm !important;
-    gap: 15mm !important;
-  }
-
-  .client-sign,
-  .firm-sign {
-    width: 48% !important;
-  }
-
-  .client-sign p,
-  .firm-sign p {
-    font-size: 8pt !important;
-    margin-bottom: 0.5mm !important;
-  }
-
-  .signature-line {
-    margin-top: 7mm !important;
-    border-top: 1px solid #222 !important;
-  }
-
-  .invoice-footer {
-    justify-content: center !important;
+  .premium-total-label {
     text-align: center !important;
-    margin-top: 2mm !important;
-    padding-top: 1mm !important;
-    font-size: 7.5pt !important;
-    line-height: 1.1 !important;
+    font-weight: bold;
   }
 
-  .footer-left {
-    width: 100% !important;
-    text-align: center !important;
+  .premium-words {
+    border: 1px solid #000;
+    text-align: center;
+    padding: 6px;
+    margin-top: 12px;
+    font-size: 13px;
   }
 
-  .footer-left p {
-    text-align: center !important;
+  .premium-separator {
+    border-top: 3px double #d4af37;
+    margin: 28px 0 10px;
+  }
+
+  .premium-notes h3 {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .premium-notes ul {
+    margin-left: 28px;
+  }
+
+  .premium-sign {
+    text-align: right;
+    font-weight: bold;
+    margin-top: 30px;
   }
 }
