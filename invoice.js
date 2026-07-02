@@ -564,3 +564,108 @@ window.addEventListener("keydown", (event) => {
     hideLoading();
   }
 });
+function buildPremiumInvoice() {
+  const printBox = document.getElementById("premiumPrintInvoice");
+
+  const invNo = invoiceNo.value || "";
+  const date = invoiceDate.value
+    ? invoiceDate.value.split("-").reverse().join("/")
+    : "";
+
+  const clientName = document.getElementById("clientName").value || "";
+  const clientMobile = document.getElementById("clientMobile").value || "";
+  const clientAddress = document.getElementById("clientAddress").value || "";
+  const words = amountWords.value || "";
+
+  let rows = "";
+  let subtotal = 0;
+
+  document.querySelectorAll("#invoiceBody tr").forEach((row, index) => {
+    const particular = row.querySelector(".particular")?.value || "";
+    const qty = parseFloat(row.querySelector(".qty")?.value) || 0;
+    const rate = parseFloat(row.querySelector(".rate")?.value) || 0;
+    const amount = qty * rate;
+
+    subtotal += amount;
+
+    rows += `
+      <tr>
+        <td>${index + 1}.</td>
+        <td>${particular}</td>
+        <td>${qty}</td>
+        <td>${money(rate)}</td>
+        <td>${money(amount)}</td>
+      </tr>
+    `;
+  });
+
+  const discount = parseFloat(discountInput.value) || 0;
+  const total = Math.max(subtotal - discount, 0);
+
+  printBox.innerHTML = `
+    <div class="premium-head">
+      <img src="images/letterhead-logo.png" alt="MNM Legal Associates">
+      <div class="premium-office">
+        <h1>MNM LEGAL ASSOCIATES</h1>
+        <div>Adv. Aman Mishra | Adv. Sonali Pandey</div>
+        <div>Office No. 511, Vedmata Cooperative Housing Society, IOC Road, Chandkheda, Ahmedabad, Gujarat - 382424</div>
+        <div>Mo: +91 9898172734 | +91 9579220137</div>
+        <div>Email: mnmlegal.in@gmail.com</div>
+      </div>
+    </div>
+
+    <div class="premium-title">TAX INVOICE / PROFESSIONAL BILL</div>
+
+    <div class="premium-meta">
+      <div>Bill No: ${invNo}</div>
+      <div>Date: ${date}</div>
+    </div>
+
+    <div class="premium-billto">
+      <h3>BILL TO:</h3>
+      <p>${clientName}</p>
+      <p>Add: ${clientAddress}</p>
+      <p>Mo: ${clientMobile}</p>
+    </div>
+
+    <table class="premium-table">
+      <thead>
+        <tr>
+          <th>SR. NO</th>
+          <th>PARTICULARS</th>
+          <th>QTY.</th>
+          <th>FEE (₹)</th>
+          <th>AMOUNT (₹)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+        <tr>
+          <td colspan="4" class="premium-total-label">TOTAL</td>
+          <td><strong>₹ ${money(total)}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="premium-words">
+      <strong>AMOUNT IN WORDS:</strong><br>
+      ${words}
+    </div>
+
+    <div class="premium-separator"></div>
+
+    <div class="premium-notes">
+      <h3>NOTES:</h3>
+      <ul>
+        <li>Professional charges are exclusive of court fees, government fees, stamp duty, registration charges and other statutory levies, wherever applicable.</li>
+        <li>All out-of-pocket expenses including travel, courier/postal charges, documentation, photocopying, miscellaneous expenses and any other incidental expenses shall be borne by the Client.</li>
+        <li>Fees for litigation, court appearances, appeals, execution proceedings or any additional legal work not specifically covered under this Invoice shall be charged separately.</li>
+        <li>Professional fees paid against services rendered shall not ordinarily be refundable once the work has commenced.</li>
+      </ul>
+    </div>
+
+    <div class="premium-sign">
+      FOR MNM LEGAL ASSOCIATES
+    </div>
+  `;
+}
