@@ -598,38 +598,40 @@ body {
 
  .premium-head {
   display: grid;
-  grid-template-columns: 42mm 1fr;
-  gap: 14mm;
+  grid-template-columns: 45mm 1fr;
+  gap: 12mm;
   align-items: center;
-  border-bottom: 3px double #000;
-  padding-bottom: 5px;
+  border-bottom: 2px solid #d4af37;
+  padding: 8mm 6mm 5mm;
 }
 
 .premium-head img {
-  width: 39mm;
+  width: 42mm;
 }
 
 .premium-office {
   text-align: center;
-  font-weight: 700;
-  padding-left: 4mm;
+  font-weight: 600;
   color: #000;
 }
 
 .premium-office h1 {
   color: #000 !important;
-  font-size: 26px;
+  font-family: Arial, sans-serif;
+  font-size: 32px;
   font-weight: 900;
-  margin-bottom: 3px;
+  line-height: 1.1;
+  margin-bottom: 8px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
 .premium-office div {
-  color: #000 !important;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.25;
+  color: #111 !important;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.45;
 }
   .premium-title {
     text-align: center;
