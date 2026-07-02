@@ -671,3 +671,20 @@ function buildPremiumInvoice() {
     </div>
   `;
 }
+if (invoiceNo) {
+  invoiceNo.addEventListener("focus", () => {
+    if (!invoiceNo.value.trim()) {
+      invoiceNo.value = "MNM//2026";
+    }
+  });
+
+  invoiceNo.addEventListener("input", () => {
+    let numberOnly = invoiceNo.value.replace(/\D/g, "");
+
+    if (numberOnly.length > 4) {
+      numberOnly = numberOnly.slice(0, 4);
+    }
+
+    invoiceNo.value = `MNM/${numberOnly}/2026`;
+  });
+}
