@@ -609,7 +609,8 @@ function buildPremiumInvoice() {
       <div class="premium-office">
         <h1>MNM LEGAL ASSOCIATES</h1>
         <div>Adv. Aman Mishra | Adv. Sonali Pandey</div>
-        <div>Office No. 511, Vedmata Cooperative Housing Society, IOC Road, Chandkheda, Ahmedabad, Gujarat - 382424</div>
+        <div>Office No. 511, Vedmata Cooperative Housing Society,</div> 
+        <div>IOC Road, Chandkheda, Ahmedabad, Gujarat - 382424</div>
         <div>Mo: +91 9898172734 | +91 9579220137</div>
         <div>Email: mnmlegal.in@gmail.com</div>
       </div>
