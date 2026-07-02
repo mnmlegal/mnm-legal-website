@@ -601,21 +601,36 @@ body {
   grid-template-columns: 42mm 1fr;
   gap: 14mm;
   align-items: center;
-  border-bottom: 3px double #d4af37;
-  padding-bottom: 4px;
+  border-bottom: 3px double #000;
+  padding-bottom: 5px;
+}
+
+.premium-head img {
+  width: 39mm;
 }
 
 .premium-office {
   text-align: center;
-  font-weight: bold;
-  padding-left: 6mm;
+  font-weight: 700;
+  padding-left: 4mm;
+  color: #000;
 }
-  .premium-office h1 {
-    color: #d4af37;
-    font-size: 20px;
-    margin-bottom: 2px;
-  }
 
+.premium-office h1 {
+  color: #000 !important;
+  font-size: 26px;
+  font-weight: 900;
+  margin-bottom: 3px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.premium-office div {
+  color: #000 !important;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+}
   .premium-title {
     text-align: center;
     font-size: 16px;
