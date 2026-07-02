@@ -598,22 +598,17 @@ body {
 
  .premium-head {
   display: grid;
-  grid-template-columns: 45mm 1fr;
-  gap: 8mm;
+  grid-template-columns: 42mm 1fr;
+  gap: 14mm;
   align-items: center;
   border-bottom: 3px double #d4af37;
   padding-bottom: 4px;
 }
 
-.premium-head img {
-  width: 43mm;
-}
-
-.premium-office h1 {
-  color: #d4af37;
-  font-size: 25px;
-  margin-bottom: 2px;
-  letter-spacing: 0.5px;
+.premium-office {
+  text-align: center;
+  font-weight: bold;
+  padding-left: 6mm;
 }
   .premium-office h1 {
     color: #d4af37;
