@@ -368,6 +368,7 @@ function validateInvoice() {
 
 function printInvoice() {
   calculateInvoice();
+  buildPremiumInvoice();
   window.print();
 }
 
