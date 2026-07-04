@@ -236,11 +236,14 @@ body {
   margin: 22px 0;
 }
 
+/* Invoice table */
+
 #invoiceTable {
   width: 100%;
   border-collapse: collapse;
   margin-top: 15px;
   margin-bottom: 20px;
+  table-layout: fixed;
 }
 
 #invoiceTable thead {
@@ -262,20 +265,40 @@ body {
   vertical-align: middle;
 }
 
-#invoiceTable td:first-child {
-  width: 60px;
+#invoiceTable th:nth-child(1),
+#invoiceTable td:nth-child(1) {
+  width: 55px;
   text-align: center;
   font-weight: 600;
 }
 
+#invoiceTable th:nth-child(2),
 #invoiceTable td:nth-child(2) {
-  min-width: 320px;
+  width: auto;
+  min-width: 260px;
 }
 
-#invoiceTable td:nth-child(3),
-#invoiceTable td:nth-child(4),
+#invoiceTable th:nth-child(3),
+#invoiceTable td:nth-child(3) {
+  width: 75px;
+  text-align: center;
+}
+
+#invoiceTable th:nth-child(4),
+#invoiceTable td:nth-child(4) {
+  width: 130px;
+  text-align: center;
+}
+
+#invoiceTable th:nth-child(5),
 #invoiceTable td:nth-child(5) {
-  width: 110px;
+  width: 150px;
+  text-align: center;
+}
+
+#invoiceTable th:nth-child(6),
+#invoiceTable td:nth-child(6) {
+  width: 70px;
   text-align: center;
 }
 
@@ -293,10 +316,16 @@ body {
   text-align: center;
 }
 
+#invoiceTable .rate {
+  min-width: 100px;
+  text-align: center;
+}
+
 .amount {
   font-weight: 700;
   text-align: right;
   padding-right: 12px !important;
+  white-space: nowrap;
 }
 
 .delete-row {
@@ -308,6 +337,8 @@ body {
   color: #fff;
   cursor: pointer;
 }
+
+/* Buttons and totals */
 
 .table-actions {
   display: flex;
@@ -376,13 +407,12 @@ body {
   font-weight: 700;
 }
 
-#grandTotal {
-  font-size: 22px;
+#balanceDue {
   color: #d4af37;
+  font-size: 22px;
 }
 
-#totalFees,
-#pendingFees {
+#totalFees {
   font-size: 16px;
   color: #111;
 }
@@ -402,6 +432,8 @@ body {
   resize: none;
   cursor: default;
 }
+
+/* Signature and footer */
 
 .signature-section {
   display: flex;
@@ -463,6 +495,8 @@ body {
   min-width: 160px;
   height: 50px;
 }
+
+/* Popups */
 
 .loading-popup,
 .popup-overlay {
@@ -550,6 +584,8 @@ body {
 .premium-print-invoice {
   display: none;
 }
+
+/* Responsive */
 
 @media (max-width: 992px) {
   body {
@@ -716,6 +752,11 @@ body {
     margin-bottom: 10px;
   }
 
+  .premium-reference {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
   .premium-billto h3 {
     font-size: 15px;
     margin-bottom: 8px;
@@ -729,6 +770,7 @@ body {
     width: 100%;
     border-collapse: collapse;
     margin-top: 14px;
+    table-layout: fixed;
   }
 
   .premium-table th,
@@ -736,6 +778,7 @@ body {
     border: 1px solid #000;
     padding: 5px;
     vertical-align: top;
+    overflow-wrap: break-word;
   }
 
   .premium-table th {
@@ -744,11 +787,35 @@ body {
     font-size: 12px;
   }
 
-  .premium-table td:nth-child(1),
-  .premium-table td:nth-child(3),
-  .premium-table td:nth-child(4),
-  .premium-table td:nth-child(5) {
+  .premium-table th:nth-child(1),
+  .premium-table td:nth-child(1) {
+    width: 14mm;
     text-align: center;
+  }
+
+  .premium-table th:nth-child(2),
+  .premium-table td:nth-child(2) {
+    width: 68mm;
+  }
+
+  .premium-table th:nth-child(3),
+  .premium-table td:nth-child(3) {
+    width: 16mm;
+    text-align: center;
+  }
+
+  .premium-table th:nth-child(4),
+  .premium-table td:nth-child(4) {
+    width: 32mm;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .premium-table th:nth-child(5),
+  .premium-table td:nth-child(5) {
+    width: 34mm;
+    text-align: center;
+    white-space: nowrap;
   }
 
   .premium-total-label {
@@ -757,7 +824,7 @@ body {
   }
 
   .premium-fee-summary {
-    width: 70mm;
+    width: 74mm;
     margin-left: auto;
     margin-top: 8px;
     border-collapse: collapse;
@@ -771,6 +838,11 @@ body {
 
   .premium-fee-summary td:last-child {
     text-align: right;
+    white-space: nowrap;
+  }
+
+  .premium-fee-summary .pending-row {
+    background: #f5f5f5;
   }
 
   .premium-words {
