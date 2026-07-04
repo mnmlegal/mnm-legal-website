@@ -15,19 +15,15 @@ const invoiceBody = document.getElementById("invoiceBody");
 const addItemBtn = document.getElementById("addItemBtn");
 const clearTableBtn = document.getElementById("clearTableBtn");
 
-const discountInput = document.getElementById("discount");
 const subTotal = document.getElementById("subTotal");
 const grandTotal = document.getElementById("grandTotal");
+const discountInput = document.getElementById("discount");
 const amountWords = document.getElementById("amountWords");
 
 const totalFees = document.getElementById("totalFees");
-const previouslyReceived = document.getElementById("previouslyReceived");
-const receivedThisBill = document.getElementById("receivedThisBill");
-const totalReceived = document.getElementById("totalReceived");
-const pendingBalance = document.getElementById("pendingBalance");
-
-const receivedFees = document.getElementById("receivedFees");
-const pendingFees = document.getElementById("pendingFees");
+const receivedEarlier = document.getElementById("receivedEarlier");
+const receivedNow = document.getElementById("receivedNow");
+const balanceDue = document.getElementById("balanceDue");
 
 const printBtn = document.getElementById("printBtn");
 const printInvoiceBottom = document.getElementById("printInvoiceBottom");
@@ -250,7 +246,7 @@ function updateSerialNumbers() {
 =========================== */
 
 function calculateInvoice() {
-  let subtotal = 0;
+  let total = 0;
 
   document.querySelectorAll("#invoiceBody tr").forEach((row) => {
     const qty = parseFloat(row.querySelector(".qty")?.value) || 0;
@@ -263,51 +259,31 @@ function calculateInvoice() {
       amountCell.textContent = "₹" + money(amount);
     }
 
-    subtotal += amount;
+    total += amount;
   });
 
-  const discount = parseFloat(discountInput?.value) || 0;
-  const finalFees = Math.max(subtotal - discount, 0);
+  const earlier = parseFloat(receivedEarlier?.value) || 0;
+  const now = parseFloat(receivedNow?.value) || 0;
+  const balance = Math.max(total - earlier - now, 0);
 
   if (subTotal) {
-    subTotal.textContent = "₹" + money(subtotal);
-  }
-
-  if (totalFees) {
-    totalFees.textContent = "₹" + money(subtotal);
+    subTotal.textContent = "₹" + money(total);
   }
 
   if (grandTotal) {
-    grandTotal.textContent = "₹" + money(finalFees);
+    grandTotal.textContent = "₹" + money(total);
   }
 
-  calculatePaymentSummary(finalFees);
+  if (totalFees) {
+    totalFees.textContent = "₹" + money(total);
+  }
+
+  if (balanceDue) {
+    balanceDue.textContent = "₹" + money(balance);
+  }
 
   if (amountWords) {
-    amountWords.value = numberToWords(Math.round(finalFees)) + " Rupees Only";
-  }
-}
-
-function calculatePaymentSummary(finalFees) {
-  const oldReceived = parseFloat(previouslyReceived?.value) || 0;
-  const currentReceived = parseFloat(receivedThisBill?.value) || 0;
-  const receivedTotal = oldReceived + currentReceived;
-  const pending = Math.max(finalFees - receivedTotal, 0);
-
-  if (totalReceived) {
-    totalReceived.textContent = "₹" + money(receivedTotal);
-  }
-
-  if (pendingBalance) {
-    pendingBalance.textContent = "₹" + money(pending);
-  }
-
-  if (receivedFees) {
-    receivedFees.value = currentReceived;
-  }
-
-  if (pendingFees) {
-    pendingFees.textContent = "₹" + money(pending);
+    amountWords.value = numberToWords(Math.round(now)) + " Rupees Only";
   }
 }
 
@@ -488,9 +464,8 @@ function collectBillData() {
     clientName: document.getElementById("clientName").value,
     clientMobile: document.getElementById("clientMobile").value,
     clientAddress: document.getElementById("clientAddress").value,
-    discount: discountInput.value,
-    previouslyReceived: previouslyReceived?.value || "0",
-    receivedThisBill: receivedThisBill?.value || "0",
+    receivedEarlier: receivedEarlier?.value || "0",
+    receivedNow: receivedNow?.value || "0",
     notes: document.getElementById("notes").value,
     items
   };
@@ -579,9 +554,8 @@ function loadSavedBill(id) {
   document.getElementById("clientName").value = bill.clientName;
   document.getElementById("clientMobile").value = bill.clientMobile;
   document.getElementById("clientAddress").value = bill.clientAddress;
-  discountInput.value = bill.discount || "0";
-  previouslyReceived.value = bill.previouslyReceived || "0";
-  receivedThisBill.value = bill.receivedThisBill || "0";
+  receivedEarlier.value = bill.receivedEarlier || "0";
+  receivedNow.value = bill.receivedNow || "0";
 
   invoiceBody.innerHTML = "";
 
@@ -693,7 +667,7 @@ function buildPremiumInvoice() {
   const words = amountWords.value || "";
 
   let rows = "";
-  let subtotal = 0;
+  let total = 0;
 
   document.querySelectorAll("#invoiceBody tr").forEach((row, index) => {
     const particular = row.querySelector(".particular")?.value || "";
@@ -701,7 +675,7 @@ function buildPremiumInvoice() {
     const rate = parseFloat(row.querySelector(".rate")?.value) || 0;
     const amount = qty * rate;
 
-    subtotal += amount;
+    total += amount;
 
     rows += `
       <tr>
@@ -714,12 +688,9 @@ function buildPremiumInvoice() {
     `;
   });
 
-  const discount = parseFloat(discountInput.value) || 0;
-  const finalFees = Math.max(subtotal - discount, 0);
-  const oldReceived = parseFloat(previouslyReceived?.value) || 0;
-  const currentReceived = parseFloat(receivedThisBill?.value) || 0;
-  const receivedTotal = oldReceived + currentReceived;
-  const pending = Math.max(finalFees - receivedTotal, 0);
+  const earlier = parseFloat(receivedEarlier?.value) || 0;
+  const now = parseFloat(receivedNow?.value) || 0;
+  const balance = Math.max(total - earlier - now, 0);
 
   printBox.innerHTML = `
     <div class="premium-head">
@@ -768,7 +739,7 @@ function buildPremiumInvoice() {
         ${rows}
         <tr>
           <td colspan="4" class="premium-total-label">TOTAL FEES</td>
-          <td><strong>₹ ${money(subtotal)}</strong></td>
+          <td><strong>₹ ${money(total)}</strong></td>
         </tr>
       </tbody>
     </table>
@@ -776,31 +747,19 @@ function buildPremiumInvoice() {
     <table class="premium-fee-summary">
       <tr>
         <td>Total Fees</td>
-        <td>₹ ${money(subtotal)}</td>
+        <td>₹ ${money(total)}</td>
       </tr>
       <tr>
-        <td>Discount</td>
-        <td>₹ ${money(discount)}</td>
+        <td>Received Earlier</td>
+        <td>₹ ${money(earlier)}</td>
       </tr>
       <tr>
-        <td>Final Fees</td>
-        <td>₹ ${money(finalFees)}</td>
-      </tr>
-      <tr>
-        <td>Previously Received</td>
-        <td>₹ ${money(oldReceived)}</td>
-      </tr>
-      <tr>
-        <td>Received This Bill</td>
-        <td>₹ ${money(currentReceived)}</td>
-      </tr>
-      <tr>
-        <td>Total Received</td>
-        <td>₹ ${money(receivedTotal)}</td>
+        <td>Received Now</td>
+        <td>₹ ${money(now)}</td>
       </tr>
       <tr class="pending-row">
-        <td>Pending Balance</td>
-        <td>₹ ${money(pending)}</td>
+        <td>Balance Due</td>
+        <td>₹ ${money(balance)}</td>
       </tr>
     </table>
 
@@ -863,9 +822,8 @@ function clearInvoiceWithoutConfirm() {
   document.getElementById("clientName").value = "";
   document.getElementById("clientMobile").value = "";
   document.getElementById("clientAddress").value = "";
-  discountInput.value = "0";
-  previouslyReceived.value = "0";
-  receivedThisBill.value = "0";
+  receivedEarlier.value = "0";
+  receivedNow.value = "0";
 
   invoiceBody.innerHTML = "";
   createRow();
@@ -935,16 +893,12 @@ if (clearTableBtn) {
   clearTableBtn.addEventListener("click", clearTable);
 }
 
-if (discountInput) {
-  discountInput.addEventListener("input", calculateInvoice);
+if (receivedEarlier) {
+  receivedEarlier.addEventListener("input", calculateInvoice);
 }
 
-if (previouslyReceived) {
-  previouslyReceived.addEventListener("input", calculateInvoice);
-}
-
-if (receivedThisBill) {
-  receivedThisBill.addEventListener("input", calculateInvoice);
+if (receivedNow) {
+  receivedNow.addEventListener("input", calculateInvoice);
 }
 
 if (saveBillBtn) {
