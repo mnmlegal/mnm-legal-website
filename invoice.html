@@ -91,6 +91,11 @@
         </div>
       </div>
 
+      <div class="field">
+        <label for="previousBillNo">Previous Bill No. / Reference Bill No.</label>
+        <input type="text" id="previousBillNo" placeholder="Example: MNM/001/2026">
+      </div>
+
       <hr>
 
       <h3>Bill To</h3>
@@ -168,8 +173,8 @@
         <div class="total-box">
           <table class="total-table">
             <tr>
-              <td>Sub Total</td>
-              <td id="subTotal">₹0.00</td>
+              <td>Total Fees</td>
+              <td><strong id="totalFees">₹0.00</strong></td>
             </tr>
 
             <tr>
@@ -179,28 +184,41 @@
               </td>
             </tr>
 
-            <tr class="grand-total-row">
-              <td><strong>Grand Total</strong></td>
+            <tr>
+              <td>Final Fees</td>
               <td><strong id="grandTotal">₹0.00</strong></td>
             </tr>
 
             <tr>
-              <td>Total Fees</td>
-              <td><strong id="totalFees">₹0.00</strong></td>
-            </tr>
-
-            <tr>
-              <td><label for="receivedFees">Received Fees</label></td>
+              <td><label for="previouslyReceived">Previously Received</label></td>
               <td>
-                <input type="number" id="receivedFees" value="0" min="0">
+                <input type="number" id="previouslyReceived" value="0" min="0">
               </td>
             </tr>
 
             <tr>
-              <td>Pending Fees</td>
-              <td><strong id="pendingFees">₹0.00</strong></td>
+              <td><label for="receivedThisBill">Received This Bill</label></td>
+              <td>
+                <input type="number" id="receivedThisBill" value="0" min="0">
+              </td>
+            </tr>
+
+            <tr>
+              <td>Total Received</td>
+              <td><strong id="totalReceived">₹0.00</strong></td>
+            </tr>
+
+            <tr class="grand-total-row">
+              <td><strong>Pending Balance</strong></td>
+              <td><strong id="pendingBalance">₹0.00</strong></td>
             </tr>
           </table>
+
+          <div style="display:none;">
+            <span id="subTotal">₹0.00</span>
+            <span id="pendingFees">₹0.00</span>
+            <input type="number" id="receivedFees" value="0">
+          </div>
         </div>
       </div>
 
