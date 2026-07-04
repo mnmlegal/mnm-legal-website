@@ -19,6 +19,10 @@ const subTotal = document.getElementById("subTotal");
 const grandTotal = document.getElementById("grandTotal");
 const amountWords = document.getElementById("amountWords");
 
+const totalFees = document.getElementById("totalFees");
+const receivedFees = document.getElementById("receivedFees");
+const pendingFees = document.getElementById("pendingFees");
+
 const printBtn = document.getElementById("printBtn");
 const printInvoiceBottom = document.getElementById("printInvoiceBottom");
 
@@ -27,6 +31,12 @@ const downloadPdfBottom = document.getElementById("downloadPdfBottom");
 
 const previewBtn = document.getElementById("previewBtn");
 const clearInvoiceBtn = document.getElementById("clearInvoiceBtn");
+
+const saveBillBtn = document.getElementById("saveBillBtn");
+const savedBillsBtn = document.getElementById("savedBillsBtn");
+const savedBillsPopup = document.getElementById("savedBillsPopup");
+const savedBillsList = document.getElementById("savedBillsList");
+const closeSavedBills = document.getElementById("closeSavedBills");
 
 const loadingPopup = document.getElementById("loadingPopup");
 const successPopup = document.getElementById("successPopup");
@@ -38,11 +48,14 @@ const closeErrorPopup = document.getElementById("closeErrorPopup");
 
 const pdfFileName = document.getElementById("pdfFileName");
 
+let editingBillId = null;
+
 /* ===========================
    INITIALIZE
 =========================== */
 
 setTodayDate();
+setNextInvoiceNumber();
 bindExistingRows();
 calculateInvoice();
 
@@ -59,6 +72,51 @@ function setTodayDate() {
   const dd = String(today.getDate()).padStart(2, "0");
 
   invoiceDate.value = `${yyyy}-${mm}-${dd}`;
+}
+
+/* ===========================
+   INVOICE NUMBER
+=========================== */
+
+function getNextInvoiceNumber() {
+  return parseInt(localStorage.getItem("mnmNextInvoiceNumber") || "1", 10);
+}
+
+function setNextInvoiceNumber() {
+  if (!invoiceNo) return;
+
+  if (!invoiceNo.value.trim() || invoiceNo.value === "MNM//2026") {
+    const next = String(getNextInvoiceNumber()).padStart(3, "0");
+    invoiceNo.value = `MNM/${next}/2026`;
+  }
+}
+
+function increaseInvoiceNumber() {
+  const next = getNextInvoiceNumber() + 1;
+  localStorage.setItem("mnmNextInvoiceNumber", String(next));
+}
+
+function formatManualInvoiceNumber() {
+  if (!invoiceNo) return;
+
+  const value = invoiceNo.value.trim();
+
+  if (!value) {
+    setNextInvoiceNumber();
+    return;
+  }
+
+  if (value.startsWith("MNM/") && value.endsWith("/2026")) {
+    return;
+  }
+
+  if (value.startsWith("MNM/")) {
+    const middle = value.replace("MNM/", "").replace("/2026", "");
+    invoiceNo.value = `MNM/${middle}/2026`;
+    return;
+  }
+
+  invoiceNo.value = `MNM/${value}/2026`;
 }
 
 /* ===========================
@@ -216,6 +274,21 @@ function calculateInvoice() {
   if (amountWords) {
     amountWords.value = numberToWords(Math.round(total)) + " Rupees Only";
   }
+
+  calculateFeesSummary(total);
+}
+
+function calculateFeesSummary(total) {
+  const received = parseFloat(receivedFees?.value) || 0;
+  const pending = Math.max(total - received, 0);
+
+  if (totalFees) {
+    totalFees.textContent = "₹" + money(total);
+  }
+
+  if (pendingFees) {
+    pendingFees.textContent = "₹" + money(pending);
+  }
 }
 
 /* ===========================
@@ -322,6 +395,8 @@ function numberToWords(num) {
 =========================== */
 
 function validateInvoice() {
+  formatManualInvoiceNumber();
+
   if (!invoiceNo.value.trim()) {
     showError("Please enter invoice number.");
     invoiceNo.focus();
@@ -363,6 +438,157 @@ function validateInvoice() {
 }
 
 /* ===========================
+   SAVED BILLS STORAGE
+=========================== */
+
+function getSavedBills() {
+  return JSON.parse(localStorage.getItem("mnmSavedBills")) || [];
+}
+
+function setSavedBills(bills) {
+  localStorage.setItem("mnmSavedBills", JSON.stringify(bills));
+}
+
+function collectBillData() {
+  const items = [];
+
+  document.querySelectorAll("#invoiceBody tr").forEach((row) => {
+    items.push({
+      particular: row.querySelector(".particular")?.value || "",
+      qty: row.querySelector(".qty")?.value || "1",
+      rate: row.querySelector(".rate")?.value || "0"
+    });
+  });
+
+  return {
+    id: editingBillId || Date.now(),
+    invoiceNo: invoiceNo.value,
+    invoiceDate: invoiceDate.value,
+    clientName: document.getElementById("clientName").value,
+    clientMobile: document.getElementById("clientMobile").value,
+    clientAddress: document.getElementById("clientAddress").value,
+    discount: discountInput.value,
+    receivedFees: receivedFees?.value || "0",
+    notes: document.getElementById("notes").value,
+    items
+  };
+}
+
+function saveBill() {
+  if (!validateInvoice()) {
+    return;
+  }
+
+  const bill = collectBillData();
+  const bills = getSavedBills();
+
+  if (editingBillId) {
+    const index = bills.findIndex((item) => item.id === editingBillId);
+
+    if (index !== -1) {
+      bills[index] = bill;
+    }
+
+    editingBillId = null;
+  } else {
+    bills.push(bill);
+    increaseInvoiceNumber();
+  }
+
+  setSavedBills(bills);
+  alert("Bill saved successfully.");
+
+  clearInvoice();
+  setNextInvoiceNumber();
+}
+
+function showSavedBills() {
+  const bills = getSavedBills();
+
+  savedBillsList.innerHTML = "";
+
+  if (bills.length === 0) {
+    savedBillsList.innerHTML = "<p>No saved bills found.</p>";
+  }
+
+  bills
+    .slice()
+    .reverse()
+    .forEach((bill) => {
+      const div = document.createElement("div");
+      div.className = "saved-bill-item";
+
+      div.innerHTML = `
+        <div>
+          <strong>${bill.invoiceNo}</strong>
+          <span>${bill.clientName || "No Client Name"} | ${bill.invoiceDate || "No Date"}</span>
+        </div>
+        <button type="button" class="edit-saved-bill">Edit</button>
+        <button type="button" class="delete-saved-bill">Delete</button>
+      `;
+
+      div.querySelector(".edit-saved-bill").addEventListener("click", () => {
+        loadSavedBill(bill.id);
+      });
+
+      div.querySelector(".delete-saved-bill").addEventListener("click", () => {
+        deleteSavedBill(bill.id);
+      });
+
+      savedBillsList.appendChild(div);
+    });
+
+  savedBillsPopup.style.display = "flex";
+}
+
+function loadSavedBill(id) {
+  const bills = getSavedBills();
+  const bill = bills.find((item) => item.id === id);
+
+  if (!bill) {
+    return;
+  }
+
+  editingBillId = bill.id;
+
+  invoiceNo.value = bill.invoiceNo;
+  invoiceDate.value = bill.invoiceDate;
+  document.getElementById("clientName").value = bill.clientName;
+  document.getElementById("clientMobile").value = bill.clientMobile;
+  document.getElementById("clientAddress").value = bill.clientAddress;
+  discountInput.value = bill.discount || "0";
+
+  if (receivedFees) {
+    receivedFees.value = bill.receivedFees || "0";
+  }
+
+  invoiceBody.innerHTML = "";
+
+  bill.items.forEach((item) => {
+    createRow();
+    const row = invoiceBody.lastElementChild;
+
+    row.querySelector(".particular").value = item.particular;
+    row.querySelector(".qty").value = item.qty;
+    row.querySelector(".rate").value = item.rate;
+  });
+
+  updateSerialNumbers();
+  calculateInvoice();
+  savedBillsPopup.style.display = "none";
+}
+
+function deleteSavedBill(id) {
+  if (!confirm("Delete this saved bill?")) {
+    return;
+  }
+
+  const bills = getSavedBills().filter((item) => item.id !== id);
+  setSavedBills(bills);
+  showSavedBills();
+}
+
+/* ===========================
    PRINT
 =========================== */
 
@@ -382,13 +608,14 @@ function downloadInvoicePdf() {
   }
 
   calculateInvoice();
+  buildPremiumInvoice();
   showLoading();
 
-  const element = document.getElementById("invoicePrintArea");
+  const element = document.getElementById("premiumPrintInvoice");
   const fileName = buildPdfFileName();
 
   const options = {
-    margin: 10,
+    margin: 8,
     filename: fileName,
     image: {
       type: "jpeg",
@@ -427,12 +654,139 @@ function buildPdfFileName() {
 }
 
 /* ===========================
+   PREMIUM PRINT TEMPLATE
+=========================== */
+
+function buildPremiumInvoice() {
+  const printBox = document.getElementById("premiumPrintInvoice");
+
+  const invNo = invoiceNo.value || "";
+  const date = invoiceDate.value
+    ? invoiceDate.value.split("-").reverse().join("/")
+    : "";
+
+  const clientName = document.getElementById("clientName").value || "";
+  const clientMobile = document.getElementById("clientMobile").value || "";
+  const clientAddress = document.getElementById("clientAddress").value || "";
+  const words = amountWords.value || "";
+
+  let rows = "";
+  let subtotal = 0;
+
+  document.querySelectorAll("#invoiceBody tr").forEach((row, index) => {
+    const particular = row.querySelector(".particular")?.value || "";
+    const qty = parseFloat(row.querySelector(".qty")?.value) || 0;
+    const rate = parseFloat(row.querySelector(".rate")?.value) || 0;
+    const amount = qty * rate;
+
+    subtotal += amount;
+
+    rows += `
+      <tr>
+        <td>${index + 1}.</td>
+        <td>${particular}</td>
+        <td>${qty}</td>
+        <td>${money(rate)}</td>
+        <td>${money(amount)}</td>
+      </tr>
+    `;
+  });
+
+  const discount = parseFloat(discountInput.value) || 0;
+  const total = Math.max(subtotal - discount, 0);
+  const received = parseFloat(receivedFees?.value) || 0;
+  const pending = Math.max(total - received, 0);
+
+  printBox.innerHTML = `
+    <div class="premium-head">
+      <img src="images/letterhead-logo.png" alt="MNM Legal Associates">
+      <div class="premium-office">
+        <h1>MNM LEGAL ASSOCIATES</h1>
+        <div>Advocates & Legal Consultants</div>
+        <div>Office No. 511, Vedmata Cooperative Housing Society, IOC Road,</div>
+        <div>Chandkheda, Ahmedabad - 382424</div>
+        <div>Mob: +91 9898172734 | Email: mnmlegal.in@gmail.com |</div>
+        <div>Website: www.mnmlegal.in</div>
+      </div>
+    </div>
+
+    <div class="premium-title">TAX INVOICE / PROFESSIONAL BILL</div>
+
+    <div class="premium-meta">
+      <div>Bill No: ${invNo}</div>
+      <div>Date: ${date}</div>
+    </div>
+
+    <div class="premium-billto">
+      <h3>BILL TO:</h3>
+      <p>${clientName}</p>
+      <p>Add: ${clientAddress}</p>
+      <p>Mo: ${clientMobile}</p>
+    </div>
+
+    <table class="premium-table">
+      <thead>
+        <tr>
+          <th>SR. NO</th>
+          <th>PARTICULARS</th>
+          <th>QTY.</th>
+          <th>FEE (₹)</th>
+          <th>AMOUNT (₹)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+        <tr>
+          <td colspan="4" class="premium-total-label">TOTAL</td>
+          <td><strong>₹ ${money(total)}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="premium-fee-summary">
+      <tr>
+        <td>Total Fees</td>
+        <td>₹ ${money(total)}</td>
+      </tr>
+      <tr>
+        <td>Received Fees</td>
+        <td>₹ ${money(received)}</td>
+      </tr>
+      <tr>
+        <td>Pending Fees</td>
+        <td>₹ ${money(pending)}</td>
+      </tr>
+    </table>
+
+    <div class="premium-words">
+      <strong>AMOUNT IN WORDS:</strong><br>
+      ${words}
+    </div>
+
+    <div class="premium-separator"></div>
+
+    <div class="premium-notes">
+      <h3>NOTES:</h3>
+      <ul>
+        <li>Professional charges are exclusive of court fees, government fees, stamp duty, registration charges and other statutory levies, wherever applicable.</li>
+        <li>All out-of-pocket expenses including travel, courier/postal charges, documentation, photocopying, miscellaneous expenses and any other incidental expenses shall be borne by the Client.</li>
+        <li>Fees for litigation, court appearances, appeals, execution proceedings or any additional legal work not specifically covered under this Invoice shall be charged separately.</li>
+        <li>Professional fees paid against services rendered shall not ordinarily be refundable once the work has commenced.</li>
+      </ul>
+    </div>
+
+    <div class="premium-sign">
+      FOR MNM LEGAL ASSOCIATES
+    </div>
+  `;
+}
+
+/* ===========================
    PREVIEW
 =========================== */
 
 function previewInvoice() {
-  calculateInvoice();
-  window.print();
+  printInvoice();
 }
 
 /* ===========================
@@ -460,10 +814,16 @@ function clearInvoice() {
   document.getElementById("clientAddress").value = "";
   discountInput.value = "0";
 
+  if (receivedFees) {
+    receivedFees.value = "0";
+  }
+
   invoiceBody.innerHTML = "";
   createRow();
 
+  editingBillId = null;
   setTodayDate();
+  setNextInvoiceNumber();
   calculateInvoice();
 }
 
@@ -514,6 +874,10 @@ function hideError() {
    EVENTS
 =========================== */
 
+if (invoiceNo) {
+  invoiceNo.addEventListener("blur", formatManualInvoiceNumber);
+}
+
 if (addItemBtn) {
   addItemBtn.addEventListener("click", createRow);
 }
@@ -524,6 +888,24 @@ if (clearTableBtn) {
 
 if (discountInput) {
   discountInput.addEventListener("input", calculateInvoice);
+}
+
+if (receivedFees) {
+  receivedFees.addEventListener("input", calculateInvoice);
+}
+
+if (saveBillBtn) {
+  saveBillBtn.addEventListener("click", saveBill);
+}
+
+if (savedBillsBtn) {
+  savedBillsBtn.addEventListener("click", showSavedBills);
+}
+
+if (closeSavedBills) {
+  closeSavedBills.addEventListener("click", () => {
+    savedBillsPopup.style.display = "none";
+  });
 }
 
 if (printBtn) {
@@ -563,134 +945,9 @@ window.addEventListener("keydown", (event) => {
     hideSuccess();
     hideError();
     hideLoading();
+
+    if (savedBillsPopup) {
+      savedBillsPopup.style.display = "none";
+    }
   }
 });
-function buildPremiumInvoice() {
-  const printBox = document.getElementById("premiumPrintInvoice");
-
-  const invNo = invoiceNo.value || "";
-  const date = invoiceDate.value
-    ? invoiceDate.value.split("-").reverse().join("/")
-    : "";
-
-  const clientName = document.getElementById("clientName").value || "";
-  const clientMobile = document.getElementById("clientMobile").value || "";
-  const clientAddress = document.getElementById("clientAddress").value || "";
-  const words = amountWords.value || "";
-
-  let rows = "";
-  let subtotal = 0;
-
-  document.querySelectorAll("#invoiceBody tr").forEach((row, index) => {
-    const particular = row.querySelector(".particular")?.value || "";
-    const qty = parseFloat(row.querySelector(".qty")?.value) || 0;
-    const rate = parseFloat(row.querySelector(".rate")?.value) || 0;
-    const amount = qty * rate;
-
-    subtotal += amount;
-
-    rows += `
-      <tr>
-        <td>${index + 1}.</td>
-        <td>${particular}</td>
-        <td>${qty}</td>
-        <td>${money(rate)}</td>
-        <td>${money(amount)}</td>
-      </tr>
-    `;
-  });
-
-  const discount = parseFloat(discountInput.value) || 0;
-  const total = Math.max(subtotal - discount, 0);
-
-  printBox.innerHTML = `
-   <div class="premium-head">
-  <img src="images/letterhead-logo.png" alt="MNM Legal Associates">
-  <div class="premium-office">
-    <h1>MNM LEGAL ASSOCIATES</h1>
-    <div>Advocates & Legal Consultants</div>
-    <div>Office No. 511, Vedmata Cooperative Housing Society, IOC Road,</div>
-    <div>Chandkheda, Ahmedabad - 382424</div>
-    <div>Mob: +91 9898172734 | Email: mnmlegal.in@gmail.com |</div>
-    <div>Website: www.mnmlegal.in</div>
-  </div>
-</div>
-
-    <div class="premium-title">PROFESSIONAL FEE INVOICE </div>
-
-    <div class="premium-meta">
-      <div>Bill No: ${invNo}</div>
-      <div>Date: ${date}</div>
-    </div>
-
-    <div class="premium-billto">
-      <h3>BILL TO:</h3>
-      <p>${clientName}</p>
-      <p>Add: ${clientAddress}</p>
-      <p>Mo: ${clientMobile}</p>
-    </div>
-
-    <table class="premium-table">
-      <thead>
-        <tr>
-          <th>SR. NO</th>
-          <th>PARTICULARS</th>
-          <th>QTY.</th>
-          <th>FEE (₹)</th>
-          <th>AMOUNT (₹)</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows}
-        <tr>
-          <td colspan="4" class="premium-total-label">TOTAL</td>
-          <td><strong>₹ ${money(total)}</strong></td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="premium-words">
-      <strong>AMOUNT IN WORDS:</strong><br>
-      ${words}
-    </div>
-
-    <div class="premium-separator"></div>
-
-    <div class="premium-notes">
-      <h3>NOTES:</h3>
-      <ul>
-        <li>Professional charges are exclusive of court fees, government fees, stamp duty, registration charges and other statutory levies, wherever applicable.</li>
-        <li>All out-of-pocket expenses including travel, courier/postal charges, documentation, photocopying, miscellaneous expenses and any other incidental expenses shall be borne by the Client.</li>
-        <li>Fees for litigation, court appearances, appeals, execution proceedings or any additional legal work not specifically covered under this Invoice shall be charged separately.</li>
-        <li>Professional fees paid against services rendered shall not ordinarily be refundable once the work has commenced.</li>
-      </ul>
-    </div>
-
-    <div class="premium-sign">
-      FOR MNM LEGAL ASSOCIATES
-    </div>
-  `;
-}
-if (invoiceNo) {
-  invoiceNo.addEventListener("blur", () => {
-    const value = invoiceNo.value.trim();
-
-    if (!value) {
-      invoiceNo.value = "MNM//2026";
-      return;
-    }
-
-    if (!value.startsWith("MNM/")) {
-      invoiceNo.value = `MNM/${value}/2026`;
-      return;
-    }
-
-    if (!value.endsWith("/2026")) {
-      const middle = value
-        .replace("MNM/", "")
-        .replace("/2026", "");
-
-      invoiceNo.value = `MNM/${middle}/2026`;
-    }
-  });
-}
