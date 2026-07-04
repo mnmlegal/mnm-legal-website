@@ -616,7 +616,7 @@ function buildPremiumInvoice() {
   </div>
 </div>
 
-    <div class="premium-title">TAX INVOICE / PROFESSIONAL BILL</div>
+    <div class="premium-title">PROFESSIONAL FEE INVOICE </div>
 
     <div class="premium-meta">
       <div>Bill No: ${invNo}</div>
