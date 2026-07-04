@@ -323,7 +323,7 @@ body {
 }
 
 .total-box {
-  width: 380px;
+  width: 430px;
   border: 2px solid #222;
   border-radius: 8px;
   overflow: hidden;
@@ -339,6 +339,10 @@ body {
   padding: 14px 16px;
   border-bottom: 1px solid #ddd;
   font-size: 15px;
+}
+
+.total-table tr:last-child td {
+  border-bottom: none;
 }
 
 .total-table td:first-child {
@@ -375,6 +379,12 @@ body {
 #grandTotal {
   font-size: 22px;
   color: #d4af37;
+}
+
+#totalFees,
+#pendingFees {
+  font-size: 16px;
+  color: #111;
 }
 
 #amountWords {
@@ -450,7 +460,7 @@ body {
 }
 
 .bottom-actions .btn {
-  min-width: 180px;
+  min-width: 160px;
   height: 50px;
 }
 
@@ -482,6 +492,63 @@ body {
 .error-icon {
   font-size: 65px;
   color: #d32f2f;
+}
+
+.saved-bills-card {
+  width: 760px;
+  max-width: 95%;
+  text-align: left;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.saved-bills-card h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.saved-bill-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #d4af37;
+  border-radius: 8px;
+  background: #fffdf5;
+}
+
+.saved-bill-item strong {
+  display: block;
+  color: #111;
+}
+
+.saved-bill-item span {
+  font-size: 13px;
+  color: #555;
+}
+
+.saved-bill-item button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.edit-saved-bill {
+  background: #d4af37;
+  color: #111;
+}
+
+.delete-saved-bill {
+  background: #d32f2f;
+  color: #fff;
+}
+
+.premium-print-invoice {
+  display: none;
 }
 
 @media (max-width: 992px) {
@@ -526,6 +593,10 @@ body {
     flex-direction: column;
     align-items: center;
   }
+
+  .total-box {
+    width: 100%;
+  }
 }
 
 @media (max-width: 600px) {
@@ -550,6 +621,10 @@ body {
   .bottom-actions .btn {
     width: 100%;
   }
+
+  .saved-bill-item {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* =====================================================
@@ -558,19 +633,10 @@ body {
 
 @page {
   size: A4 portrait;
-  margin: 5mm;
-}
-
-.premium-print-invoice {
-  display: none;
+  margin: 8mm;
 }
 
 @media print {
-  @page {
-    size: A4 portrait;
-    margin: 8mm;
-  }
-
   body {
     background: #fff !important;
     padding: 0 !important;
@@ -596,44 +662,45 @@ body {
     line-height: 1.25;
   }
 
- .premium-head {
-  display: grid;
-  grid-template-columns: 42mm 1fr;
-  gap: 10mm;
-  align-items: center;
-  border-bottom: 2px solid #d4af37;
-  padding: 5mm 5mm 4mm;
-}
+  .premium-head {
+    display: grid;
+    grid-template-columns: 42mm 1fr;
+    gap: 10mm;
+    align-items: center;
+    border-bottom: 2px solid #d4af37;
+    padding: 5mm 5mm 4mm;
+  }
 
-.premium-head img {
-  width: 36mm;
-}
+  .premium-head img {
+    width: 36mm;
+  }
 
-.premium-office {
-  text-align: center;
-  font-weight: 600;
-  color: #000;
-}
+  .premium-office {
+    text-align: center;
+    font-weight: 600;
+    color: #000;
+  }
 
-.premium-office h1 {
-  color: #000 !important;
-  font-family: Arial, sans-serif;
-  font-size: 22px;
-  font-weight: 900;
-  line-height: 1.1;
-  margin-bottom: 4px;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
+  .premium-office h1 {
+    color: #000 !important;
+    font-family: Arial, sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 4px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
 
-.premium-office div {
-  color: #000 !important;
-  font-family: Arial, sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.35;
-}
+  .premium-office div {
+    color: #000 !important;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
   .premium-title {
     text-align: center;
     font-size: 16px;
@@ -687,6 +754,23 @@ body {
   .premium-total-label {
     text-align: center !important;
     font-weight: bold;
+  }
+
+  .premium-fee-summary {
+    width: 70mm;
+    margin-left: auto;
+    margin-top: 8px;
+    border-collapse: collapse;
+  }
+
+  .premium-fee-summary td {
+    border: 1px solid #000;
+    padding: 4px 6px;
+    font-weight: bold;
+  }
+
+  .premium-fee-summary td:last-child {
+    text-align: right;
   }
 
   .premium-words {
