@@ -1,842 +1,1006 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  -webkit-print-color-adjust: exact;
-  print-color-adjust: exact;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  font-family: "Poppins", sans-serif;
-  background: #f2f2f2;
-  color: #222;
-  padding: 30px;
-}
-
-.invoice-header {
-  background: #111;
-  color: #fff;
-  padding: 18px 35px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-radius: 12px;
-  margin-bottom: 30px;
-}
-
-.invoice-logo {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.invoice-logo img {
-  width: 70px;
-  height: 70px;
-  object-fit: contain;
-}
-
-.invoice-logo h2 {
-  color: #d4af37;
-  font-size: 28px;
-}
-
-.invoice-logo p {
-  color: #ccc;
-  font-size: 15px;
-}
-
-.invoice-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.btn {
-  background: #d4af37;
-  color: #111;
-  border: none;
-  padding: 12px 22px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 600;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.btn.secondary {
-  background: #444;
-  color: #fff;
-}
-
-.btn.gold {
-  background: #d4af37;
-  color: #111;
-}
-
-.btn.danger {
-  background: #d32f2f;
-  color: #fff;
-}
-
-.page-heading {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.page-heading h1 {
-  font-size: 34px;
-  color: #111;
-}
-
-.page-heading p {
-  color: #666;
-  margin-top: 6px;
-}
-
-#invoicePrintArea {
-  max-width: 210mm;
-  margin: auto;
-  background: #fff;
-}
-
-.invoice-card {
-  width: 210mm;
-  min-height: 297mm;
-  margin: auto;
-  background: #fff;
-  padding: 20mm;
-  border: 1px solid #ccc;
-  box-shadow: 0 0 18px rgba(0, 0, 0, 0.08);
-}
-
-.invoice-letterhead {
-  display: flex;
-  align-items: center;
-  gap: 25px;
-  border-bottom: 3px solid #d4af37;
-  padding-bottom: 18px;
-  margin-bottom: 20px;
-}
-
-.letterhead-left {
-  width: 170px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.letterhead-left img {
-  width: 145px;
-  height: auto;
-  object-fit: contain;
-}
-
-.letterhead-right {
-  flex: 1;
-  text-align: center;
-}
-
-.letterhead-right h1 {
-  font-size: 30px;
-  color: #111;
-  margin-bottom: 5px;
-  letter-spacing: 1px;
-}
-
-.letterhead-right p {
-  font-size: 14px;
-  line-height: 1.7;
-  color: #444;
-}
-
-.invoice-title {
-  text-align: center;
-  margin: 25px 0;
-}
-
-.invoice-title h2 {
-  display: inline-block;
-  border: 2px solid #111;
-  padding: 8px 30px;
-  font-size: 26px;
-  letter-spacing: 2px;
-}
-
-.invoice-meta {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 25px;
-}
-
-.invoice-meta label,
-.field label {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #222;
-}
-
-.invoice-meta input {
-  width: 240px;
-  border: 1px solid #bbb;
-  padding: 10px;
-  font-size: 15px;
-  font-family: "Poppins", sans-serif;
-}
-
-.bill-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.field {
-  margin-bottom: 18px;
-}
-
-.field input,
-.field textarea,
-.field select {
-  width: 100%;
-  padding: 12px 14px;
-  font-size: 15px;
-  font-family: "Poppins", sans-serif;
-  border: 1px solid #bdbdbd;
-  border-radius: 6px;
-  outline: none;
-  background: #fff;
-}
-
-.field textarea {
-  resize: vertical;
-  min-height: 90px;
-}
-
-.invoice-card h3 {
-  font-size: 18px;
-  margin: 22px 0 12px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #d4af37;
-  color: #111;
-}
-
-.invoice-card hr {
-  border: none;
-  border-top: 1px solid #ddd;
-  margin: 22px 0;
-}
-
-#invoiceTable {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-  margin-bottom: 20px;
-}
-
-#invoiceTable thead {
-  background: #111;
-  color: #fff;
-}
-
-#invoiceTable th {
-  padding: 14px 10px;
-  text-align: center;
-  font-size: 14px;
-  font-weight: 600;
-  border: 1px solid #333;
-}
-
-#invoiceTable td {
-  border: 1px solid #d9d9d9;
-  padding: 8px;
-  vertical-align: middle;
-}
-
-#invoiceTable td:first-child {
-  width: 60px;
-  text-align: center;
-  font-weight: 600;
-}
-
-#invoiceTable td:nth-child(2) {
-  min-width: 320px;
-}
-
-#invoiceTable td:nth-child(3),
-#invoiceTable td:nth-child(4),
-#invoiceTable td:nth-child(5) {
-  width: 110px;
-  text-align: center;
-}
-
-#invoiceTable input {
-  width: 100%;
-  border: none;
-  background: transparent;
-  padding: 8px;
-  font-size: 15px;
-  font-family: "Poppins", sans-serif;
-  outline: none;
-}
-
-#invoiceTable input[type="number"] {
-  text-align: center;
-}
-
-.amount {
-  font-weight: 700;
-  text-align: right;
-  padding-right: 12px !important;
-}
-
-.delete-row {
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 6px;
-  background: #d32f2f;
-  color: #fff;
-  cursor: pointer;
-}
-
-.table-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin: 15px 0 10px;
-}
-
-.invoice-total-wrapper {
-  display: flex;
-  justify-content: flex-end;
-  margin: 25px 0;
-}
-
-.total-box {
-  width: 470px;
-  border: 2px solid #222;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #fff;
-}
-
-.total-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.total-table td {
-  padding: 14px 16px;
-  border-bottom: 1px solid #ddd;
-  font-size: 15px;
-}
-
-.total-table tr:last-child td {
-  border-bottom: none;
-}
-
-.total-table td:first-child {
-  font-weight: 600;
-  background: #fafafa;
-  width: 55%;
-}
-
-.total-table td:last-child {
-  text-align: right;
-  font-weight: 600;
-}
-
-.total-table input {
-  width: 100%;
-  border: none;
-  background: transparent;
-  text-align: right;
-  font-size: 15px;
-  font-family: "Poppins", sans-serif;
-  outline: none;
-}
-
-.grand-total-row {
-  background: #111;
-  color: #fff;
-}
-
-.grand-total-row td {
-  font-size: 20px;
-  font-weight: 700;
-}
-
-#grandTotal,
-#totalFees,
-#totalReceived,
-#pendingBalance,
-#pendingFees {
-  font-size: 16px;
-  color: #111;
-}
-
-.grand-total-row #pendingBalance {
-  color: #d4af37;
-  font-size: 20px;
-}
-
-#amountWords {
-  background: #fafafa;
-  border: 1px solid #d4af37;
-  font-weight: 500;
-  resize: none;
-}
-
-#notes {
-  line-height: 1.8;
-  font-size: 14px;
-  background: #fffdf5;
-  border: 1px solid #d4af37;
-  resize: none;
-  cursor: default;
-}
-
-.signature-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-top: 60px;
-  gap: 40px;
-}
-
-.client-sign,
-.firm-sign {
-  width: 260px;
-  text-align: center;
-}
-
-.client-sign p,
-.firm-sign p {
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-.signature-line {
-  border-top: 2px solid #222;
-  margin-top: 50px;
-  padding-top: 10px;
-}
-
-.invoice-footer {
-  display: flex;
-  justify-content: center;
-  text-align: center;
-  gap: 30px;
-  margin-top: 30px;
-  padding-top: 15px;
-  border-top: 2px solid #d4af37;
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.footer-left {
-  width: 100%;
-  text-align: center;
-}
-
-.footer-left p {
-  text-align: center;
-}
-
-.bottom-actions {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  flex-wrap: wrap;
-  margin: 35px auto;
-}
-
-.bottom-actions .btn {
-  min-width: 160px;
-  height: 50px;
-}
-
-.loading-popup,
-.popup-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 99999;
-  justify-content: center;
-  align-items: center;
-}
-
-.loading-box,
-.popup-card {
-  background: #fff;
-  padding: 35px;
-  border-radius: 12px;
-  text-align: center;
-  max-width: 420px;
-}
-
-.success-icon {
-  font-size: 65px;
-  color: #25d366;
-}
-
-.error-icon {
-  font-size: 65px;
-  color: #d32f2f;
-}
-
-.saved-bills-card {
-  width: 820px;
-  max-width: 95%;
-  text-align: left;
-  max-height: 85vh;
-  overflow-y: auto;
-}
-
-.saved-bills-card h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.saved-bill-item {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 10px;
-  align-items: center;
-  padding: 12px;
-  margin-bottom: 10px;
-  border: 1px solid #d4af37;
-  border-radius: 8px;
-  background: #fffdf5;
-}
-
-.saved-bill-item strong {
-  display: block;
-  color: #111;
-}
-
-.saved-bill-item span {
-  font-size: 13px;
-  color: #555;
-}
-
-.saved-bill-item button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.edit-saved-bill {
-  background: #d4af37;
-  color: #111;
-}
-
-.delete-saved-bill {
-  background: #d32f2f;
-  color: #fff;
-}
-
-.premium-print-invoice {
-  display: none;
-}
-
-@media (max-width: 992px) {
-  body {
-    padding: 15px;
-  }
-
-  .invoice-header {
-    flex-direction: column;
-    gap: 20px;
-    text-align: center;
-  }
-
-  .invoice-actions {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .invoice-card {
-    width: 100%;
-    padding: 35px;
-  }
-
-  .invoice-letterhead {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .invoice-meta {
-    flex-direction: column;
-  }
-
-  .invoice-meta input {
-    width: 100%;
-  }
-
-  .bill-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .signature-section {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .total-box {
-    width: 100%;
-  }
-}
-
-@media (max-width: 600px) {
-  body {
-    padding: 10px;
-  }
-
-  .invoice-card {
-    padding: 20px;
-  }
-
-  #invoiceTable {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-
-  .bottom-actions {
-    flex-direction: column;
-  }
-
-  .bottom-actions .btn {
-    width: 100%;
-  }
-
-  .saved-bill-item {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* =====================================================
-   PRINT / PDF ONLY
+   MNM LEGAL ASSOCIATES
+   Invoice Generator JavaScript
 ===================================================== */
 
-@page {
-  size: A4 portrait;
-  margin: 8mm;
+/* ===========================
+   ELEMENTS
+=========================== */
+
+const invoiceNo = document.getElementById("invoiceNo");
+const invoiceDate = document.getElementById("invoiceDate");
+const previousBillNo = document.getElementById("previousBillNo");
+
+const invoiceBody = document.getElementById("invoiceBody");
+const addItemBtn = document.getElementById("addItemBtn");
+const clearTableBtn = document.getElementById("clearTableBtn");
+
+const discountInput = document.getElementById("discount");
+const subTotal = document.getElementById("subTotal");
+const grandTotal = document.getElementById("grandTotal");
+const amountWords = document.getElementById("amountWords");
+
+const totalFees = document.getElementById("totalFees");
+const previouslyReceived = document.getElementById("previouslyReceived");
+const receivedThisBill = document.getElementById("receivedThisBill");
+const totalReceived = document.getElementById("totalReceived");
+const pendingBalance = document.getElementById("pendingBalance");
+
+const receivedFees = document.getElementById("receivedFees");
+const pendingFees = document.getElementById("pendingFees");
+
+const printBtn = document.getElementById("printBtn");
+const printInvoiceBottom = document.getElementById("printInvoiceBottom");
+
+const downloadPdf = document.getElementById("downloadPdf");
+const downloadPdfBottom = document.getElementById("downloadPdfBottom");
+
+const previewBtn = document.getElementById("previewBtn");
+const clearInvoiceBtn = document.getElementById("clearInvoiceBtn");
+
+const saveBillBtn = document.getElementById("saveBillBtn");
+const savedBillsBtn = document.getElementById("savedBillsBtn");
+const savedBillsPopup = document.getElementById("savedBillsPopup");
+const savedBillsList = document.getElementById("savedBillsList");
+const closeSavedBills = document.getElementById("closeSavedBills");
+
+const loadingPopup = document.getElementById("loadingPopup");
+const successPopup = document.getElementById("successPopup");
+const errorPopup = document.getElementById("errorPopup");
+const errorMessage = document.getElementById("errorMessage");
+
+const closeSuccessPopup = document.getElementById("closeSuccessPopup");
+const closeErrorPopup = document.getElementById("closeErrorPopup");
+
+const pdfFileName = document.getElementById("pdfFileName");
+
+let editingBillId = null;
+
+/* ===========================
+   INITIALIZE
+=========================== */
+
+setTodayDate();
+setNextInvoiceNumber();
+bindExistingRows();
+calculateInvoice();
+
+/* ===========================
+   DATE
+=========================== */
+
+function setTodayDate() {
+  if (!invoiceDate) return;
+
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+
+  invoiceDate.value = `${yyyy}-${mm}-${dd}`;
 }
 
-@media print {
-  body {
-    background: #fff !important;
-    padding: 0 !important;
-  }
+/* ===========================
+   INVOICE NUMBER
+=========================== */
 
-  .invoice-header,
-  .page-heading,
-  #invoicePrintArea,
-  .bottom-actions,
-  .loading-popup,
-  .popup-overlay {
-    display: none !important;
-  }
+function getNextInvoiceNumber() {
+  return parseInt(localStorage.getItem("mnmNextInvoiceNumber") || "1", 10);
+}
 
-  .premium-print-invoice {
-    display: block !important;
-    width: 194mm;
-    margin: 0 auto;
-    background: #fff;
-    color: #000;
-    font-family: "Times New Roman", serif;
-    font-size: 12px;
-    line-height: 1.25;
-  }
+function setNextInvoiceNumber() {
+  if (!invoiceNo) return;
 
-  .premium-head {
-    display: grid;
-    grid-template-columns: 42mm 1fr;
-    gap: 10mm;
-    align-items: center;
-    border-bottom: 2px solid #d4af37;
-    padding: 5mm 5mm 4mm;
-  }
-
-  .premium-head img {
-    width: 36mm;
-  }
-
-  .premium-office {
-    text-align: center;
-    font-weight: 600;
-    color: #000;
-  }
-
-  .premium-office h1 {
-    color: #000 !important;
-    font-family: Arial, sans-serif;
-    font-size: 22px;
-    font-weight: 900;
-    line-height: 1.1;
-    margin-bottom: 4px;
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  .premium-office div {
-    color: #000 !important;
-    font-family: Arial, sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    line-height: 1.35;
-  }
-
-  .premium-title {
-    text-align: center;
-    font-size: 16px;
-    font-weight: bold;
-    text-decoration: underline;
-    margin: 6px 0;
-  }
-
-  .premium-meta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    margin-bottom: 10px;
-  }
-
-  .premium-reference {
-    font-size: 12px;
-    margin-bottom: 8px;
-  }
-
-  .premium-billto h3 {
-    font-size: 15px;
-    margin-bottom: 8px;
-  }
-
-  .premium-billto p {
-    margin-bottom: 4px;
-  }
-
-  .premium-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 14px;
-    table-layout: fixed;
-  }
-
-  .premium-table th,
-  .premium-table td {
-    border: 1px solid #000;
-    padding: 5px;
-    vertical-align: top;
-    overflow-wrap: break-word;
-  }
-
-  .premium-table th {
-    text-align: center;
-    font-weight: bold;
-    font-size: 12px;
-  }
-
-  .premium-table th:nth-child(1),
-  .premium-table td:nth-child(1) {
-    width: 14mm;
-    text-align: center;
-  }
-
-  .premium-table th:nth-child(2),
-  .premium-table td:nth-child(2) {
-    width: 70mm;
-  }
-
-  .premium-table th:nth-child(3),
-  .premium-table td:nth-child(3) {
-    width: 16mm;
-    text-align: center;
-  }
-
-  .premium-table th:nth-child(4),
-  .premium-table td:nth-child(4) {
-    width: 30mm;
-    text-align: center;
-    white-space: nowrap;
-  }
-
-  .premium-table th:nth-child(5),
-  .premium-table td:nth-child(5) {
-    width: 32mm;
-    text-align: center;
-    white-space: nowrap;
-  }
-
-  .premium-total-label {
-    text-align: center !important;
-    font-weight: bold;
-  }
-
-  .premium-fee-summary {
-    width: 78mm;
-    margin-left: auto;
-    margin-top: 8px;
-    border-collapse: collapse;
-  }
-
-  .premium-fee-summary td {
-    border: 1px solid #000;
-    padding: 4px 6px;
-    font-weight: bold;
-  }
-
-  .premium-fee-summary td:last-child {
-    text-align: right;
-    white-space: nowrap;
-  }
-
-  .premium-fee-summary .pending-row {
-    background: #f5f5f5;
-  }
-
-  .premium-words {
-    border: 1px solid #000;
-    text-align: center;
-    padding: 6px;
-    margin-top: 12px;
-    font-size: 13px;
-  }
-
-  .premium-separator {
-    border-top: 3px double #d4af37;
-    margin: 28px 0 10px;
-  }
-
-  .premium-notes h3 {
-    font-size: 14px;
-    margin-bottom: 8px;
-  }
-
-  .premium-notes ul {
-    margin-left: 28px;
-  }
-
-  .premium-sign {
-    text-align: right;
-    font-weight: bold;
-    margin-top: 30px;
+  if (!invoiceNo.value.trim() || invoiceNo.value === "MNM//2026") {
+    const next = String(getNextInvoiceNumber()).padStart(3, "0");
+    invoiceNo.value = `MNM/${next}/2026`;
   }
 }
+
+function increaseInvoiceNumber() {
+  const next = getNextInvoiceNumber() + 1;
+  localStorage.setItem("mnmNextInvoiceNumber", String(next));
+}
+
+function formatManualInvoiceNumber() {
+  if (!invoiceNo) return;
+
+  const value = invoiceNo.value.trim();
+
+  if (!value) {
+    setNextInvoiceNumber();
+    return;
+  }
+
+  if (value.startsWith("MNM/") && value.endsWith("/2026")) {
+    return;
+  }
+
+  if (value.startsWith("MNM/")) {
+    const middle = value.replace("MNM/", "").replace("/2026", "");
+    invoiceNo.value = `MNM/${middle}/2026`;
+    return;
+  }
+
+  invoiceNo.value = `MNM/${value}/2026`;
+}
+
+/* ===========================
+   MONEY FORMAT
+=========================== */
+
+function money(value) {
+  return Number(value || 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+/* ===========================
+   CREATE ROW
+=========================== */
+
+function createRow() {
+  const tr = document.createElement("tr");
+
+  tr.innerHTML = `
+    <td class="serial"></td>
+
+    <td>
+      <input
+        type="text"
+        class="particular"
+        placeholder="Professional Charges"
+      >
+    </td>
+
+    <td>
+      <input
+        type="number"
+        class="qty"
+        value="1"
+        min="1"
+      >
+    </td>
+
+    <td>
+      <input
+        type="number"
+        class="rate"
+        value="0"
+        min="0"
+      >
+    </td>
+
+    <td class="amount">₹0.00</td>
+
+    <td>
+      <button type="button" class="delete-row">
+        <i class="fa-solid fa-trash"></i>
+      </button>
+    </td>
+  `;
+
+  invoiceBody.appendChild(tr);
+  bindRowEvents(tr);
+  updateSerialNumbers();
+  calculateInvoice();
+}
+
+/* ===========================
+   ROW EVENTS
+=========================== */
+
+function bindExistingRows() {
+  document.querySelectorAll("#invoiceBody tr").forEach((row) => {
+    bindRowEvents(row);
+  });
+
+  updateSerialNumbers();
+}
+
+function bindRowEvents(row) {
+  const qtyInput = row.querySelector(".qty");
+  const rateInput = row.querySelector(".rate");
+  const particularInput = row.querySelector(".particular");
+  const deleteBtn = row.querySelector(".delete-row");
+
+  if (qtyInput) {
+    qtyInput.addEventListener("input", calculateInvoice);
+  }
+
+  if (rateInput) {
+    rateInput.addEventListener("input", calculateInvoice);
+  }
+
+  if (particularInput) {
+    particularInput.addEventListener("input", calculateInvoice);
+  }
+
+  if (deleteBtn) {
+    deleteBtn.addEventListener("click", () => {
+      if (invoiceBody.rows.length === 1) {
+        showError("At least one invoice item is required.");
+        return;
+      }
+
+      row.remove();
+      updateSerialNumbers();
+      calculateInvoice();
+    });
+  }
+}
+
+/* ===========================
+   SERIAL NUMBERS
+=========================== */
+
+function updateSerialNumbers() {
+  document.querySelectorAll("#invoiceBody tr").forEach((row, index) => {
+    const serialCell = row.querySelector(".serial");
+
+    if (serialCell) {
+      serialCell.textContent = index + 1;
+    }
+  });
+}
+
+/* ===========================
+   CALCULATION
+=========================== */
+
+function calculateInvoice() {
+  let subtotal = 0;
+
+  document.querySelectorAll("#invoiceBody tr").forEach((row) => {
+    const qty = parseFloat(row.querySelector(".qty")?.value) || 0;
+    const rate = parseFloat(row.querySelector(".rate")?.value) || 0;
+    const amount = qty * rate;
+
+    const amountCell = row.querySelector(".amount");
+
+    if (amountCell) {
+      amountCell.textContent = "₹" + money(amount);
+    }
+
+    subtotal += amount;
+  });
+
+  const discount = parseFloat(discountInput?.value) || 0;
+  const finalFees = Math.max(subtotal - discount, 0);
+
+  if (subTotal) {
+    subTotal.textContent = "₹" + money(subtotal);
+  }
+
+  if (totalFees) {
+    totalFees.textContent = "₹" + money(subtotal);
+  }
+
+  if (grandTotal) {
+    grandTotal.textContent = "₹" + money(finalFees);
+  }
+
+  calculatePaymentSummary(finalFees);
+
+  if (amountWords) {
+    amountWords.value = numberToWords(Math.round(finalFees)) + " Rupees Only";
+  }
+}
+
+function calculatePaymentSummary(finalFees) {
+  const oldReceived = parseFloat(previouslyReceived?.value) || 0;
+  const currentReceived = parseFloat(receivedThisBill?.value) || 0;
+  const receivedTotal = oldReceived + currentReceived;
+  const pending = Math.max(finalFees - receivedTotal, 0);
+
+  if (totalReceived) {
+    totalReceived.textContent = "₹" + money(receivedTotal);
+  }
+
+  if (pendingBalance) {
+    pendingBalance.textContent = "₹" + money(pending);
+  }
+
+  if (receivedFees) {
+    receivedFees.value = currentReceived;
+  }
+
+  if (pendingFees) {
+    pendingFees.textContent = "₹" + money(pending);
+  }
+}
+
+/* ===========================
+   NUMBER TO WORDS
+=========================== */
+
+function numberToWords(num) {
+  if (num === 0) {
+    return "Zero";
+  }
+
+  const ones = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen"
+  ];
+
+  const tens = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety"
+  ];
+
+  function convertBelowHundred(n) {
+    if (n < 20) {
+      return ones[n];
+    }
+
+    return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
+  }
+
+  function convertBelowThousand(n) {
+    let words = "";
+
+    if (n >= 100) {
+      words += ones[Math.floor(n / 100)] + " Hundred";
+
+      if (n % 100) {
+        words += " ";
+      }
+    }
+
+    words += convertBelowHundred(n % 100);
+
+    return words.trim();
+  }
+
+  let words = "";
+
+  const crore = Math.floor(num / 10000000);
+  num %= 10000000;
+
+  const lakh = Math.floor(num / 100000);
+  num %= 100000;
+
+  const thousand = Math.floor(num / 1000);
+  num %= 1000;
+
+  if (crore) {
+    words += convertBelowThousand(crore) + " Crore ";
+  }
+
+  if (lakh) {
+    words += convertBelowThousand(lakh) + " Lakh ";
+  }
+
+  if (thousand) {
+    words += convertBelowThousand(thousand) + " Thousand ";
+  }
+
+  if (num) {
+    words += convertBelowThousand(num);
+  }
+
+  return words.trim();
+}
+
+/* ===========================
+   VALIDATION
+=========================== */
+
+function validateInvoice() {
+  formatManualInvoiceNumber();
+
+  if (!invoiceNo.value.trim()) {
+    showError("Please enter invoice number.");
+    invoiceNo.focus();
+    return false;
+  }
+
+  if (!invoiceDate.value) {
+    showError("Please select invoice date.");
+    invoiceDate.focus();
+    return false;
+  }
+
+  const clientName = document.getElementById("clientName");
+
+  if (!clientName.value.trim()) {
+    showError("Please enter client name.");
+    clientName.focus();
+    return false;
+  }
+
+  let hasValidItem = false;
+
+  document.querySelectorAll("#invoiceBody tr").forEach((row) => {
+    const particular = row.querySelector(".particular")?.value.trim();
+    const qty = parseFloat(row.querySelector(".qty")?.value) || 0;
+    const rate = parseFloat(row.querySelector(".rate")?.value) || 0;
+
+    if (particular && qty > 0 && rate > 0) {
+      hasValidItem = true;
+    }
+  });
+
+  if (!hasValidItem) {
+    showError("Please enter at least one valid invoice item.");
+    return false;
+  }
+
+  return true;
+}
+
+/* ===========================
+   SAVED BILLS STORAGE
+=========================== */
+
+function getSavedBills() {
+  return JSON.parse(localStorage.getItem("mnmSavedBills")) || [];
+}
+
+function setSavedBills(bills) {
+  localStorage.setItem("mnmSavedBills", JSON.stringify(bills));
+}
+
+function collectBillData() {
+  const items = [];
+
+  document.querySelectorAll("#invoiceBody tr").forEach((row) => {
+    items.push({
+      particular: row.querySelector(".particular")?.value || "",
+      qty: row.querySelector(".qty")?.value || "1",
+      rate: row.querySelector(".rate")?.value || "0"
+    });
+  });
+
+  return {
+    id: editingBillId || Date.now(),
+    invoiceNo: invoiceNo.value,
+    invoiceDate: invoiceDate.value,
+    previousBillNo: previousBillNo?.value || "",
+    clientName: document.getElementById("clientName").value,
+    clientMobile: document.getElementById("clientMobile").value,
+    clientAddress: document.getElementById("clientAddress").value,
+    discount: discountInput.value,
+    previouslyReceived: previouslyReceived?.value || "0",
+    receivedThisBill: receivedThisBill?.value || "0",
+    notes: document.getElementById("notes").value,
+    items
+  };
+}
+
+function saveBill() {
+  if (!validateInvoice()) {
+    return;
+  }
+
+  const bill = collectBillData();
+  const bills = getSavedBills();
+
+  if (editingBillId) {
+    const index = bills.findIndex((item) => item.id === editingBillId);
+
+    if (index !== -1) {
+      bills[index] = bill;
+    }
+
+    editingBillId = null;
+  } else {
+    bills.push(bill);
+    increaseInvoiceNumber();
+  }
+
+  setSavedBills(bills);
+  alert("Bill saved successfully.");
+
+  clearInvoiceWithoutConfirm();
+  setNextInvoiceNumber();
+}
+
+function showSavedBills() {
+  const bills = getSavedBills();
+
+  savedBillsList.innerHTML = "";
+
+  if (bills.length === 0) {
+    savedBillsList.innerHTML = "<p>No saved bills found.</p>";
+  }
+
+  bills
+    .slice()
+    .reverse()
+    .forEach((bill) => {
+      const div = document.createElement("div");
+      div.className = "saved-bill-item";
+
+      div.innerHTML = `
+        <div>
+          <strong>${bill.invoiceNo}</strong>
+          <span>${bill.clientName || "No Client Name"} | ${bill.invoiceDate || "No Date"}</span>
+        </div>
+        <button type="button" class="edit-saved-bill">Edit</button>
+        <button type="button" class="delete-saved-bill">Delete</button>
+      `;
+
+      div.querySelector(".edit-saved-bill").addEventListener("click", () => {
+        loadSavedBill(bill.id);
+      });
+
+      div.querySelector(".delete-saved-bill").addEventListener("click", () => {
+        deleteSavedBill(bill.id);
+      });
+
+      savedBillsList.appendChild(div);
+    });
+
+  savedBillsPopup.style.display = "flex";
+}
+
+function loadSavedBill(id) {
+  const bills = getSavedBills();
+  const bill = bills.find((item) => item.id === id);
+
+  if (!bill) {
+    return;
+  }
+
+  editingBillId = bill.id;
+
+  invoiceNo.value = bill.invoiceNo;
+  invoiceDate.value = bill.invoiceDate;
+  previousBillNo.value = bill.previousBillNo || "";
+  document.getElementById("clientName").value = bill.clientName;
+  document.getElementById("clientMobile").value = bill.clientMobile;
+  document.getElementById("clientAddress").value = bill.clientAddress;
+  discountInput.value = bill.discount || "0";
+  previouslyReceived.value = bill.previouslyReceived || "0";
+  receivedThisBill.value = bill.receivedThisBill || "0";
+
+  invoiceBody.innerHTML = "";
+
+  bill.items.forEach((item) => {
+    createRow();
+    const row = invoiceBody.lastElementChild;
+
+    row.querySelector(".particular").value = item.particular;
+    row.querySelector(".qty").value = item.qty;
+    row.querySelector(".rate").value = item.rate;
+  });
+
+  updateSerialNumbers();
+  calculateInvoice();
+  savedBillsPopup.style.display = "none";
+}
+
+function deleteSavedBill(id) {
+  if (!confirm("Delete this saved bill?")) {
+    return;
+  }
+
+  const bills = getSavedBills().filter((item) => item.id !== id);
+  setSavedBills(bills);
+  showSavedBills();
+}
+
+/* ===========================
+   PRINT
+=========================== */
+
+function printInvoice() {
+  calculateInvoice();
+  buildPremiumInvoice();
+  window.print();
+}
+
+/* ===========================
+   PDF DOWNLOAD
+=========================== */
+
+function downloadInvoicePdf() {
+  if (!validateInvoice()) {
+    return;
+  }
+
+  calculateInvoice();
+  buildPremiumInvoice();
+  showLoading();
+
+  const element = document.getElementById("premiumPrintInvoice");
+  const fileName = buildPdfFileName();
+
+  const options = {
+    margin: 8,
+    filename: fileName,
+    image: {
+      type: "jpeg",
+      quality: 0.98
+    },
+    html2canvas: {
+      scale: 2,
+      useCORS: true
+    },
+    jsPDF: {
+      unit: "mm",
+      format: "a4",
+      orientation: "portrait"
+    }
+  };
+
+  html2pdf()
+    .set(options)
+    .from(element)
+    .save()
+    .then(() => {
+      hideLoading();
+      showSuccess();
+    })
+    .catch(() => {
+      hideLoading();
+      showError("Unable to generate PDF. Please try again.");
+    });
+}
+
+function buildPdfFileName() {
+  const baseName = pdfFileName?.value || "MNM-Invoice";
+  const number = invoiceNo.value.trim() || "Draft";
+
+  return `${baseName}-${number}.pdf`;
+}
+
+/* ===========================
+   PREMIUM PRINT TEMPLATE
+=========================== */
+
+function buildPremiumInvoice() {
+  const printBox = document.getElementById("premiumPrintInvoice");
+
+  const invNo = invoiceNo.value || "";
+  const date = invoiceDate.value
+    ? invoiceDate.value.split("-").reverse().join("/")
+    : "";
+
+  const refNo = previousBillNo?.value || "";
+  const clientName = document.getElementById("clientName").value || "";
+  const clientMobile = document.getElementById("clientMobile").value || "";
+  const clientAddress = document.getElementById("clientAddress").value || "";
+  const words = amountWords.value || "";
+
+  let rows = "";
+  let subtotal = 0;
+
+  document.querySelectorAll("#invoiceBody tr").forEach((row, index) => {
+    const particular = row.querySelector(".particular")?.value || "";
+    const qty = parseFloat(row.querySelector(".qty")?.value) || 0;
+    const rate = parseFloat(row.querySelector(".rate")?.value) || 0;
+    const amount = qty * rate;
+
+    subtotal += amount;
+
+    rows += `
+      <tr>
+        <td>${index + 1}.</td>
+        <td>${particular}</td>
+        <td>${qty}</td>
+        <td>${money(rate)}</td>
+        <td>${money(amount)}</td>
+      </tr>
+    `;
+  });
+
+  const discount = parseFloat(discountInput.value) || 0;
+  const finalFees = Math.max(subtotal - discount, 0);
+  const oldReceived = parseFloat(previouslyReceived?.value) || 0;
+  const currentReceived = parseFloat(receivedThisBill?.value) || 0;
+  const receivedTotal = oldReceived + currentReceived;
+  const pending = Math.max(finalFees - receivedTotal, 0);
+
+  printBox.innerHTML = `
+    <div class="premium-head">
+      <img src="images/letterhead-logo.png" alt="MNM Legal Associates">
+      <div class="premium-office">
+        <h1>MNM LEGAL ASSOCIATES</h1>
+        <div>Advocates & Legal Consultants</div>
+        <div>Office No. 511, Vedmata Cooperative Housing Society, IOC Road,</div>
+        <div>Chandkheda, Ahmedabad - 382424</div>
+        <div>Mob: +91 9898172734 | Email: mnmlegal.in@gmail.com |</div>
+        <div>Website: www.mnmlegal.in</div>
+      </div>
+    </div>
+
+    <div class="premium-title">TAX INVOICE / PROFESSIONAL BILL</div>
+
+    <div class="premium-meta">
+      <div>Bill No: ${invNo}</div>
+      <div>Date: ${date}</div>
+    </div>
+
+    ${
+      refNo
+        ? `<div class="premium-reference"><strong>Reference / Previous Bill No:</strong> ${refNo}</div>`
+        : ""
+    }
+
+    <div class="premium-billto">
+      <h3>BILL TO:</h3>
+      <p>${clientName}</p>
+      <p>Add: ${clientAddress}</p>
+      <p>Mo: ${clientMobile}</p>
+    </div>
+
+    <table class="premium-table">
+      <thead>
+        <tr>
+          <th>SR. NO</th>
+          <th>PARTICULARS</th>
+          <th>QTY.</th>
+          <th>FEE (₹)</th>
+          <th>AMOUNT (₹)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+        <tr>
+          <td colspan="4" class="premium-total-label">TOTAL FEES</td>
+          <td><strong>₹ ${money(subtotal)}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="premium-fee-summary">
+      <tr>
+        <td>Total Fees</td>
+        <td>₹ ${money(subtotal)}</td>
+      </tr>
+      <tr>
+        <td>Discount</td>
+        <td>₹ ${money(discount)}</td>
+      </tr>
+      <tr>
+        <td>Final Fees</td>
+        <td>₹ ${money(finalFees)}</td>
+      </tr>
+      <tr>
+        <td>Previously Received</td>
+        <td>₹ ${money(oldReceived)}</td>
+      </tr>
+      <tr>
+        <td>Received This Bill</td>
+        <td>₹ ${money(currentReceived)}</td>
+      </tr>
+      <tr>
+        <td>Total Received</td>
+        <td>₹ ${money(receivedTotal)}</td>
+      </tr>
+      <tr class="pending-row">
+        <td>Pending Balance</td>
+        <td>₹ ${money(pending)}</td>
+      </tr>
+    </table>
+
+    <div class="premium-words">
+      <strong>AMOUNT IN WORDS:</strong><br>
+      ${words}
+    </div>
+
+    <div class="premium-separator"></div>
+
+    <div class="premium-notes">
+      <h3>NOTES:</h3>
+      <ul>
+        <li>Professional charges are exclusive of court fees, government fees, stamp duty, registration charges and other statutory levies, wherever applicable.</li>
+        <li>All out-of-pocket expenses including travel, courier/postal charges, documentation, photocopying, miscellaneous expenses and any other incidental expenses shall be borne by the Client.</li>
+        <li>Fees for litigation, court appearances, appeals, execution proceedings or any additional legal work not specifically covered under this Invoice shall be charged separately.</li>
+        <li>Professional fees paid against services rendered shall not ordinarily be refundable once the work has commenced.</li>
+      </ul>
+    </div>
+
+    <div class="premium-sign">
+      FOR MNM LEGAL ASSOCIATES
+    </div>
+  `;
+}
+
+/* ===========================
+   PREVIEW
+=========================== */
+
+function previewInvoice() {
+  printInvoice();
+}
+
+/* ===========================
+   CLEAR
+=========================== */
+
+function clearTable() {
+  if (!confirm("Clear all invoice items?")) {
+    return;
+  }
+
+  invoiceBody.innerHTML = "";
+  createRow();
+  calculateInvoice();
+}
+
+function clearInvoice() {
+  if (!confirm("Clear the complete invoice?")) {
+    return;
+  }
+
+  clearInvoiceWithoutConfirm();
+}
+
+function clearInvoiceWithoutConfirm() {
+  invoiceNo.value = "";
+  previousBillNo.value = "";
+  document.getElementById("clientName").value = "";
+  document.getElementById("clientMobile").value = "";
+  document.getElementById("clientAddress").value = "";
+  discountInput.value = "0";
+  previouslyReceived.value = "0";
+  receivedThisBill.value = "0";
+
+  invoiceBody.innerHTML = "";
+  createRow();
+
+  editingBillId = null;
+  setTodayDate();
+  setNextInvoiceNumber();
+  calculateInvoice();
+}
+
+/* ===========================
+   POPUPS
+=========================== */
+
+function showLoading() {
+  if (loadingPopup) {
+    loadingPopup.style.display = "flex";
+  }
+}
+
+function hideLoading() {
+  if (loadingPopup) {
+    loadingPopup.style.display = "none";
+  }
+}
+
+function showSuccess() {
+  if (successPopup) {
+    successPopup.style.display = "flex";
+  }
+}
+
+function hideSuccess() {
+  if (successPopup) {
+    successPopup.style.display = "none";
+  }
+}
+
+function showError(message) {
+  if (errorPopup && errorMessage) {
+    errorMessage.textContent = message;
+    errorPopup.style.display = "flex";
+  } else {
+    alert(message);
+  }
+}
+
+function hideError() {
+  if (errorPopup) {
+    errorPopup.style.display = "none";
+  }
+}
+
+/* ===========================
+   EVENTS
+=========================== */
+
+if (invoiceNo) {
+  invoiceNo.addEventListener("blur", formatManualInvoiceNumber);
+}
+
+if (addItemBtn) {
+  addItemBtn.addEventListener("click", createRow);
+}
+
+if (clearTableBtn) {
+  clearTableBtn.addEventListener("click", clearTable);
+}
+
+if (discountInput) {
+  discountInput.addEventListener("input", calculateInvoice);
+}
+
+if (previouslyReceived) {
+  previouslyReceived.addEventListener("input", calculateInvoice);
+}
+
+if (receivedThisBill) {
+  receivedThisBill.addEventListener("input", calculateInvoice);
+}
+
+if (saveBillBtn) {
+  saveBillBtn.addEventListener("click", saveBill);
+}
+
+if (savedBillsBtn) {
+  savedBillsBtn.addEventListener("click", showSavedBills);
+}
+
+if (closeSavedBills) {
+  closeSavedBills.addEventListener("click", () => {
+    savedBillsPopup.style.display = "none";
+  });
+}
+
+if (printBtn) {
+  printBtn.addEventListener("click", printInvoice);
+}
+
+if (printInvoiceBottom) {
+  printInvoiceBottom.addEventListener("click", printInvoice);
+}
+
+if (downloadPdf) {
+  downloadPdf.addEventListener("click", downloadInvoicePdf);
+}
+
+if (downloadPdfBottom) {
+  downloadPdfBottom.addEventListener("click", downloadInvoicePdf);
+}
+
+if (previewBtn) {
+  previewBtn.addEventListener("click", previewInvoice);
+}
+
+if (clearInvoiceBtn) {
+  clearInvoiceBtn.addEventListener("click", clearInvoice);
+}
+
+if (closeSuccessPopup) {
+  closeSuccessPopup.addEventListener("click", hideSuccess);
+}
+
+if (closeErrorPopup) {
+  closeErrorPopup.addEventListener("click", hideError);
+}
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    hideSuccess();
+    hideError();
+    hideLoading();
+
+    if (savedBillsPopup) {
+      savedBillsPopup.style.display = "none";
+    }
+  }
+});
