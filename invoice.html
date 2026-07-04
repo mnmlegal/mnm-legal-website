@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="invoice.css">
 
@@ -70,15 +70,8 @@
         <div class="letterhead-right">
           <h1>MNM LEGAL ASSOCIATES</h1>
           <p>Advocates & Legal Consultants</p>
-          <p>
-            Office No. 511, Vedmata Cooperative Housing Society, IOC Road,
-            Chandkheda, Ahmedabad - 382424
-          </p>
-          <p>
-            Mob: +91 9898172734 |
-            Email: mnmlegal.in@gmail.com |
-            Website: www.mnmlegal.in
-          </p>
+          <p>Office No. 511, Vedmata Cooperative Housing Society, IOC Road, Chandkheda, Ahmedabad - 382424</p>
+          <p>Mob: +91 9898172734 | Email: mnmlegal.in@gmail.com | Website: www.mnmlegal.in</p>
         </div>
       </div>
 
@@ -89,11 +82,7 @@
       <div class="invoice-meta">
         <div>
           <label for="invoiceNo">Invoice No.</label>
-       <input
-  type="text"
-  id="invoiceNo"
-  value="MNM//2026"
-  placeholder="MNM/001/2026">
+          <input type="text" id="invoiceNo" value="MNM//2026" placeholder="MNM/001/2026">
         </div>
 
         <div>
@@ -184,9 +173,7 @@
             </tr>
 
             <tr>
-              <td>
-                <label for="discount">Discount</label>
-              </td>
+              <td><label for="discount">Discount</label></td>
               <td>
                 <input type="number" id="discount" value="0" min="0">
               </td>
@@ -195,6 +182,23 @@
             <tr class="grand-total-row">
               <td><strong>Grand Total</strong></td>
               <td><strong id="grandTotal">₹0.00</strong></td>
+            </tr>
+
+            <tr>
+              <td>Total Fees</td>
+              <td><strong id="totalFees">₹0.00</strong></td>
+            </tr>
+
+            <tr>
+              <td><label for="receivedFees">Received Fees</label></td>
+              <td>
+                <input type="number" id="receivedFees" value="0" min="0">
+              </td>
+            </tr>
+
+            <tr>
+              <td>Pending Fees</td>
+              <td><strong id="pendingFees">₹0.00</strong></td>
             </tr>
           </table>
         </div>
@@ -211,7 +215,7 @@
 
       <div class="field">
         <label for="notes">Notes</label>
-   <textarea id="notes" rows="5" readonly>Professional fees towards legal consultation, drafting, appearance and other agreed legal services.
+        <textarea id="notes" rows="5" readonly>Professional fees towards legal consultation, drafting, appearance and other agreed legal services.
 
 Court fees, Government fees, Stamp Duty, Registration Charges, Travelling Expenses and other out-of-pocket expenses shall be borne separately unless specifically agreed.
 
@@ -233,18 +237,29 @@ Professional fees once paid shall ordinarily not be refundable after commencemen
 
       <div class="invoice-footer">
         <div class="footer-left">
-          <p><strong>                 Thank you for choosing MNM Legal Associates</strong></p>
+          <p><strong>Thank you for choosing MNM Legal Associates</strong></p>
         </div>
-
         <div class="footer-right"></div>
       </div>
     </section>
   </main>
-<section id="premiumPrintInvoice" class="premium-print-invoice"></section>
+
+  <section id="premiumPrintInvoice" class="premium-print-invoice"></section>
+
   <div class="bottom-actions">
     <button type="button" id="previewBtn" class="btn">
       <i class="fa-solid fa-eye"></i>
       Preview
+    </button>
+
+    <button type="button" id="saveBillBtn" class="btn gold">
+      <i class="fa-solid fa-floppy-disk"></i>
+      Save Bill
+    </button>
+
+    <button type="button" id="savedBillsBtn" class="btn">
+      <i class="fa-solid fa-folder-open"></i>
+      Saved Bills
     </button>
 
     <button type="button" id="downloadPdfBottom" class="btn gold">
@@ -274,7 +289,7 @@ Professional fees once paid shall ordinarily not be refundable after commencemen
     <div class="popup-card">
       <i class="fa-solid fa-circle-check success-icon"></i>
       <h2>Invoice Generated Successfully</h2>
-      <p>Your invoice has been generated successfully. You can now print or download the PDF.</p>
+      <p>Your invoice has been generated successfully.</p>
 
       <button type="button" id="closeSuccessPopup" class="btn gold">
         OK
@@ -289,6 +304,17 @@ Professional fees once paid shall ordinarily not be refundable after commencemen
       <p id="errorMessage"></p>
 
       <button type="button" id="closeErrorPopup" class="btn">
+        Close
+      </button>
+    </div>
+  </div>
+
+  <div id="savedBillsPopup" class="popup-overlay">
+    <div class="popup-card saved-bills-card">
+      <h2>Saved Bills</h2>
+      <div id="savedBillsList"></div>
+
+      <button type="button" id="closeSavedBills" class="btn">
         Close
       </button>
     </div>
