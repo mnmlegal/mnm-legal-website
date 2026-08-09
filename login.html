@@ -10,6 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     * {
       margin: 0;
@@ -82,8 +85,20 @@
       background: #f0c94b;
     }
 
+    .login-box button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     #error {
       color: #ff4d4d;
+      margin-top: 15px;
+      font-size: 14px;
+      min-height: 20px;
+    }
+
+    #success {
+      color: #4dff88;
       margin-top: 15px;
       font-size: 14px;
       min-height: 20px;
@@ -102,44 +117,381 @@
 </head>
 
 <body>
+
   <div class="login-box">
-    <img src="images/logo.png" alt="MNM Legal Associates Logo">
+
+    <img
+      src="images/logo.png"
+      alt="MNM Legal Associates Logo"
+    >
 
     <h2>MNM Admin Panel</h2>
 
-    <input type="text" id="username" placeholder="Username" autocomplete="username">
-    <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+    <input
+      type="text"
+      id="username"
+      placeholder="Username or Email"
+      autocomplete="username"
+    >
 
-    <button type="button" id="loginBtn">LOGIN</button>
+    <input
+      type="password"
+      id="password"
+      placeholder="Password"
+      autocomplete="current-password"
+    >
+
+    <button
+      type="button"
+      id="loginBtn"
+    >
+      LOGIN
+    </button>
 
     <p id="error"></p>
+    <p id="success"></p>
+
   </div>
 
+
   <script>
-    const username = document.getElementById("username");
-    const password = document.getElementById("password");
+
+    /* =========================================================
+       SUPABASE CONFIGURATION
+       ========================================================= */
+
+    const SUPABASE_URL = "PASTE_YOUR_SUPABASE_PROJECT_URL_HERE";
+
+    const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_OR_PUBLISHABLE_KEY_HERE";
+
+
+    /* =========================================================
+       CREATE SUPABASE CLIENT
+       ========================================================= */
+
+    const { createClient } = window.supabase;
+
+    const supabaseClient = createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+
+    /* =========================================================
+       ELEMENTS
+       ========================================================= */
+
+    const usernameInput = document.getElementById("username");
+    const passwordInput = document.getElementById("password");
     const loginBtn = document.getElementById("loginBtn");
-    const error = document.getElementById("error");
 
-    function login() {
-      const user = username.value.trim();
-      const pass = password.value.trim();
+    const errorMessage = document.getElementById("error");
+    const successMessage = document.getElementById("success");
 
-      if (user === "mnmlegal" && pass === "@mnmlegal108") {
-        localStorage.setItem("loggedIn", "yes");
-        window.location.href = "dashboard.html";
-      } else {
-        error.textContent = "Invalid username or password";
-      }
+
+    /* =========================================================
+       ADMIN EMAIL
+       
+       Your Supabase admin account:
+       mnmlegal.in@gmail.com
+       ========================================================= */
+
+    const ADMIN_EMAIL = "mnmlegal.in@gmail.com";
+
+
+    /* =========================================================
+       CLEAR MESSAGES
+       ========================================================= */
+
+    function clearMessages() {
+      errorMessage.textContent = "";
+      successMessage.textContent = "";
     }
 
-    loginBtn.addEventListener("click", login);
 
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        login();
+    /* =========================================================
+       LOGIN FUNCTION
+       ========================================================= */
+
+    async function login() {
+
+      clearMessages();
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!username || !password) {
+
+        errorMessage.textContent =
+          "Please enter username and password.";
+
+        return;
       }
-    });
+
+
+      /*
+       Allow both:
+
+       mnmlegal
+
+       OR
+
+       mnmlegal.in@gmail.com
+      */
+
+      let email = username;
+
+      if (username.toLowerCase() === "mnmlegal") {
+        email = ADMIN_EMAIL;
+      }
+
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = "LOGGING IN...";
+
+
+      try {
+
+        /* =====================================================
+           SUPABASE AUTHENTICATION
+           ===================================================== */
+
+        const { data, error } =
+          await supabaseClient.auth.signInWithPassword({
+
+            email: email,
+
+            password: password
+
+          });
+
+
+        if (error) {
+
+          console.error("Login error:", error);
+
+          errorMessage.textContent =
+            "Invalid username or password.";
+
+          loginBtn.disabled = false;
+          loginBtn.textContent = "LOGIN";
+
+          return;
+        }
+
+
+        /* =====================================================
+           CHECK USER
+           ===================================================== */
+
+        const user = data.user;
+
+
+        if (!user) {
+
+          errorMessage.textContent =
+            "Unable to verify account.";
+
+          loginBtn.disabled = false;
+          loginBtn.textContent = "LOGIN";
+
+          return;
+        }
+
+
+        /* =====================================================
+           CHECK ADMIN ROLE
+           ===================================================== */
+
+        const {
+          data: profile,
+          error: profileError
+        } = await supabaseClient
+
+          .from("profiles")
+
+          .select("role")
+
+          .eq("id", user.id)
+
+          .single();
+
+
+        if (profileError) {
+
+          console.error(
+            "Profile error:",
+            profileError
+          );
+
+          await supabaseClient.auth.signOut();
+
+          errorMessage.textContent =
+            "Unable to verify admin access.";
+
+          loginBtn.disabled = false;
+          loginBtn.textContent = "LOGIN";
+
+          return;
+        }
+
+
+        /* =====================================================
+           ADMIN ONLY
+           ===================================================== */
+
+        if (!profile || profile.role !== "admin") {
+
+          await supabaseClient.auth.signOut();
+
+          errorMessage.textContent =
+            "Access denied. Admin account required.";
+
+          loginBtn.disabled = false;
+          loginBtn.textContent = "LOGIN";
+
+          return;
+        }
+
+
+        /* =====================================================
+           SUCCESS
+           ===================================================== */
+
+        successMessage.textContent =
+          "Login successful. Opening Admin Panel...";
+
+
+        /*
+         IMPORTANT:
+
+         We DO NOT use:
+
+         localStorage.setItem("loggedIn", "yes")
+
+         Supabase itself maintains the authenticated session.
+        */
+
+
+        setTimeout(() => {
+
+          window.location.href = "dashboard.html";
+
+        }, 500);
+
+
+      } catch (err) {
+
+        console.error(err);
+
+        errorMessage.textContent =
+          "Something went wrong. Please try again.";
+
+        loginBtn.disabled = false;
+        loginBtn.textContent = "LOGIN";
+
+      }
+
+    }
+
+
+    /* =========================================================
+       LOGIN BUTTON
+       ========================================================= */
+
+    loginBtn.addEventListener(
+      "click",
+      login
+    );
+
+
+    /* =========================================================
+       ENTER KEY
+       ========================================================= */
+
+    document.addEventListener(
+      "keydown",
+      function(event) {
+
+        if (event.key === "Enter") {
+
+          login();
+
+        }
+
+      }
+    );
+
+
+    /* =========================================================
+       CHECK EXISTING SESSION
+       
+       If already logged in, don't show login again.
+       ========================================================= */
+
+    async function checkExistingSession() {
+
+      try {
+
+        const {
+          data: {
+            session
+          }
+        } = await supabaseClient.auth.getSession();
+
+
+        if (!session) {
+          return;
+        }
+
+
+        const user = session.user;
+
+
+        /* Check admin role */
+
+        const {
+          data: profile,
+          error
+        } = await supabaseClient
+
+          .from("profiles")
+
+          .select("role")
+
+          .eq("id", user.id)
+
+          .single();
+
+
+        if (
+          !error &&
+          profile &&
+          profile.role === "admin"
+        ) {
+
+          window.location.href =
+            "dashboard.html";
+
+        }
+
+      } catch (err) {
+
+        console.error(
+          "Session check error:",
+          err
+        );
+
+      }
+
+    }
+
+
+    /* Run session check */
+
+    checkExistingSession();
+
   </script>
+
 </body>
 </html>
