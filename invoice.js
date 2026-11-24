@@ -5,7 +5,35 @@
    Version 3.0
    Justice, Integrity & Excellence
    ========================================================= */
+import {
+    createCloudInvoice,
+    updateCloudInvoice,
+    fetchCentralInvoices,
+    getCentralSequence,
+    getCentralPaymentSettings,
+    saveCentralPaymentSettings
+} from "./invoice-cloud.js";
 
+let cloudRecords = [];
+let cloudSequence = 1;
+let cloudPaymentSettings = {};
+let pendingCreateId = null;
+let cloudSaving = false;
+
+async function syncCloudData() {
+
+    const [records, sequence, settings] =
+        await Promise.all([
+            fetchCentralInvoices(),
+            getCentralSequence(),
+            getCentralPaymentSettings()
+        ]);
+
+    cloudRecords = records;
+    cloudSequence = sequence;
+    cloudPaymentSettings = settings;
+
+}
 const KEYS = {
     invoices: "mnmSavedBills",
     sequence: "mnmNextInvoiceNumber",
