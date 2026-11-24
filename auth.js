@@ -1,11 +1,18 @@
 
 /* =========================================================
    MNM LEGAL ASSOCIATES
-   Authentication & Session Management
+   AUTHENTICATION & STAFF AUTHORIZATION
+   Version 3.0
+
    Justice, Integrity & Excellence
    ========================================================= */
 
-import { auth } from "./firebase-config.js";
+import {
+    auth,
+    db,
+    COLLECTIONS,
+    ROLES
+} from "./firebase-config.js";
 
 import {
     signInWithEmailAndPassword,
@@ -16,6 +23,12 @@ import {
     browserSessionPersistence,
     sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+
+import {
+    doc,
+    getDocFromServer,
+    onSnapshot
+} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
 
 /* =========================================================
@@ -34,9 +47,17 @@ const AUTH_CONFIG = Object.freeze({
 
 });
 
+const ALLOWED_ROLES = new Set([
+    ROLES.ADMIN,
+    ROLES.ADVOCATE,
+    ROLES.STAFF
+]);
+
+let currentStaffProfile = null;
+
 
 /* =========================================================
-   AUTHENTICATION ERROR HANDLING
+   ERROR HANDLING
    ========================================================= */
 
 function getAuthErrorMessage(error) {
@@ -47,7 +68,7 @@ function getAuthErrorMessage(error) {
             return "Please enter a valid email address.";
 
         case "auth/user-disabled":
-            return "This account has been disabled. Please contact the administrator.";
+            return "Your account has been disabled.";
 
         case "auth/user-not-found":
         case "auth/wrong-password":
@@ -59,16 +80,30 @@ function getAuthErrorMessage(error) {
             return "Too many attempts. Please try again later.";
 
         case "auth/network-request-failed":
-            return "Network connection failed. Please check your internet connection.";
+        case "unavailable":
+            return "Network connection failed. Please try again.";
 
         case "auth/operation-not-allowed":
-            return "This authentication operation is currently unavailable.";
+            return "This authentication operation is unavailable.";
 
         case "auth/unauthorized-domain":
-            return "This website is not authorised for authentication.";
+            return "This website is not authorised.";
 
         case "auth/invalid-api-key":
-            return "Authentication configuration error. Please contact the administrator.";
+            return "Authentication configuration error.";
+
+        case "permission-denied":
+        case "staff/access-denied":
+            return "You are not authorised to access this system.";
+
+        case "staff/inactive":
+            return "Your staff account is inactive.";
+
+        case "staff/invalid-role":
+            return "Your account has an invalid access role.";
+
+        case "staff/session-changed":
+            return "Your session has changed. Please sign in again.";
 
         default:
             return "Unable to complete the request. Please try again.";
@@ -77,12 +112,107 @@ function getAuthErrorMessage(error) {
 
 }
 
+function staffError(code) {
+
+    const error = new Error(code);
+
+    error.code = code;
+
+    return error;
+
+}
+
+
+/* =========================================================
+   STAFF PROFILE VALIDATION
+   ========================================================= */
+
+function validateStaffProfile(snapshot, user) {
+
+    if (!snapshot.exists()) {
+
+        throw staffError("staff/access-denied");
+
+    }
+
+    const data = snapshot.data();
+
+    if (data.active !== true) {
+
+        throw staffError("staff/inactive");
+
+    }
+
+    if (!ALLOWED_ROLES.has(data.role)) {
+
+        throw staffError("staff/invalid-role");
+
+    }
+
+    return Object.freeze({
+
+        uid: user.uid,
+
+        name: String(
+            data.name || user.displayName || "Staff Member"
+        ),
+
+        email: user.email || "",
+
+        role: data.role,
+
+        active: true
+
+    });
+
+}
+
+
+/* =========================================================
+   SERVER-SIDE STAFF VERIFICATION
+   Cached profiles are not accepted for initial authorization.
+   ========================================================= */
+
+async function verifyStaffAccess(user) {
+
+    if (!user?.uid) {
+
+        throw staffError("staff/access-denied");
+
+    }
+
+    const reference = doc(
+        db,
+        COLLECTIONS.STAFF,
+        user.uid
+    );
+
+    const snapshot = await getDocFromServer(reference);
+
+    if (auth.currentUser?.uid !== user.uid) {
+
+        throw staffError("staff/session-changed");
+
+    }
+
+    const profile = validateStaffProfile(snapshot, user);
+
+    currentStaffProfile = profile;
+
+    return profile;
+
+}
+
 
 /* =========================================================
    STAFF LOGIN
    ========================================================= */
 
-async function loginUser(email, password, rememberMe = false) {
+async function loginUser(
+    email,
+    password,
+    rememberMe = false
+) {
 
     const cleanEmail = String(email || "").trim();
 
@@ -90,10 +220,12 @@ async function loginUser(email, password, rememberMe = false) {
 
         return {
             success: false,
-            message: "Please enter your email address and password."
+            message: "Please enter your email and password."
         };
 
     }
+
+    let signedInUser = null;
 
     try {
 
@@ -104,23 +236,52 @@ async function loginUser(email, password, rememberMe = false) {
                 : browserSessionPersistence
         );
 
-        const credential = await signInWithEmailAndPassword(
-            auth,
-            cleanEmail,
-            password
+        const credential =
+            await signInWithEmailAndPassword(
+                auth,
+                cleanEmail,
+                password
+            );
+
+        signedInUser = credential.user;
+
+        const staff = await verifyStaffAccess(
+            signedInUser
         );
 
         return {
 
             success: true,
 
-            user: credential.user,
+            user: signedInUser,
+
+            staff,
 
             message: "Login successful."
 
         };
 
     } catch (error) {
+
+        currentStaffProfile = null;
+
+        if (
+            signedInUser &&
+            auth.currentUser?.uid === signedInUser.uid
+        ) {
+
+            try {
+
+                await signOut(auth);
+
+            } catch {
+
+                // Protected pages will independently
+                // verify authorization before access.
+
+            }
+
+        }
 
         return {
 
@@ -145,12 +306,12 @@ async function logoutUser() {
 
         await signOut(auth);
 
-        // Remove obsolete authentication flags only.
-        // Existing invoice records must remain untouched.
+        currentStaffProfile = null;
 
         try {
 
             localStorage.removeItem("loggedIn");
+
             sessionStorage.removeItem("loggedIn");
 
         } catch {
@@ -159,7 +320,9 @@ async function logoutUser() {
 
         }
 
-        window.location.replace(AUTH_CONFIG.loginPage);
+        window.location.replace(
+            AUTH_CONFIG.loginPage
+        );
 
         return { success: true };
 
@@ -192,18 +355,22 @@ async function resetPassword(email) {
 
             success: false,
 
-            message: "Please enter your registered email address."
+            message: "Please enter your registered email."
 
         };
 
     }
 
     const genericMessage =
-        "If an eligible account exists, a password reset email will be sent.";
+        "If an eligible account exists, " +
+        "a password reset email will be sent.";
 
     try {
 
-        await sendPasswordResetEmail(auth, cleanEmail);
+        await sendPasswordResetEmail(
+            auth,
+            cleanEmail
+        );
 
         return {
 
@@ -241,55 +408,133 @@ async function resetPassword(email) {
 
 
 /* =========================================================
-   AUTHENTICATION STATE OBSERVER
+   AUTHORIZED SESSION OBSERVER
    ========================================================= */
 
 function watchAuthState(callback, onError) {
 
-    return onAuthStateChanged(
+    let revision = 0;
+
+    let stopped = false;
+
+    const unsubscribe = onAuthStateChanged(
 
         auth,
 
-        (user) => {
+        async user => {
 
-            if (typeof callback === "function") {
+            const attempt = ++revision;
 
-                callback(user);
+            currentStaffProfile = null;
+
+            if (!user) {
+
+                callback?.(null);
+
+                return;
+
+            }
+
+            try {
+
+                const profile =
+                    await verifyStaffAccess(user);
+
+                if (
+                    stopped ||
+                    attempt !== revision ||
+                    auth.currentUser?.uid !== user.uid
+                ) return;
+
+                callback?.(user, profile);
+
+            } catch (error) {
+
+                if (
+                    stopped ||
+                    attempt !== revision
+                ) return;
+
+                currentStaffProfile = null;
+
+                onError?.(error);
+
+                if (
+                    auth.currentUser?.uid === user.uid
+                ) {
+
+                    try {
+
+                        await signOut(auth);
+
+                    } catch {
+
+                        callback?.(null);
+
+                    }
+
+                }
 
             }
 
         },
 
-        (error) => {
+        error => {
 
-            if (typeof onError === "function") {
+            currentStaffProfile = null;
 
-                onError(error);
+            onError?.(error);
 
-            }
+            callback?.(null);
 
         }
 
     );
 
+    return () => {
+
+        stopped = true;
+
+        revision++;
+
+        unsubscribe();
+
+    };
+
 }
 
 
 /* =========================================================
-   GET CURRENT AUTHENTICATED USER
+   GET CURRENT AUTHORIZED USER
    ========================================================= */
 
 async function getCurrentUser() {
 
     await auth.authStateReady();
 
-    return auth.currentUser;
+    const user = auth.currentUser;
+
+    if (!user) return null;
+
+    try {
+
+        await verifyStaffAccess(user);
+
+        return user;
+
+    } catch {
+
+        currentStaffProfile = null;
+
+        return null;
+
+    }
 
 }
 
 
 /* =========================================================
-   PROTECTED PAGE — CLIENT-SIDE ACCESS CHECK
+   PROTECTED PAGE AUTHORIZATION
    ========================================================= */
 
 function protectPage(options = {}) {
@@ -300,68 +545,255 @@ function protectPage(options = {}) {
 
         loadingSelector = "#authLoading",
 
-        onAuthenticated = null
+        onAuthenticated = null,
+
+        allowedRoles = [
+            ROLES.ADMIN,
+            ROLES.ADVOCATE,
+            ROLES.STAFF
+        ]
 
     } = options;
 
+    const content =
+        document.querySelector(contentSelector);
 
-    const content = document.querySelector(contentSelector);
+    const loading =
+        document.querySelector(loadingSelector);
 
-    const loading = document.querySelector(loadingSelector);
+    let unsubscribeStaff = null;
 
+    let stopped = false;
 
-    // Keep protected interface hidden during verification.
+    let generation = 0;
 
-    if (content) {
+    function hideContent() {
 
-        content.hidden = true;
+        if (content) {
+
+            content.hidden = true;
+
+        }
+
+        if (loading) {
+
+            loading.hidden = false;
+
+        }
 
     }
 
-    if (loading) {
+    function showContent() {
 
-        loading.hidden = false;
+        if (loading) {
+
+            loading.hidden = true;
+
+        }
+
+        if (content) {
+
+            content.hidden = false;
+
+        }
 
     }
 
+    function stopStaffListener() {
 
-    return onAuthStateChanged(
+        if (unsubscribeStaff) {
+
+            unsubscribeStaff();
+
+            unsubscribeStaff = null;
+
+        }
+
+    }
+
+    async function denyAccess(user) {
+
+        if (stopped) return;
+
+        generation++;
+
+        hideContent();
+
+        stopStaffListener();
+
+        currentStaffProfile = null;
+
+        try {
+
+            if (
+                user &&
+                auth.currentUser?.uid === user.uid
+            ) {
+
+                await signOut(auth);
+
+            }
+
+        } catch {
+
+            // Interface remains hidden.
+
+        }
+
+        window.location.replace(
+            AUTH_CONFIG.loginPage
+        );
+
+    }
+
+    hideContent();
+
+    const unsubscribeAuth = onAuthStateChanged(
 
         auth,
 
-        (user) => {
+        async user => {
+
+            const attempt = ++generation;
+
+            stopStaffListener();
+
+            hideContent();
+
+            currentStaffProfile = null;
 
             if (!user) {
 
-                if (content) {
-
-                    content.hidden = true;
-
-                }
-
-                window.location.replace(AUTH_CONFIG.loginPage);
+                window.location.replace(
+                    AUTH_CONFIG.loginPage
+                );
 
                 return;
 
             }
 
+            try {
 
-            if (loading) {
+                const profile =
+                    await verifyStaffAccess(user);
 
-                loading.hidden = true;
+                if (
+                    stopped ||
+                    attempt !== generation
+                ) return;
 
-            }
+                if (
+                    !allowedRoles.includes(profile.role)
+                ) {
 
-            if (content) {
+                    throw staffError(
+                        "staff/access-denied"
+                    );
 
-                content.hidden = false;
+                }
 
-            }
+                if (
+                    typeof onAuthenticated === "function"
+                ) {
 
+                    await onAuthenticated(user, profile);
 
-            if (typeof onAuthenticated === "function") {
+                }
 
-                onAuthenticated(user);
+                if (
+                    stopped ||
+                    attempt !== generation ||
+                    auth.currentUser?.uid !== user.uid
+                ) return;
+
+                showContent();
+
+                const reference = doc(
+                    db,
+                    COLLECTIONS.STAFF,
+                    user.uid
+                );
+
+                /*
+                 * Monitor staff status while the
+                 * protected page remains open.
+                 */
+
+                unsubscribeStaff = onSnapshot(
+
+                    reference,
+
+                    { includeMetadataChanges: true },
+
+                    snapshot => {
+
+                        if (
+                            stopped ||
+                            attempt !== generation
+                        ) return;
+
+                        if (
+                            snapshot.metadata.fromCache ||
+                            snapshot.metadata.hasPendingWrites
+                        ) {
+
+                            hideContent();
+
+                            return;
+
+                        }
+
+                        try {
+
+                            const updatedProfile =
+                                validateStaffProfile(
+                                    snapshot,
+                                    user
+                                );
+
+                            if (
+                                !allowedRoles.includes(
+                                    updatedProfile.role
+                                )
+                            ) {
+
+                                throw staffError(
+                                    "staff/access-denied"
+                                );
+
+                            }
+
+                            currentStaffProfile =
+                                updatedProfile;
+
+                            showContent();
+
+                        } catch {
+
+                            void denyAccess(user);
+
+                        }
+
+                    },
+
+                    () => {
+
+                        void denyAccess(user);
+
+                    }
+
+                );
+
+            } catch {
+
+                if (
+                    !stopped &&
+                    attempt === generation
+                ) {
+
+                    await denyAccess(user);
+
+                }
 
             }
 
@@ -369,17 +801,25 @@ function protectPage(options = {}) {
 
         () => {
 
-            if (content) {
-
-                content.hidden = true;
-
-            }
-
-            window.location.replace(AUTH_CONFIG.loginPage);
+            void denyAccess(auth.currentUser);
 
         }
 
     );
+
+    return () => {
+
+        stopped = true;
+
+        generation++;
+
+        stopStaffListener();
+
+        unsubscribeAuth();
+
+        hideContent();
+
+    };
 
 }
 
@@ -390,52 +830,76 @@ function protectPage(options = {}) {
 
 function redirectIfAuthenticated() {
 
-    return onAuthStateChanged(
+    return watchAuthState(user => {
 
-        auth,
+        if (user) {
 
-        (user) => {
-
-            if (user) {
-
-                window.location.replace(
-                    AUTH_CONFIG.dashboardPage
-                );
-
-            }
+            window.location.replace(
+                AUTH_CONFIG.dashboardPage
+            );
 
         }
 
-    );
+    });
 
 }
 
 
 /* =========================================================
-   USER DISPLAY INFORMATION
+   STAFF PROFILE UTILITIES
    ========================================================= */
 
-function getUserDisplayName(user) {
+function getStaffProfile() {
 
-    if (!user) {
+    if (
+        currentStaffProfile?.uid !==
+        auth.currentUser?.uid
+    ) {
 
-        return "Staff Member";
+        return null;
 
     }
 
-    if (user.displayName) {
+    return currentStaffProfile;
+
+}
+
+function getUserDisplayName(user) {
+
+    if (
+        user &&
+        currentStaffProfile?.uid === user.uid
+    ) {
+
+        return currentStaffProfile.name;
+
+    }
+
+    if (user?.displayName) {
 
         return user.displayName;
 
     }
 
-    if (user.email) {
+    if (user?.email) {
 
         return user.email.split("@")[0];
 
     }
 
     return "Staff Member";
+
+}
+
+function hasRole(role) {
+
+    return getStaffProfile()?.role === role;
+
+}
+
+function isAdmin() {
+
+    return hasRole(ROLES.ADMIN);
 
 }
 
@@ -448,11 +912,15 @@ async function getSessionInfo() {
 
     const user = await getCurrentUser();
 
-    if (!user) {
+    const staff = getStaffProfile();
+
+    if (!user || !staff) {
 
         return {
 
             authenticated: false,
+
+            authorized: false,
 
             user: null
 
@@ -464,15 +932,22 @@ async function getSessionInfo() {
 
         authenticated: true,
 
+        authorized: true,
+
         uid: user.uid,
 
         email: user.email,
 
-        displayName: getUserDisplayName(user),
+        displayName: staff.name,
+
+        role: staff.role,
+
+        active: staff.active,
 
         emailVerified: user.emailVerified,
 
-        lastSignInTime: user.metadata.lastSignInTime
+        lastSignInTime:
+            user.metadata.lastSignInTime
 
     };
 
@@ -480,7 +955,7 @@ async function getSessionInfo() {
 
 
 /* =========================================================
-   AUTHENTICATION MODULE EXPORTS
+   MODULE EXPORTS
    ========================================================= */
 
 export {
@@ -505,7 +980,15 @@ export {
 
     getSessionInfo,
 
-    getAuthErrorMessage
+    getAuthErrorMessage,
+
+    verifyStaffAccess,
+
+    getStaffProfile,
+
+    hasRole,
+
+    isAdmin
 
 };
 
@@ -513,4 +996,5 @@ export {
 /* =========================================================
    END OF AUTHENTICATION MODULE
    MNM LEGAL ASSOCIATES
+   Justice, Integrity & Excellence
    ========================================================= */
