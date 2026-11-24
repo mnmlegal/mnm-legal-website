@@ -1,23 +1,34 @@
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
-   Firebase Configuration
+   CENTRAL FIREBASE CONFIGURATION
+   Version 2.0
+
    Justice, Integrity & Excellence
    ========================================================= */
 
-import { initializeApp, getApp, getApps }
-from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+import {
+    initializeApp,
+    getApp,
+    getApps
+} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
 
-import { getAuth }
-from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+import {
+    getAuth
+} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+
+import {
+    getFirestore
+} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
 
 /* =========================================================
-   FIREBASE WEB APP CONFIGURATION
+   FIREBASE PROJECT CONFIGURATION
    ========================================================= */
 
 const firebaseConfig = {
 
-    apiKey: "PASTE_YOUR_FIREBASE_API_KEY_HERE",
+    apiKey: "PASTE_YOUR_EXISTING_FIREBASE_API_KEY_HERE",
 
     authDomain: "mnm-legal-associates.firebaseapp.com",
 
@@ -33,7 +44,7 @@ const firebaseConfig = {
 
 
 /* =========================================================
-   INITIALIZE FIREBASE
+   INITIALIZE FIREBASE APPLICATION
    ========================================================= */
 
 const app = getApps().length
@@ -42,7 +53,7 @@ const app = getApps().length
 
 
 /* =========================================================
-   INITIALIZE AUTHENTICATION
+   FIREBASE AUTHENTICATION
    ========================================================= */
 
 const auth = getAuth(app);
@@ -51,7 +62,74 @@ auth.languageCode = "en";
 
 
 /* =========================================================
+   CLOUD FIRESTORE DATABASE
+   ========================================================= */
+
+const db = getFirestore(app);
+
+
+/* =========================================================
+   DATABASE COLLECTION REFERENCES
+   ========================================================= */
+
+const COLLECTIONS = Object.freeze({
+
+    STAFF: "staff",
+
+    CLIENTS: "clients",
+
+    CASES: "cases",
+
+    INVOICES: "invoices",
+
+    PAYMENTS: "payments",
+
+    HEARINGS: "hearings",
+
+    DOCUMENTS: "documents",
+
+    SETTINGS: "settings",
+
+    AUDIT_LOGS: "auditLogs"
+
+});
+
+
+/* =========================================================
+   STAFF ACCESS ROLES
+   ========================================================= */
+
+const ROLES = Object.freeze({
+
+    ADMIN: "admin",
+
+    ADVOCATE: "advocate",
+
+    STAFF: "staff"
+
+});
+
+
+/* =========================================================
    EXPORT FIREBASE SERVICES
    ========================================================= */
 
-export { app, auth };
+export {
+
+    app,
+
+    auth,
+
+    db,
+
+    COLLECTIONS,
+
+    ROLES
+
+};
+
+
+/* =========================================================
+   END OF CONFIGURATION
+   MNM LEGAL ASSOCIATES
+   ========================================================= */
