@@ -1238,22 +1238,70 @@
                             </section>
 
 
-                            <!-- AUTHORISED SIGNATORY -->
+                            
+<!-- PAYMENT, FEEDBACK & AUTHORISED SIGNATORY -->
 
-                            <section id="previewSignatureSection"
-                                     class="invoice-signature">
+<div class="invoice-closing-section">
 
-                                <div class="signature-block">
+    <div class="invoice-qr-section">
 
-                                    <p>For MNM Legal Associates</p>
+        <!-- UPI PAYMENT QR -->
 
-                                    <div class="signature-space"></div>
+        <div class="invoice-qr-card">
 
-                                    <strong>Authorised Signatory</strong>
+            <img
+                class="invoice-qr-image"
+                src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&amp;qzone=4&amp;data=upi%3A%2F%2Fpay%3Fpa%3D9898172734-5%40ybl%26pn%3DMNM%2520LEGAL%2520ASSOCIATES%26cu%3DINR"
+                alt="UPI Payment QR Code"
+                width="300"
+                height="300"
+                referrerpolicy="no-referrer">
 
-                                </div>
+            <strong>SCAN TO PAY</strong>
 
-                            </section>
+            <span>UPI Payment</span>
+
+        </div>
+
+        <!-- GOOGLE REVIEW QR -->
+
+        <div class="invoice-qr-card">
+
+            <img
+                class="invoice-qr-image"
+                src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&amp;qzone=4&amp;data=https%3A%2F%2Fg.page%2Fr%2FCSkyJ18cM2SYEBM%2Freview"
+                alt="Google Feedback QR Code"
+                width="300"
+                height="300"
+                referrerpolicy="no-referrer">
+
+            <strong>SHARE FEEDBACK</strong>
+
+            <span>Google Review</span>
+
+        </div>
+
+    </div>
+
+    <!-- AUTHORISED SIGNATORY -->
+
+    <section id="previewSignatureSection"
+             class="invoice-signature">
+
+        <div class="signature-block">
+
+            <p>For MNM Legal Associates</p>
+
+            <div class="signature-space"></div>
+
+            <strong>Authorised Signatory</strong>
+
+        </div>
+
+    </section>
+
+</div>
+
 
 
                             <!-- DOCUMENT FOOTER -->
