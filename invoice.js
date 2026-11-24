@@ -285,17 +285,18 @@ function normalize(record) {
    ========================================================= */
 
 const DEFAULT_TERMS = [
-    "Professional charges are exclusive of court fees, " +
-    "government fees, stamp duty and other statutory charges, " +
-    "wherever applicable.",
 
-    "Out-of-pocket expenses shall be borne by the client " +
-    "as agreed between the parties.",
+    "1. Professional fees are exclusive of court fees, government fees, stamp duty, registration charges, applicable taxes and other statutory levies, which shall be charged separately, wherever applicable.",
 
-    "Additional legal services not covered by this invoice " +
-    "shall be subject to separate agreement."
-].join("\n");
+    "2. All expenses towards documentation, photocopying, notarisation, certified copies, postal charges, process fees and other incidental or out-of-pocket expenses shall be borne separately by the Client.",
 
+    "3. Fees for court appearances, additional proceedings, appeals, execution proceedings or any other legal services not specifically covered under this invoice shall be charged separately.",
+
+    "4. Professional fees earned for services rendered shall be non-refundable. Voluntary withdrawal of proceedings, change of advocate, discontinuation of legal services by the Client or settlement between the parties shall not, by itself, constitute grounds for a refund.",
+
+    "5. Professional fees are payable as mutually agreed. Engagement of legal services does not constitute any assurance or guarantee of a favourable outcome in any legal proceeding."
+
+].join("\n\n");
 
 /* =========================================================
    DATE UTILITIES
