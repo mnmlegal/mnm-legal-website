@@ -762,6 +762,527 @@ export {
 
 
 /* =========================================================
+   CENTRALIZED CLOUD INVOICE STORAGE
+   MNM LEGAL ASSOCIATES
+   Version 2.0
+   ========================================================= */
+
+
+/* =========================================================
+   CENTRAL BILLING CONFIGURATION
+   ========================================================= */
+
+const CENTRAL_BILLING = Object.freeze({
+
+    collection: "invoices",
+
+    settingsCollection: "settings",
+
+    sequenceDocument: "invoiceSequence",
+
+    paymentDocument: "firmPayment",
+
+    prefix: "MNM",
+
+    initialSequence: 1,
+
+    schemaVersion: 4
+
+});
+
+
+/* =========================================================
+   VALIDATE CLOUD INVOICE DATA
+   ========================================================= */
+
+function validateCloudInvoice(data) {
+
+    if (
+        !data ||
+        typeof data !== "object" ||
+        Array.isArray(data)
+    ) {
+        throw new Error("Invalid invoice data.");
+    }
+
+    if (!String(data.clientName || "").trim()) {
+        throw new Error("Client name is required.");
+    }
+
+    if (
+        !Array.isArray(data.items) ||
+        data.items.length === 0
+    ) {
+        throw new Error("At least one service is required.");
+    }
+
+    if (
+        !/^\d{4}-\d{2}-\d{2}$/.test(
+            data.invoiceDate || ""
+        )
+    ) {
+        throw new Error("Invalid invoice date.");
+    }
+
+    for (const item of data.items) {
+
+        const quantity = Number(
+            item.quantity ?? item.qty
+        );
+
+        const rate = Number(item.rate);
+
+        if (
+            !Number.isFinite(quantity) ||
+            quantity <= 0 ||
+            !Number.isFinite(rate) ||
+            rate < 0
+        ) {
+            throw new Error("Invalid service amount.");
+        }
+
+    }
+
+    return JSON.parse(JSON.stringify(data));
+
+}
+
+
+/* =========================================================
+   READ CENTRAL INVOICE SEQUENCE
+   ========================================================= */
+
+export async function getCentralSequence() {
+
+    await requireAdministrator();
+
+    const reference = doc(
+        db,
+        CENTRAL_BILLING.settingsCollection,
+        CENTRAL_BILLING.sequenceDocument
+    );
+
+    const snapshot = await getDocFromServer(reference);
+
+    if (!snapshot.exists()) {
+
+        const records = await readCloudInvoices();
+
+        if (records.length > 0) {
+            throw new Error(
+                "Cloud invoices exist but the sequence is missing."
+            );
+        }
+
+        return CENTRAL_BILLING.initialSequence;
+
+    }
+
+    const sequence = snapshot.data().nextSequence;
+
+    if (
+        !Number.isSafeInteger(sequence) ||
+        sequence < 1
+    ) {
+        throw new Error("Invalid central invoice sequence.");
+    }
+
+    return sequence;
+
+}
+
+
+/* =========================================================
+   CREATE NEW CLOUD INVOICE
+   Atomic transaction prevents duplicate numbering.
+   ========================================================= */
+
+export async function createCloudInvoice(invoiceData) {
+
+    const administrator = await requireAdministrator();
+
+    const data = validateCloudInvoice(invoiceData);
+
+    const invoiceId = String(
+        data.id || crypto.randomUUID()
+    );
+
+    if (!/^[a-zA-Z0-9_-]{1,128}$/.test(invoiceId)) {
+        throw new Error("Invalid invoice ID.");
+    }
+
+    const invoiceRef = doc(
+        db,
+        CENTRAL_BILLING.collection,
+        invoiceId
+    );
+
+    const sequenceRef = doc(
+        db,
+        CENTRAL_BILLING.settingsCollection,
+        CENTRAL_BILLING.sequenceDocument
+    );
+
+    const startingSequence = await getCentralSequence();
+
+    await runTransaction(db, async transaction => {
+
+        const existingInvoice =
+            await transaction.get(invoiceRef);
+
+        if (existingInvoice.exists()) {
+
+            throw new Error(
+                "This invoice ID already exists. " +
+                "Reopen the saved invoice before continuing."
+            );
+
+        }
+
+        const sequenceSnapshot =
+            await transaction.get(sequenceRef);
+
+        const sequence = sequenceSnapshot.exists()
+
+            ? sequenceSnapshot.data().nextSequence
+
+            : startingSequence;
+
+        if (
+            !Number.isSafeInteger(sequence) ||
+            sequence < 1 ||
+            sequence >= Number.MAX_SAFE_INTEGER
+        ) {
+            throw new Error("Invalid invoice sequence.");
+        }
+
+        const year = data.invoiceDate.slice(0, 4);
+
+        const invoiceNo =
+            CENTRAL_BILLING.prefix + "/" +
+            String(sequence).padStart(3, "0") + "/" +
+            year;
+
+        const record = {
+
+            ...data,
+
+            id: invoiceId,
+
+            invoiceNo,
+
+            sequenceNumber: sequence,
+
+            schemaVersion:
+                CENTRAL_BILLING.schemaVersion,
+
+            revision: 1,
+
+            recordStatus: "active",
+
+            createdBy: administrator.uid,
+
+            updatedBy: administrator.uid,
+
+            createdAt: serverTimestamp(),
+
+            updatedAt: serverTimestamp()
+
+        };
+
+        transaction.set(invoiceRef, record);
+
+        transaction.set(sequenceRef, {
+
+            nextSequence: sequence + 1,
+
+            lastInvoiceNumber: invoiceNo,
+
+            updatedAt: serverTimestamp(),
+
+            updatedBy: administrator.uid
+
+        }, { merge: true });
+
+    });
+
+    const saved = await getDocFromServer(invoiceRef);
+
+    if (!saved.exists()) {
+        throw new Error(
+            "Cloud invoice confirmation failed. " +
+            "Check saved invoices before retrying."
+        );
+    }
+
+    return saved.data();
+
+}
+
+
+/* =========================================================
+   UPDATE EXISTING CLOUD INVOICE
+   Original invoice number remains unchanged.
+   ========================================================= */
+
+export async function updateCloudInvoice(
+    invoiceId,
+    invoiceData,
+    expectedRevision
+) {
+
+    const administrator = await requireAdministrator();
+
+    const data = validateCloudInvoice(invoiceData);
+
+    const reference = doc(
+        db,
+        CENTRAL_BILLING.collection,
+        String(invoiceId)
+    );
+
+    await runTransaction(db, async transaction => {
+
+        const snapshot =
+            await transaction.get(reference);
+
+        if (!snapshot.exists()) {
+            throw new Error("Invoice does not exist.");
+        }
+
+        const existing = snapshot.data();
+
+        if (existing.recordStatus === "cancelled") {
+            throw new Error(
+                "Cancelled invoices cannot be modified."
+            );
+        }
+
+        if (
+            !Number.isSafeInteger(expectedRevision) ||
+            existing.revision !== expectedRevision
+        ) {
+            throw new Error(
+                "Invoice was modified elsewhere. " +
+                "Please reopen it before updating."
+            );
+        }
+
+        if (data.invoiceDate !== existing.invoiceDate) {
+            throw new Error(
+                "The original invoice date cannot be changed."
+            );
+        }
+
+        transaction.set(reference, {
+
+            ...existing,
+
+            ...data,
+
+            id: existing.id,
+
+            invoiceNo: existing.invoiceNo,
+
+            sequenceNumber: existing.sequenceNumber,
+
+            createdAt: existing.createdAt,
+
+            createdBy: existing.createdBy,
+
+            recordStatus: existing.recordStatus,
+
+            revision: existing.revision + 1,
+
+            schemaVersion:
+                CENTRAL_BILLING.schemaVersion,
+
+            updatedAt: serverTimestamp(),
+
+            updatedBy: administrator.uid
+
+        });
+
+    });
+
+    const saved = await getDocFromServer(reference);
+
+    return saved.data();
+
+}
+
+
+/* =========================================================
+   FETCH ALL CENTRALIZED INVOICES
+   ========================================================= */
+
+export async function fetchCentralInvoices() {
+
+    await requireAdministrator();
+
+    const reference = collection(
+        db,
+        CENTRAL_BILLING.collection
+    );
+
+    const snapshot = await getDocsFromServer(reference);
+
+    return snapshot.docs
+
+        .map(item => ({
+
+            ...item.data(),
+
+            id: item.id
+
+        }))
+
+        .sort((a, b) =>
+
+            Number(b.sequenceNumber || 0) -
+            Number(a.sequenceNumber || 0)
+
+        );
+
+}
+
+
+/* =========================================================
+   CANCEL INVOICE WITHOUT PERMANENT DELETION
+   ========================================================= */
+
+export async function cancelCloudInvoice(
+    invoiceId,
+    reason,
+    expectedRevision
+) {
+
+    const administrator = await requireAdministrator();
+
+    const cancellationReason =
+        String(reason || "").trim();
+
+    if (!cancellationReason) {
+        throw new Error(
+            "Cancellation reason is required."
+        );
+    }
+
+    const reference = doc(
+        db,
+        CENTRAL_BILLING.collection,
+        String(invoiceId)
+    );
+
+    await runTransaction(db, async transaction => {
+
+        const snapshot =
+            await transaction.get(reference);
+
+        if (!snapshot.exists()) {
+            throw new Error("Invoice does not exist.");
+        }
+
+        const existing = snapshot.data();
+
+        if (existing.recordStatus === "cancelled") {
+            throw new Error(
+                "Invoice is already cancelled."
+            );
+        }
+
+        if (existing.revision !== expectedRevision) {
+            throw new Error(
+                "Invoice was modified elsewhere. Reopen it."
+            );
+        }
+
+        transaction.update(reference, {
+
+            recordStatus: "cancelled",
+
+            cancellationReason,
+
+            cancelledAt: serverTimestamp(),
+
+            cancelledBy: administrator.uid,
+
+            revision: existing.revision + 1,
+
+            updatedAt: serverTimestamp(),
+
+            updatedBy: administrator.uid
+
+        });
+
+    });
+
+    return true;
+
+}
+
+
+/* =========================================================
+   CENTRALIZED PAYMENT SETTINGS
+   ========================================================= */
+
+export async function saveCentralPaymentSettings(settings) {
+
+    const administrator = await requireAdministrator();
+
+    if (
+        !settings ||
+        typeof settings !== "object" ||
+        Array.isArray(settings)
+    ) {
+        throw new Error("Invalid payment settings.");
+    }
+
+    const reference = doc(
+        db,
+        CENTRAL_BILLING.settingsCollection,
+        CENTRAL_BILLING.paymentDocument
+    );
+
+    await setDoc(reference, {
+
+        ...JSON.parse(JSON.stringify(settings)),
+
+        updatedAt: serverTimestamp(),
+
+        updatedBy: administrator.uid
+
+    });
+
+    return true;
+
+}
+
+
+export async function getCentralPaymentSettings() {
+
+    await requireAdministrator();
+
+    const reference = doc(
+        db,
+        CENTRAL_BILLING.settingsCollection,
+        CENTRAL_BILLING.paymentDocument
+    );
+
+    const snapshot = await getDocFromServer(reference);
+
+    return snapshot.exists()
+        ? snapshot.data()
+        : {};
+
+}
+
+
+/* =========================================================
+   END OF CENTRALIZED CLOUD STORAGE ENGINE
+   ========================================================= */
+
+/* =========================================================
    END OF CLOUD INVOICE MANAGEMENT
    MNM LEGAL ASSOCIATES
    ========================================================= */
