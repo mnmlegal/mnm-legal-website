@@ -1,7 +1,9 @@
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    CENTRAL FIREBASE CONFIGURATION
-   Version 2.1
+   Version 2.2
+
    Justice, Integrity & Excellence
    ========================================================= */
 
@@ -20,11 +22,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
 
-/* FIREBASE PROJECT CONFIGURATION */
+/* =========================================================
+   FIREBASE PROJECT CONFIGURATION
+   ========================================================= */
 
 const firebaseConfig = {
 
-    apiKey: "COPY_ACTUAL_API_KEY_FROM_FIREBASE",
+    apiKey: "AIzaSyBYsYzHayyXHfPgeyLzL5Hz-Fsl4hihBbI",
 
     authDomain: "mnm-legal-associates.firebaseapp.com",
 
@@ -34,31 +38,41 @@ const firebaseConfig = {
 
     messagingSenderId: "14199102894",
 
-    appId: "1:14199102894:web:1d09624f3b2c88d281fc3f"
+    appId: "1:14199102894:web:1d09624f3b2c88d281fc3f",
+
+    measurementId: "G-ENSVKT9B10"
 
 };
 
 
-/* INITIALIZE FIREBASE */
+/* =========================================================
+   INITIALIZE FIREBASE APPLICATION
+   ========================================================= */
 
 const app = getApps().length
     ? getApp()
     : initializeApp(firebaseConfig);
 
 
-/* FIREBASE AUTHENTICATION */
+/* =========================================================
+   FIREBASE AUTHENTICATION
+   ========================================================= */
 
 const auth = getAuth(app);
 
 auth.languageCode = "en";
 
 
-/* CLOUD FIRESTORE DATABASE */
+/* =========================================================
+   CLOUD FIRESTORE DATABASE
+   ========================================================= */
 
 const db = getFirestore(app);
 
 
-/* DATABASE COLLECTIONS */
+/* =========================================================
+   DATABASE COLLECTION REFERENCES
+   ========================================================= */
 
 const COLLECTIONS = Object.freeze({
 
@@ -83,7 +97,9 @@ const COLLECTIONS = Object.freeze({
 });
 
 
-/* STAFF ACCESS ROLES */
+/* =========================================================
+   STAFF ACCESS ROLES
+   ========================================================= */
 
 const ROLES = Object.freeze({
 
@@ -96,7 +112,9 @@ const ROLES = Object.freeze({
 });
 
 
-/* EXPORT FIREBASE SERVICES */
+/* =========================================================
+   EXPORT FIREBASE SERVICES
+   ========================================================= */
 
 export {
 
@@ -111,3 +129,10 @@ export {
     ROLES
 
 };
+
+
+/* =========================================================
+   END OF CONFIGURATION
+   MNM LEGAL ASSOCIATES
+   Justice, Integrity & Excellence
+   ========================================================= */
