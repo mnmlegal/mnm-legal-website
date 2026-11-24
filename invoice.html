@@ -1837,178 +1837,292 @@
          FIREBASE AUTHENTICATION & INVOICE ENGINE
          ============================================= -->
 
-    <script type="module">
+   
+<script type="module">
 
-        const loading = document.getElementById("authLoading");
+    /* =====================================================
+       MNM LEGAL ASSOCIATES
+       INVOICE AUTHORIZATION & INITIALIZATION
+       Version 4.0
+       Justice, Integrity & Excellence
+       ===================================================== */
 
-        const content = document.getElementById("protectedContent");
+    const loading =
+        document.getElementById("authLoading");
 
-        const loadingMessage =
-            document.getElementById("loadingMessage");
+    const content =
+        document.getElementById("protectedContent");
 
-        const loadingSpinner =
-            document.getElementById("loadingSpinner");
+    const loadingMessage =
+        document.getElementById("loadingMessage");
 
-        async function initialiseInvoiceApplication() {
+    const loadingSpinner =
+        document.getElementById("loadingSpinner");
 
-            try {
+    const logoutButton =
+        document.getElementById("logoutButton");
 
-                const {
-                    protectPage,
-                    logoutUser,
-                    getUserDisplayName
 
-                } = await import("./auth.js");
+    /* APPLICATION STATE */
 
-                let applicationPromise = null;
+    let applicationPromise = null;
 
-                let activeUser = null;
+    let activeUser = null;
 
-                const logoutButton =
-                    document.getElementById("logoutButton");
+    let logoutInProgress = false;
 
-                logoutButton.addEventListener(
-                    "click",
-                    async () => {
 
-                        logoutButton.disabled = true;
+    /* INITIALIZATION ERROR */
 
-                        try {
+    function showInitializationError(message) {
 
-                            const result = await logoutUser();
+        content.hidden = true;
 
-                            if (!result.success) {
+        loading.hidden = false;
 
-                                alert(result.message);
+        loadingSpinner.hidden = true;
 
-                            }
+        loadingMessage.textContent = message;
 
-                        } catch {
+    }
 
-                            alert("Unable to sign out.");
 
-                        } finally {
+    /* INITIALIZE AUTHORIZED INVOICE APPLICATION */
 
-                            logoutButton.disabled = false;
+    async function initialiseInvoiceApplication() {
 
-                        }
+        try {
 
-                    }
-                );
+            const {
 
-                protectPage({
+                protectPage,
 
-                    contentSelector: "#protectedContent",
+                logoutUser,
 
-                    loadingSelector: "#authLoading",
+                verifyStaffAccess
 
-                    onAuthenticated: async (user) => {
+            } = await import("./auth.js");
 
-                        if (activeUser && activeUser !== user.uid) {
 
-                            window.location.reload();
+            /* ADMINISTRATOR AUTHORIZATION */
 
-                            return;
+            protectPage({
 
-                        }
+                contentSelector: "#protectedContent",
 
-                        activeUser = user.uid;
+                loadingSelector: "#authLoading",
 
-                        content.hidden = true;
+                allowedRoles: ["admin"],
 
-                        loading.hidden = false;
+                onAuthenticated: async (user, profile) => {
 
-                        loadingMessage.textContent =
-                            "Initialising invoice management...";
+                    if (
 
-                        try {
+                        !user?.uid ||
 
-                            document.getElementById(
-                                "staffName"
-                            ).textContent =
-                                getUserDisplayName(user);
+                        !profile ||
 
-                            document.getElementById(
-                                "currentYear"
-                            ).textContent =
-                                new Date().getFullYear();
+                        profile.uid !== user.uid ||
 
-                            if (!applicationPromise) {
+                        profile.active !== true ||
 
-                                applicationPromise = (async () => {
+                        profile.role !== "admin"
 
-                                    const {
-                                        initialiseInvoiceSystem
+                    ) {
 
-                                    } = await import("./invoice.js");
-
-                                    await initialiseInvoiceSystem(user);
-
-                                })();
-
-                            }
-
-                            await applicationPromise;
-
-                            const { getCurrentUser } =
-                                await import("./auth.js");
-
-                            const currentUser = await getCurrentUser();
-
-                            if (!currentUser ||
-                                currentUser.uid !== user.uid) {
-
-                                content.hidden = true;
-
-                                window.location.replace("/login.html");
-
-                                return;
-
-                            }
-
-                            loading.hidden = true;
-
-                            content.hidden = false;
-
-                        } catch (error) {
-
-                            content.hidden = true;
-
-                            loading.hidden = false;
-
-                            loadingSpinner.hidden = true;
-
-                            loadingMessage.textContent =
-                                "Invoice system could not be loaded. " +
-                                "Please contact the administrator. " +
-                                "Do not clear your browser data.";
-
-                        }
+                        throw new Error(
+                            "Administrator authorization required."
+                        );
 
                     }
 
-                });
 
-            } catch (error) {
+                    /* PREVENT CROSS-ACCOUNT INITIALIZATION */
 
-                content.hidden = true;
+                    if (
 
-                loading.hidden = false;
+                        activeUser &&
 
-                loadingSpinner.hidden = true;
+                        activeUser !== user.uid
 
-                loadingMessage.textContent =
-                    "Authentication service unavailable. " +
-                    "Please refresh or return to the dashboard.";
+                    ) {
 
-            }
+                        window.location.reload();
+
+                        throw new Error(
+                            "Account session changed."
+                        );
+
+                    }
+
+                    activeUser = user.uid;
+
+
+                    /* KEEP APPLICATION HIDDEN */
+
+                    content.hidden = true;
+
+                    loading.hidden = false;
+
+                    loadingMessage.textContent =
+                        "Initialising authorised invoice management...";
+
+
+                    /* STAFF INFORMATION */
+
+                    document.getElementById(
+                        "staffName"
+                    ).textContent =
+                        profile.name || "Administrator";
+
+                    document.getElementById(
+                        "currentYear"
+                    ).textContent =
+                        new Intl.DateTimeFormat("en-IN", {
+
+                            year: "numeric",
+
+                            timeZone: "Asia/Kolkata"
+
+                        }).format(new Date());
+
+
+                    /* LOAD EXISTING INVOICE ENGINE */
+
+                    if (!applicationPromise) {
+
+                        applicationPromise = (async () => {
+
+                            const {
+
+                                initialiseInvoiceSystem
+
+                            } = await import("./invoice.js");
+
+                            await initialiseInvoiceSystem(user);
+
+                        })();
+
+                    }
+
+
+                    /* VERIFY INITIALIZATION */
+
+                    try {
+
+                        await applicationPromise;
+
+                    } catch (error) {
+
+                        showInitializationError(
+
+                            "Invoice system could not be loaded. " +
+
+                            "Please contact the administrator. " +
+
+                            "Do not clear your browser data."
+
+                        );
+
+                        throw error;
+
+                    }
+
+
+                    /* FINAL SERVER AUTHORIZATION CHECK */
+
+                    const verifiedProfile =
+                        await verifyStaffAccess(user);
+
+                    if (
+
+                        verifiedProfile.uid !== user.uid ||
+
+                        verifiedProfile.active !== true ||
+
+                        verifiedProfile.role !== "admin"
+
+                    ) {
+
+                        throw new Error(
+                            "Invoice access is no longer authorised."
+                        );
+
+                    }
+
+                    /*
+                     * protectPage() controls final visibility.
+                     * Do not manually reveal protected content.
+                     */
+
+                }
+
+            });
+
+
+            /* SECURE LOGOUT */
+
+            logoutButton.addEventListener(
+
+                "click",
+
+                async () => {
+
+                    if (logoutInProgress) return;
+
+                    logoutInProgress = true;
+
+                    logoutButton.disabled = true;
+
+                    try {
+
+                        const result = await logoutUser();
+
+                        if (!result.success) {
+
+                            alert(result.message);
+
+                        }
+
+                    } catch {
+
+                        alert(
+
+                            "Unable to sign out. Please try again."
+
+                        );
+
+                    } finally {
+
+                        logoutInProgress = false;
+
+                        logoutButton.disabled = false;
+
+                    }
+
+                }
+
+            );
+
+        } catch (error) {
+
+            showInitializationError(
+
+                "Authorization service unavailable. " +
+
+                "Please refresh or return to Staff Login."
+
+            );
 
         }
 
-        initialiseInvoiceApplication();
+    }
 
-    </script>
 
+    /* START APPLICATION */
+
+    initialiseInvoiceApplication();
+
+</script>
 </body>
-
 </html>
