@@ -1,197 +1,1908 @@
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Legal Blog | MNM Legal Associates</title>
+    <meta charset="UTF-8">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="style.css">
+    <!-- PRIMARY SEO -->
 
-  <style>
-    body {
-      background: #000;
-      color: #fff;
-      font-family: "Poppins", sans-serif;
-      margin: 0;
-      padding: 0;
+    <title>Legal Insights & Indian Law Guides | MNM Legal Associates</title>
+
+    <meta name="description"
+          content="Explore legal articles and informational guides on divorce, maintenance, anticipatory bail, regular bail and cheque dishonour by MNM Legal Associates, Ahmedabad, Gujarat.">
+
+    <meta name="robots"
+          content="index, follow, max-image-preview:large">
+
+    <meta name="author"
+          content="MNM Legal Associates">
+
+    <meta name="theme-color"
+          content="#101d30">
+
+    <link rel="canonical"
+          href="https://mnmlegals.com/blog.html">
+
+    <link rel="icon"
+          type="image/png"
+          href="/images/logo.png">
+
+    <!-- SOCIAL SHARING -->
+
+    <meta property="og:type"
+          content="website">
+
+    <meta property="og:title"
+          content="Legal Insights | MNM Legal Associates">
+
+    <meta property="og:description"
+          content="Informational articles on Indian laws, legal rights and judicial procedures.">
+
+    <meta property="og:url"
+          content="https://mnmlegals.com/blog.html">
+
+    <meta property="og:image"
+          content="https://mnmlegals.com/images/logo.png">
+
+    <meta property="og:site_name"
+          content="MNM Legal Associates">
+
+    <meta property="og:locale"
+          content="en_IN">
+
+    <meta name="twitter:card"
+          content="summary">
+
+    <!-- FONTS -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap"
+          rel="stylesheet">
+
+    <!-- ICONS -->
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- GLOBAL STYLESHEET -->
+
+    <link rel="stylesheet"
+          href="/style.css">
+
+    <!-- PAGE SPECIFIC STYLES -->
+
+    <style>
+
+        /* =========================================
+           LEGAL INSIGHTS PAGE
+        ========================================= */
+
+        .insights-hero {
+            padding: clamp(45px, 7vw, 85px) 0;
+
+            background:
+                linear-gradient(
+                    120deg,
+                    #0a1422,
+                    #1c2d44
+                );
+
+            color: #ffffff;
+
+            border-bottom: 3px solid var(--gold);
+        }
+
+        .insights-hero .eyebrow {
+            color: var(--gold);
+        }
+
+        .insights-hero h1 {
+            max-width: 800px;
+
+            font-size: clamp(34px, 5vw, 54px);
+
+            color: #ffffff;
+
+            margin-bottom: 20px;
+        }
+
+        .insights-hero p {
+            max-width: 760px;
+
+            color: #d5deea;
+
+            font-size: clamp(15px, 2vw, 17px);
+
+            margin-bottom: 0;
+        }
+
+        .insights-main {
+            padding: 42px 0 75px;
+        }
+
+
+        /* BREADCRUMB */
+
+        .insights-breadcrumb {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+
+            margin-bottom: 28px;
+
+            color: #cbd5e1;
+
+            font-size: 13px;
+        }
+
+        .insights-breadcrumb a {
+            color: var(--gold-light);
+        }
+
+        .insights-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .insights-breadcrumb i {
+            font-size: 9px;
+        }
+
+
+        /* SEARCH AND FILTER PANEL */
+
+        .article-toolbar {
+            margin-bottom: 32px;
+
+            padding: 24px;
+
+            background: #ffffff;
+
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .search-label {
+            display: block;
+
+            margin-bottom: 9px;
+
+            color: var(--navy);
+
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .article-search {
+            position: relative;
+
+            width: 100%;
+        }
+
+        .article-search > i {
+            position: absolute;
+
+            top: 50%;
+            left: 17px;
+
+            transform: translateY(-50%);
+
+            color: var(--gold-dark);
+
+            pointer-events: none;
+        }
+
+        .article-search input {
+            display: block;
+
+            width: 100%;
+            min-height: 50px;
+
+            padding: 12px 18px 12px 46px;
+
+            background: #fcfcfb;
+            color: var(--text);
+
+            border: 1px solid #cdd2d9;
+            border-radius: 5px;
+
+            font-size: 16px;
+        }
+
+        .article-search input:focus {
+            outline: 2px solid var(--gold-dark);
+            outline-offset: 2px;
+        }
+
+        .article-search input::placeholder {
+            color: #737d89;
+        }
+
+        .filter-label {
+            margin: 22px 0 10px;
+
+            color: var(--navy);
+
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .category-filters {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .filter-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            min-height: 44px;
+
+            padding: 9px 16px;
+
+            background: #ffffff;
+            color: var(--navy);
+
+            border: 1px solid var(--border);
+            border-radius: 4px;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            transition:
+                background 180ms ease,
+                color 180ms ease,
+                border-color 180ms ease;
+        }
+
+        .filter-button:hover {
+            border-color: var(--gold-dark);
+        }
+
+        .filter-button.active {
+            background: var(--navy);
+            color: #ffffff;
+
+            border-color: var(--navy);
+        }
+
+        .results-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+
+            gap: 12px;
+
+            margin-bottom: 20px;
+        }
+
+        .results-bar h2 {
+            margin: 0;
+
+            color: var(--navy);
+
+            font-size: 23px;
+        }
+
+        .article-count {
+            margin: 0;
+
+            color: var(--muted);
+
+            font-size: 13px;
+        }
+
+
+        /* ARTICLE CARDS */
+
+        .insights-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, minmax(0, 1fr));
+
+            gap: 24px;
+
+            align-items: stretch;
+        }
+
+        .insight-card {
+            display: flex;
+            flex-direction: column;
+
+            min-width: 0;
+
+            background: #ffffff;
+
+            border: 1px solid var(--border);
+            border-radius: 7px;
+
+            overflow: hidden;
+
+            box-shadow:
+                0 5px 20px rgba(16, 29, 48, .045);
+
+            transition:
+                transform 200ms ease,
+                box-shadow 200ms ease,
+                border-color 200ms ease;
+        }
+
+        .insight-card[hidden] {
+            display: none !important;
+        }
+
+        .insight-image {
+            display: block;
+
+            background: #efede8;
+
+            overflow: hidden;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+        .insight-image img {
+            display: block;
+
+            width: 100%;
+
+            aspect-ratio: 4 / 3;
+
+            object-fit: contain;
+
+            padding: 10px;
+
+            transition: transform 250ms ease;
+        }
+
+        .insight-body {
+            display: flex;
+            flex-direction: column;
+
+            flex: 1;
+
+            padding: 25px;
+        }
+
+        .article-category {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            align-self: flex-start;
+
+            margin-bottom: 13px;
+
+            color: var(--gold-dark);
+
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .insight-body h3 {
+            color: var(--navy);
+
+            font-family: var(--font-heading);
+            font-size: 21px;
+            line-height: 1.5;
+
+            margin-bottom: 12px;
+        }
+
+        .insight-body h3 a:hover {
+            text-decoration: underline;
+
+            text-decoration-color: var(--gold);
+            text-underline-offset: 4px;
+        }
+
+        .insight-body p {
+            color: var(--muted);
+
+            font-size: 14px;
+            line-height: 1.8;
+
+            flex-grow: 1;
+
+            margin-bottom: 20px;
+        }
+
+        .insight-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 10px;
+
+            padding-top: 17px;
+
+            border-top: 1px solid var(--border);
+        }
+
+        .article-author {
+            color: var(--muted);
+
+            font-size: 11px;
+        }
+
+        .article-read-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            min-height: 44px;
+
+            color: var(--gold-dark);
+
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .article-read-link:hover {
+            color: var(--navy);
+        }
+
+        @media (hover: hover) {
+
+            .insight-card:hover {
+                transform: translateY(-4px);
+
+                border-color: var(--gold);
+
+                box-shadow:
+                    0 12px 30px rgba(16, 29, 48, .10);
+            }
+
+            .insight-card:hover img {
+                transform: scale(1.025);
+            }
+
+        }
+
+
+        /* NO RESULTS */
+
+        .no-results {
+            padding: 55px 20px;
+
+            text-align: center;
+
+            background: #ffffff;
+
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+
+        .no-results > i {
+            color: var(--gold-dark);
+
+            font-size: 35px;
+
+            margin-bottom: 20px;
+        }
+
+        .no-results h3 {
+            color: var(--navy);
+        }
+
+        .no-results p {
+            color: var(--muted);
+
+            font-size: 14px;
+        }
+
+
+        /* INFORMATIONAL DISCLAIMER */
+
+        .editorial-note {
+            margin-top: 42px;
+
+            padding: 25px;
+
+            background: #f0ede5;
+
+            border: 1px solid #e1d9c8;
+            border-left: 3px solid var(--gold);
+            border-radius: 4px;
+        }
+
+        .editorial-note h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            color: var(--navy);
+
+            font-family: var(--font-body);
+            font-size: 16px;
+
+            margin-bottom: 10px;
+        }
+
+        .editorial-note h2 i {
+            color: var(--gold-dark);
+        }
+
+        .editorial-note p {
+            color: #595345;
+
+            font-size: 13px;
+
+            margin: 0;
+        }
+
+
+        /* TABLET */
+
+        @media (max-width: 1024px) {
+
+            .insights-grid {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+
+                gap: 18px;
+            }
+
+            .insight-body {
+                padding: 22px;
+            }
+
+        }
+
+
+        /* MOBILE */
+
+        @media (max-width: 680px) {
+
+            .insights-main {
+                padding: 25px 0 50px;
+            }
+
+            .insights-hero {
+                padding: 35px 0 42px;
+            }
+
+            .insights-hero h1 {
+                font-size: 34px;
+            }
+
+            .insights-breadcrumb {
+                margin-bottom: 20px;
+            }
+
+            .article-toolbar {
+                padding: 17px;
+
+                margin-bottom: 24px;
+            }
+
+            .category-filters {
+                flex-wrap: nowrap;
+
+                overflow-x: auto;
+
+                padding: 4px 3px 12px;
+
+                scrollbar-width: thin;
+
+                overscroll-behavior-x: contain;
+            }
+
+            .filter-button {
+                flex-shrink: 0;
+
+                white-space: nowrap;
+
+                font-size: 12px;
+            }
+
+            .insights-grid {
+                grid-template-columns:
+                    minmax(0, 1fr);
+
+                gap: 18px;
+            }
+
+            .insight-body {
+                padding: 22px;
+            }
+
+            .insight-body h3 {
+                font-size: 21px;
+            }
+
+            .insight-image img {
+                max-height: 300px;
+            }
+
+            .results-bar h2 {
+                font-size: 20px;
+            }
+
+            .editorial-note {
+                padding: 20px;
+            }
+
+        }
+
+        @media (max-width: 360px) {
+
+            .insight-body {
+                padding: 18px;
+            }
+
+            .insight-footer {
+                flex-wrap: wrap;
+            }
+
+            .insights-hero h1 {
+                font-size: 30px;
+            }
+
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .insight-card,
+            .insight-image img,
+            .filter-button {
+                transition: none;
+            }
+
+        }
+
+    </style>
+
+    <!-- STRUCTURED DATA -->
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "CollectionPage",
+                "@id": "https://mnmlegals.com/blog.html#webpage",
+                "url": "https://mnmlegals.com/blog.html",
+                "name": "Legal Insights | MNM Legal Associates",
+                "description": "Informational articles on Indian laws and legal procedures.",
+                "inLanguage": "en-IN",
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "MNM Legal Associates",
+                    "url": "https://mnmlegals.com/",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "https://mnmlegals.com/images/logo.png"
+                    }
+                },
+                "mainEntity": {
+                    "@type": "ItemList",
+                    "itemListElement": [
+                        {
+                            "@type": "ListItem",
+                            "position": 1,
+                            "url": "https://mnmlegals.com/what-is-divorce.html",
+                            "name": "Divorce Law in India"
+                        },
+                        {
+                            "@type": "ListItem",
+                            "position": 2,
+                            "url": "https://mnmlegals.com/maintenance-law-india.html",
+                            "name": "Maintenance Law in India"
+                        },
+                        {
+                            "@type": "ListItem",
+                            "position": 3,
+                            "url": "https://mnmlegals.com/Cheque-Bounce.html",
+                            "name": "Cheque Dishonour Under Section 138"
+                        },
+                        {
+                            "@type": "ListItem",
+                            "position": 4,
+                            "url": "https://mnmlegals.com/Anticipatory-Bail-Application.html",
+                            "name": "Anticipatory Bail in India"
+                        },
+                        {
+                            "@type": "ListItem",
+                            "position": 5,
+                            "url": "https://mnmlegals.com/Regular-Bail-Application.html",
+                            "name": "Regular Bail in India"
+                        }
+                    ]
+                }
+            },
+            {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "https://mnmlegals.com/"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Legal Insights",
+                        "item": "https://mnmlegals.com/blog.html"
+                    }
+                ]
+            }
+        ]
     }
+    </script>
 
-    .blog-header {
-      text-align: center;
-      padding: 60px 20px 30px;
-    }
-
-    .blog-header h1 {
-      color: #d4af37;
-      font-family: "Playfair Display", serif;
-      font-size: 48px;
-      margin-bottom: 10px;
-    }
-
-    .blog-header p {
-      color: #ddd;
-      max-width: 700px;
-      margin: 0 auto;
-      line-height: 1.7;
-    }
-
-    .blog-container {
-      max-width: 1000px;
-      margin: auto;
-      padding: 30px 20px 70px;
-    }
-
-    .blog-card {
-      background: #111;
-      border: 1px solid #d4af37;
-      border-radius: 12px;
-      padding: 25px;
-      margin-bottom: 24px;
-      box-shadow: 0 0 12px rgba(212, 175, 55, 0.12);
-      transition: 0.3s ease;
-    }
-
-    .blog-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 0 18px rgba(212, 175, 55, 0.2);
-    }
-
-    .blog-card h2 {
-      color: #d4af37;
-      font-family: "Playfair Display", serif;
-      font-size: 30px;
-      margin-bottom: 10px;
-      text-align: left;
-    }
-
-    .blog-card p {
-      color: #e6e6e6;
-      line-height: 1.7;
-      margin-bottom: 12px;
-    }
-
-    .blog-card a {
-      display: inline-block;
-      margin-top: 10px;
-      background: #d4af37;
-      color: #000;
-      text-decoration: none;
-      font-weight: 700;
-      padding: 10px 18px;
-      border-radius: 8px;
-    }
-
-    .blog-card a:hover {
-      opacity: 0.9;
-    }
-
-    @media (max-width: 768px) {
-      .blog-header h1 {
-        font-size: 34px;
-      }
-
-      .blog-card h2 {
-        font-size: 24px;
-      }
-
-      .blog-container {
-        padding: 20px 15px 50px;
-      }
-    }
-  </style>
 </head>
 
 <body>
-  <nav class="navbar">
-    <a href="index.html" class="logo-area">
-      <img src="images/logo.png" alt="MNM Legal Associates Logo">
 
-      <div class="logo-text">
-        <h3>MNM Legal Associates</h3>
-        <p>Advocates & Legal Consultants</p>
-      </div>
+    <a href="#main-content" class="skip-link">
+        Skip to main content
     </a>
 
-    <button type="button" class="hamburger" aria-label="Open menu" aria-expanded="false">
-      <i class="fa-solid fa-bars"></i>
+    <!-- =====================================
+         TOP INFORMATION BAR
+    ====================================== -->
+
+    <div class="topbar">
+
+        <div class="container topbar-inner">
+
+            <div class="topbar-contact">
+
+                <a href="tel:+919898172734">
+                    <i class="fa-solid fa-phone"
+                       aria-hidden="true"></i>
+                    +91 98981 72734
+                </a>
+
+                <a href="mailto:mnmlegal.in@gmail.com">
+                    <i class="fa-solid fa-envelope"
+                       aria-hidden="true"></i>
+                    mnmlegal.in@gmail.com
+                </a>
+
+            </div>
+
+            <span>
+                <i class="fa-solid fa-location-dot"
+                   aria-hidden="true"></i>
+                Chandkheda, Ahmedabad, Gujarat
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================
+         NAVIGATION
+    ====================================== -->
+
+    <header class="site-header">
+
+        <nav class="navbar container"
+             aria-label="Main navigation">
+
+            <a href="/" class="logo-area">
+
+                <img src="/images/logo.png"
+                     alt="MNM Legal Associates"
+                     width="55"
+                     height="55">
+
+                <div class="logo-text">
+
+                    <strong>MNM Legal Associates</strong>
+
+                    <small>
+                        Advocates &amp; Legal Consultants
+                    </small>
+
+                </div>
+
+            </a>
+
+            <button type="button"
+                    class="hamburger"
+                    id="menuToggle"
+                    aria-label="Open navigation menu"
+                    aria-controls="navLinks"
+                    aria-expanded="false">
+
+                <i class="fa-solid fa-bars"
+                   aria-hidden="true"></i>
+
+            </button>
+
+            <ul class="nav-links" id="navLinks">
+
+                <li>
+                    <a href="/#home">Home</a>
+                </li>
+
+                <li>
+                    <a href="/#about">The Firm</a>
+                </li>
+
+                <li>
+                    <a href="/#practice">Practice Areas</a>
+                </li>
+
+                <li>
+                    <a href="/#team">Our Advocates</a>
+                </li>
+
+                <li>
+                    <a href="/blog.html"
+                       aria-current="page">
+                        Legal Insights
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/#gallery">Resources</a>
+                </li>
+
+                <li>
+                    <a href="/#contact">Contact</a>
+                </li>
+
+            </ul>
+
+        </nav>
+
+    </header>
+
+
+    <!-- =====================================
+         MAIN CONTENT
+    ====================================== -->
+
+    <main id="main-content">
+
+        <!-- PAGE HERO -->
+
+        <section class="insights-hero">
+
+            <div class="container">
+
+                <nav class="insights-breadcrumb"
+                     aria-label="Breadcrumb">
+
+                    <a href="/">Home</a>
+
+                    <i class="fa-solid fa-chevron-right"
+                       aria-hidden="true"></i>
+
+                    <span aria-current="page">
+                        Legal Insights
+                    </span>
+
+                </nav>
+
+                <span class="eyebrow">
+                    Knowledge &amp; Perspectives
+                </span>
+
+                <h1>Legal Insights</h1>
+
+                <div class="gold-line"></div>
+
+                <p>
+                    Explore informational articles on Indian
+                    laws, legal rights and judicial procedures.
+                    Our legal resources are intended to promote
+                    awareness and a better understanding of
+                    the legal framework.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- ARTICLE DIRECTORY -->
+
+        <section class="insights-main"
+                 aria-labelledby="articlesHeading">
+
+            <div class="container">
+
+                <!-- SEARCH AND FILTERS -->
+
+                <div class="article-toolbar"
+                     id="articleToolbar"
+                     hidden>
+
+                    <label class="search-label"
+                           for="articleSearch">
+
+                        Search Legal Articles
+
+                    </label>
+
+                    <div class="article-search">
+
+                        <i class="fa-solid fa-magnifying-glass"
+                           aria-hidden="true"></i>
+
+                        <input type="search"
+                               id="articleSearch"
+                               placeholder="Search divorce, bail, maintenance..."
+                               autocomplete="off"
+                               maxlength="150">
+
+                    </div>
+
+                    <p class="filter-label"
+                       id="categoryLabel">
+
+                        Browse by Legal Category
+
+                    </p>
+
+                    <div class="category-filters"
+                         role="group"
+                         aria-labelledby="categoryLabel">
+
+                        <button type="button"
+                                class="filter-button active"
+                                data-filter="all"
+                                aria-pressed="true">
+
+                            All Articles
+
+                        </button>
+
+                        <button type="button"
+                                class="filter-button"
+                                data-filter="family"
+                                aria-pressed="false">
+
+                            Family Law
+
+                        </button>
+
+                        <button type="button"
+                                class="filter-button"
+                                data-filter="criminal"
+                                aria-pressed="false">
+
+                            Criminal Law
+
+                        </button>
+
+                        <button type="button"
+                                class="filter-button"
+                                data-filter="cheque"
+                                aria-pressed="false">
+
+                            Cheque Dishonour
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- RESULTS HEADER -->
+
+                <div class="results-bar">
+
+                    <h2 id="articlesHeading">
+                        Articles &amp; Legal Guides
+                    </h2>
+
+                    <p class="article-count"
+                       id="articleCount"
+                       role="status"
+                       aria-live="polite">
+
+                        5 articles available
+
+                    </p>
+
+                </div>
+
+
+                <!-- ARTICLE GRID -->
+
+                <div class="insights-grid"
+                     id="articleGrid">
+
+
+                    <!-- ARTICLE 01: DIVORCE -->
+
+                    <article class="insight-card"
+                             data-category="family"
+                             data-keywords="divorce marriage matrimonial mutual consent contested divorce hindu marriage act family court judicial separation">
+
+                        <a class="insight-image"
+                           href="/what-is-divorce.html"
+                           aria-label="Read Divorce Law in India">
+
+                            <img src="/images/divorce-guide.jpg"
+                                 alt="Informational guide on divorce law in India"
+                                 loading="lazy"
+                                 decoding="async">
+
+                        </a>
+
+                        <div class="insight-body">
+
+                            <span class="article-category">
+
+                                <i class="fa-solid fa-scale-balanced"
+                                   aria-hidden="true"></i>
+
+                                Family Law
+
+                            </span>
+
+                            <h3>
+
+                                <a href="/what-is-divorce.html">
+                                    Divorce Law in India
+                                </a>
+
+                            </h3>
+
+                            <p>
+                                An introduction to the legal
+                                framework governing divorce,
+                                including mutual consent divorce,
+                                contested divorce and matrimonial
+                                proceedings in India.
+                            </p>
+
+                            <div class="insight-footer">
+
+                                <span class="article-author">
+                                    MNM Legal Associates
+                                </span>
+
+                                <a class="article-read-link"
+                                   href="/what-is-divorce.html"
+                                   aria-label="Read article about divorce law">
+
+                                    Read Article
+
+                                    <i class="fa-solid fa-arrow-right"
+                                       aria-hidden="true"></i>
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- ARTICLE 02: MAINTENANCE -->
+
+                    <article class="insight-card"
+                             data-category="family"
+                             data-keywords="maintenance alimony wife husband children financial support interim maintenance permanent alimony section 144 bnss section 125 crpc">
+
+                        <a class="insight-image"
+                           href="/maintenance-law-india.html"
+                           aria-label="Read Maintenance Law in India">
+
+                            <img src="/images/maintienance-guide.jpg"
+                                 alt="Informational guide on maintenance law"
+                                 loading="lazy"
+                                 decoding="async">
+
+                        </a>
+
+                        <div class="insight-body">
+
+                            <span class="article-category">
+
+                                <i class="fa-solid fa-scale-balanced"
+                                   aria-hidden="true"></i>
+
+                                Family Law
+
+                            </span>
+
+                            <h3>
+
+                                <a href="/maintenance-law-india.html">
+                                    Maintenance Law in India
+                                </a>
+
+                            </h3>
+
+                            <p>
+                                Understand the concept of
+                                maintenance, financial support,
+                                statutory remedies and the
+                                general considerations involved
+                                in maintenance proceedings.
+                            </p>
+
+                            <div class="insight-footer">
+
+                                <span class="article-author">
+                                    MNM Legal Associates
+                                </span>
+
+                                <a class="article-read-link"
+                                   href="/maintenance-law-india.html"
+                                   aria-label="Read article about maintenance law">
+
+                                    Read Article
+
+                                    <i class="fa-solid fa-arrow-right"
+                                       aria-hidden="true"></i>
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- ARTICLE 03: CHEQUE DISHONOUR -->
+
+                    <article class="insight-card"
+                             data-category="cheque"
+                             data-keywords="cheque check bounce dishonour section 138 ni act negotiable instruments act legal notice payment recovery complaint">
+
+                        <a class="insight-image"
+                           href="/Cheque-Bounce.html"
+                           aria-label="Read Cheque Dishonour Under Section 138">
+
+                            <img src="/images/138.jpg"
+                                 alt="Guide on cheque dishonour under Section 138"
+                                 loading="lazy"
+                                 decoding="async">
+
+                        </a>
+
+                        <div class="insight-body">
+
+                            <span class="article-category">
+
+                                <i class="fa-solid fa-money-check"
+                                   aria-hidden="true"></i>
+
+                                Negotiable Instruments
+
+                            </span>
+
+                            <h3>
+
+                                <a href="/Cheque-Bounce.html">
+                                    Cheque Dishonour Under Section 138
+                                </a>
+
+                            </h3>
+
+                            <p>
+                                An overview of cheque dishonour,
+                                statutory demand notices and
+                                proceedings under Section 138
+                                of the Negotiable Instruments
+                                Act, 1881.
+                            </p>
+
+                            <div class="insight-footer">
+
+                                <span class="article-author">
+                                    MNM Legal Associates
+                                </span>
+
+                                <a class="article-read-link"
+                                   href="/Cheque-Bounce.html"
+                                   aria-label="Read article about cheque dishonour">
+
+                                    Read Article
+
+                                    <i class="fa-solid fa-arrow-right"
+                                       aria-hidden="true"></i>
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- ARTICLE 04: ANTICIPATORY BAIL -->
+
+                    <article class="insight-card"
+                             data-category="criminal"
+                             data-keywords="anticipatory bail arrest apprehension criminal law fir section 482 bnss section 438 crpc sessions court high court pre arrest bail">
+
+                        <a class="insight-image"
+                           href="/Anticipatory-Bail-Application.html"
+                           aria-label="Read Anticipatory Bail in India">
+
+                            <img src="/images/Anticipatory-bail.jpg"
+                                 alt="Informational guide on anticipatory bail"
+                                 loading="lazy"
+                                 decoding="async">
+
+                        </a>
+
+                        <div class="insight-body">
+
+                            <span class="article-category">
+
+                                <i class="fa-solid fa-gavel"
+                                   aria-hidden="true"></i>
+
+                                Criminal Law
+
+                            </span>
+
+                            <h3>
+
+                                <a href="/Anticipatory-Bail-Application.html">
+                                    Anticipatory Bail in India
+                                </a>
+
+                            </h3>
+
+                            <p>
+                                Understand the concept of
+                                anticipatory bail, protection
+                                against apprehended arrest
+                                and the general procedure for
+                                seeking pre-arrest bail.
+                            </p>
+
+                            <div class="insight-footer">
+
+                                <span class="article-author">
+                                    MNM Legal Associates
+                                </span>
+
+                                <a class="article-read-link"
+                                   href="/Anticipatory-Bail-Application.html"
+                                   aria-label="Read article about anticipatory bail">
+
+                                    Read Article
+
+                                    <i class="fa-solid fa-arrow-right"
+                                       aria-hidden="true"></i>
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- ARTICLE 05: REGULAR BAIL -->
+
+                    <article class="insight-card"
+                             data-category="criminal"
+                             data-keywords="regular bail criminal law arrest custody judicial custody magistrate sessions court high court bailable non bailable offences bnss crpc">
+
+                        <a class="insight-image"
+                           href="/Regular-Bail-Application.html"
+                           aria-label="Read Regular Bail in India">
+
+                            <img src="/images/Regular-Bail.jpg"
+                                 alt="Informational guide on regular bail"
+                                 loading="lazy"
+                                 decoding="async">
+
+                        </a>
+
+                        <div class="insight-body">
+
+                            <span class="article-category">
+
+                                <i class="fa-solid fa-gavel"
+                                   aria-hidden="true"></i>
+
+                                Criminal Law
+
+                            </span>
+
+                            <h3>
+
+                                <a href="/Regular-Bail-Application.html">
+                                    Regular Bail in India
+                                </a>
+
+                            </h3>
+
+                            <p>
+                                An overview of regular bail,
+                                the legal framework governing
+                                release from custody and
+                                relevant considerations in
+                                bail proceedings.
+                            </p>
+
+                            <div class="insight-footer">
+
+                                <span class="article-author">
+                                    MNM Legal Associates
+                                </span>
+
+                                <a class="article-read-link"
+                                   href="/Regular-Bail-Application.html"
+                                   aria-label="Read article about regular bail">
+
+                                    Read Article
+
+                                    <i class="fa-solid fa-arrow-right"
+                                       aria-hidden="true"></i>
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                </div>
+
+
+                <!-- NO SEARCH RESULTS -->
+
+                <div class="no-results"
+                     id="noResults"
+                     hidden>
+
+                    <i class="fa-solid fa-magnifying-glass"
+                       aria-hidden="true"></i>
+
+                    <h3>No Articles Found</h3>
+
+                    <p>
+                        Try a different search term or
+                        select another legal category.
+                    </p>
+
+                    <button type="button"
+                            class="btn btn-dark"
+                            id="resetFilters">
+
+                        Clear Search &amp; Filters
+
+                    </button>
+
+                </div>
+
+
+                <!-- EDITORIAL DISCLAIMER -->
+
+                <aside class="editorial-note">
+
+                    <h2>
+
+                        <i class="fa-solid fa-circle-info"
+                           aria-hidden="true"></i>
+
+                        Important Legal Information
+
+                    </h2>
+
+                    <p>
+                        The articles published on this website
+                        are intended solely for general
+                        informational and educational purposes.
+                        They do not constitute legal advice,
+                        solicitation or an opinion concerning
+                        any particular case. Laws, judicial
+                        interpretations and procedural
+                        requirements may change over time.
+                        Readers should independently verify
+                        the applicable legal position and
+                        obtain appropriate legal advice for
+                        their specific circumstances.
+                    </p>
+
+                </aside>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =====================================
+         FOOTER
+    ====================================== -->
+
+    <footer class="footer">
+
+        <div class="container">
+
+            <div class="footer-grid">
+
+                <!-- FIRM INFORMATION -->
+
+                <div>
+
+                    <img class="footer-logo"
+                         src="/images/logo.png"
+                         alt="MNM Legal Associates"
+                         loading="lazy">
+
+                    <h3>MNM Legal Associates</h3>
+
+                    <p>
+                        Advocates &amp; Legal Consultants
+                    </p>
+
+                    <p style="color:var(--gold)">
+                        Justice, Integrity &amp; Excellence
+                    </p>
+
+                    <div class="social-links">
+
+                        <a href="https://www.instagram.com/mnm.legal/"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           aria-label="MNM Legal Associates Instagram">
+
+                            <i class="fa-brands fa-instagram"
+                               aria-hidden="true"></i>
+
+                        </a>
+
+                        <a href="https://www.linkedin.com/in/mnm-legal-a32361418/"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           aria-label="MNM Legal Associates LinkedIn">
+
+                            <i class="fa-brands fa-linkedin-in"
+                               aria-hidden="true"></i>
+
+                        </a>
+
+                        <a href="https://x.com/MNMLEGALIN"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           aria-label="MNM Legal Associates on X">
+
+                            <i class="fa-brands fa-x-twitter"
+                               aria-hidden="true"></i>
+
+                        </a>
+
+                        <a href="mailto:mnmlegal.in@gmail.com"
+                           aria-label="Email MNM Legal Associates">
+
+                            <i class="fa-solid fa-envelope"
+                               aria-hidden="true"></i>
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+
+                <!-- QUICK LINKS -->
+
+                <div>
+
+                    <h3>Quick Links</h3>
+
+                    <ul>
+
+                        <li>
+                            <a href="/">Home</a>
+                        </li>
+
+                        <li>
+                            <a href="/#about">The Firm</a>
+                        </li>
+
+                        <li>
+                            <a href="/#practice">Practice Areas</a>
+                        </li>
+
+                        <li>
+                            <a href="/#team">Our Advocates</a>
+                        </li>
+
+                        <li>
+                            <a href="/blog.html">Legal Insights</a>
+                        </li>
+
+                        <li>
+                            <a href="/#gallery">Legal Resources</a>
+                        </li>
+
+                        <li>
+                            <a href="/#contact">Contact Information</a>
+                        </li>
+
+                    </ul>
+
+                </div>
+
+
+                <!-- OFFICE INFORMATION -->
+
+                <div>
+
+                    <h3>Office Information</h3>
+
+                    <p>
+                        Office No. 511,<br>
+                        Vedmata Cooperative Housing Society,<br>
+                        IOC Road, Chandkheda,<br>
+                        Ahmedabad, Gujarat - 382424.
+                    </p>
+
+                    <p>
+
+                        <a href="tel:+919898172734">
+                            +91 98981 72734
+                        </a>
+
+                        <br>
+
+                        <a href="tel:+919579220137">
+                            +91 95792 20137
+                        </a>
+
+                    </p>
+
+                    <p>
+
+                        <a href="mailto:mnmlegal.in@gmail.com">
+                            mnmlegal.in@gmail.com
+                        </a>
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- FOOTER BOTTOM -->
+
+            <div class="footer-bottom">
+
+                <span>
+
+                    &copy;
+
+                    <span id="currentYear">2026</span>
+
+                    MNM Legal Associates.
+                    All rights reserved.
+
+                </span>
+
+                <span>
+
+                    <a href="/privacy.html">
+                        Privacy Policy
+                    </a>
+
+                    &nbsp; | &nbsp;
+
+                    <a href="/terms.html">
+                        Disclaimer
+                    </a>
+
+                    &nbsp; | &nbsp;
+
+                    <a href="/login.html">
+
+                        <i class="fa-solid fa-lock"
+                           aria-hidden="true"></i>
+
+                        Staff Login
+
+                    </a>
+
+                </span>
+
+            </div>
+
+        </div>
+
+    </footer>
+
+
+    <!-- BACK TO TOP -->
+
+    <button class="back-to-top"
+            id="backToTop"
+            type="button"
+            aria-label="Back to top"
+            hidden>
+
+        <i class="fa-solid fa-chevron-up"
+           aria-hidden="true"></i>
+
     </button>
 
-    <ul class="nav-links">
-      <li><a href="index.html#home">Home</a></li>
-      <li><a href="index.html#about">About</a></li>
-      <li><a href="index.html#why-us">Why Choose Us</a></li>
-      <li><a href="index.html#team">Advocates</a></li>
-      <li><a href="index.html#practice">Practice Areas</a></li>
-      <li><a href="index.html#gallery">Gallery</a></li>
-      <li><a href="blog.html">Blog</a></li>
-      <li><a href="academy.html">MNM Academy</a></li>
-      <li><a href="index.html#contact">Contact</a></li>
-    </ul>
-  </nav>
 
-  <header class="blog-header">
-    <h1>Legal Blog</h1>
-    <p>
-      Practical legal guides, updates and explainers by MNM Legal Associates.
-    </p>
-  </header>
+    <!-- GLOBAL JAVASCRIPT -->
 
-  <main class="blog-container">
-    <article class="blog-card">
-      <h2>What Is Divorce In India?</h2>
-      <p>Complete legal guide about divorce laws in India.</p>
-      <a href="what-is-divorce.html">Read More</a>
-    </article>
+    <script src="/script.js" defer></script>
 
-    <article class="blog-card">
-      <h2>Maintenance Law In India</h2>
-      <p>Everything you need to know before filing a maintenance petition.</p>
-      <a href="maintenance-law-india.html">Read More</a>
-    </article>
 
-    <article class="blog-card">
-      <h2>Cheque Bounce Case in India</h2>
-      <p>Everything you need to know before filing a cheque bounce case in India.</p>
-      <a href="Cheque-Bounce.html">Read More</a>
-    </article>
+    <!-- =====================================
+         ARTICLE SEARCH AND FILTER FUNCTIONALITY
+    ====================================== -->
 
-    <article class="blog-card">
-      <h2>Anticipatory Bail in India</h2>
-      <p>Everything you need to know before filing an anticipatory bail application in India.</p>
-      <a href="Anticipatory-Bail-Application.html">Read More</a>
-    </article>
-     <article class="blog-card">
-      <h2>Regular Bail in India</h2>
-      <p>Everything you need to know before filing an Regular bail application in India.</p>
-      <a href="Regular-Bail-Application.html">Read More</a>
-    </article>
-  </main>
+    <script>
 
-  <script>
-    const hamburger = document.querySelector(".hamburger");
-    const navLinks = document.querySelector(".nav-links");
+        "use strict";
 
-    if (hamburger && navLinks) {
-      hamburger.addEventListener("click", () => {
-        navLinks.classList.toggle("active");
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
 
-        const expanded = navLinks.classList.contains("active");
-        hamburger.setAttribute("aria-expanded", String(expanded));
-      });
+                const toolbar = document.getElementById(
+                    "articleToolbar"
+                );
 
-      navLinks.querySelectorAll("a").forEach((link) => {
-        link.addEventListener("click", () => {
-          navLinks.classList.remove("active");
-          hamburger.setAttribute("aria-expanded", "false");
-        });
-      });
-    }
-  </script>
+                const searchInput = document.getElementById(
+                    "articleSearch"
+                );
+
+                const articleCount = document.getElementById(
+                    "articleCount"
+                );
+
+                const articleGrid = document.getElementById(
+                    "articleGrid"
+                );
+
+                const noResults = document.getElementById(
+                    "noResults"
+                );
+
+                const resetButton = document.getElementById(
+                    "resetFilters"
+                );
+
+                const filterButtons = Array.from(
+                    document.querySelectorAll(
+                        ".filter-button"
+                    )
+                );
+
+                const articles = Array.from(
+                    document.querySelectorAll(
+                        ".insight-card"
+                    )
+                );
+
+                if (
+                    !toolbar ||
+                    !searchInput ||
+                    !articleCount ||
+                    !articleGrid ||
+                    !noResults
+                ) {
+                    return;
+                }
+
+                let selectedCategory = "all";
+
+
+                /* NORMALIZE SEARCH TERMS */
+
+                function normalizeText(value) {
+
+                    return String(value || "")
+                        .toLowerCase()
+                        .replace(/\s+/g, " ")
+                        .trim();
+
+                }
+
+
+                /* FILTER ARTICLES */
+
+                function filterArticles() {
+
+                    const query = normalizeText(
+                        searchInput.value
+                    );
+
+                    const searchWords = query
+                        .split(" ")
+                        .filter(Boolean);
+
+                    let visibleCount = 0;
+
+                    articles.forEach(function (article) {
+
+                        const category =
+                            article.dataset.category || "";
+
+                        const keywords =
+                            article.dataset.keywords || "";
+
+                        const searchableContent =
+                            normalizeText(
+                                article.textContent +
+                                " " +
+                                keywords
+                            );
+
+                        const matchesCategory = (
+                            selectedCategory === "all" ||
+                            category === selectedCategory
+                        );
+
+                        const matchesSearch =
+                            searchWords.every(
+                                function (word) {
+
+                                    return searchableContent
+                                        .includes(word);
+
+                                }
+                            );
+
+                        const visible = (
+                            matchesCategory &&
+                            matchesSearch
+                        );
+
+                        article.hidden = !visible;
+
+                        if (visible) {
+
+                            visibleCount++;
+
+                        }
+
+                    });
+
+                    articleCount.textContent =
+                        visibleCount +
+                        (
+                            visibleCount === 1
+                                ? " article found"
+                                : " articles found"
+                        );
+
+                    articleGrid.hidden =
+                        visibleCount === 0;
+
+                    noResults.hidden =
+                        visibleCount !== 0;
+
+                }
+
+
+                /* CATEGORY SELECTION */
+
+                function selectCategory(category) {
+
+                    selectedCategory = category;
+
+                    filterButtons.forEach(
+                        function (button) {
+
+                            const active = (
+                                button.dataset.filter ===
+                                category
+                            );
+
+                            button.classList.toggle(
+                                "active",
+                                active
+                            );
+
+                            button.setAttribute(
+                                "aria-pressed",
+                                String(active)
+                            );
+
+                        }
+                    );
+
+                    filterArticles();
+
+                }
+
+
+                /* SEARCH INPUT */
+
+                searchInput.addEventListener(
+                    "input",
+                    filterArticles
+                );
+
+                searchInput.addEventListener(
+                    "search",
+                    filterArticles
+                );
+
+
+                /* CATEGORY BUTTONS */
+
+                filterButtons.forEach(
+                    function (button) {
+
+                        button.addEventListener(
+                            "click",
+                            function () {
+
+                                selectCategory(
+                                    button.dataset.filter
+                                );
+
+                            }
+                        );
+
+                    }
+                );
+
+
+                /* RESET FILTERS */
+
+                if (resetButton) {
+
+                    resetButton.addEventListener(
+                        "click",
+                        function () {
+
+                            searchInput.value = "";
+
+                            selectCategory("all");
+
+                            searchInput.focus();
+
+                        }
+                    );
+
+                }
+
+
+                /* INITIALIZE */
+
+                filterArticles();
+
+                toolbar.hidden = false;
+
+            }
+        );
+
+    </script>
+
 </body>
+
 </html>
