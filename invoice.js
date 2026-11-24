@@ -109,18 +109,11 @@ function paise(input) {
 
 function readInvoices() {
 
-    const raw = localStorage.getItem(KEYS.invoices);
+    return cloudRecords.filter(
+        record => record.recordStatus !== "cancelled"
+    );
 
-    if (raw === null) return [];
-
-    const records = JSON.parse(raw);
-
-    if (!Array.isArray(records)) {
-        throw new Error(
-            "Existing invoice storage is invalid. " +
-            "No records have been modified."
-        );
-    }
+}
 
     const ids = new Set();
 
