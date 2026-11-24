@@ -1491,6 +1491,83 @@
 }
 
 /* END OF HERO SECTION */
+        /* =========================================
+   PREMIUM ADVOCATE PROFILE PHOTOGRAPHS
+========================================= */
+
+.team-card {
+    overflow: hidden;
+    align-items: stretch;
+}
+
+.team-photo {
+    position: relative;
+    display: block;
+    padding: 0;
+    min-height: 330px;
+    overflow: hidden;
+    background: #efede7;
+}
+
+.team-photo img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    aspect-ratio: auto;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* Advocate Aman Mishra */
+
+.team-photo img[src="/images/aman.jpg"] {
+    object-position: 50% 30%;
+    transform: scale(1.15);
+    transform-origin: 50% 30%;
+}
+
+/* Advocate Sonali Pandey */
+
+.team-photo img[src="/images/sonali.jpg"] {
+    object-position: 45% 60%;
+    transform: scale(1.25);
+    transform-origin: 45% 60%;
+}
+
+/* Profile information */
+
+.team-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 28px;
+}
+
+/* Mobile responsive photographs */
+
+@media (max-width: 768px) {
+
+    .team-card {
+        grid-template-columns: 1fr;
+    }
+
+    .team-photo {
+        height: 340px;
+        min-height: 340px;
+        padding: 0;
+    }
+
+    .team-content {
+        padding: 24px;
+    }
+
+}
+
+/* END OF ADVOCATE PROFILE CORRECTION */
     </style>
 
 </head>
