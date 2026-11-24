@@ -3584,3 +3584,407 @@ input[type="date"] {
    MNM LEGAL ASSOCIATES
    Justice, Integrity & Excellence
    ========================================================= */
+
+/* =========================================================
+   36. PREMIUM INVOICE FINISHING & A4 OPTIMIZATION
+   MNM LEGAL ASSOCIATES
+   ========================================================= */
+
+
+/* Improved letterhead in live preview */
+
+.letterhead-logo {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.invoice-paper .letterhead-brand p {
+    white-space: normal;
+    margin-top: 3px;
+    line-height: 1.4;
+}
+
+.letterhead-brand h1 {
+    line-height: 1.35;
+}
+
+.firm-motto {
+    margin-top: 4px;
+}
+
+
+/* Mobile logo adjustment */
+
+@media screen and (max-width: 650px) {
+
+    .letterhead-logo {
+        width: 65px;
+        height: 65px;
+    }
+
+}
+
+
+/* =========================================================
+   OPTIMIZED A4 PAGE
+   ========================================================= */
+
+@page {
+
+    size: A4 portrait;
+    margin: 10mm 12mm;
+
+}
+
+
+@media print {
+
+    html,
+    body {
+        min-height: 0 !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .invoice-paper {
+        display: block !important;
+        width: 100% !important;
+        min-height: 0 !important;
+        height: auto !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 9pt;
+        line-height: 1.35;
+        overflow: visible !important;
+    }
+
+
+    /* PROFESSIONAL LETTERHEAD */
+
+    .invoice-letterhead {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4mm;
+        padding-bottom: 3mm;
+        margin: 0;
+    }
+
+    .letterhead-brand {
+        flex: 1 1 0 !important;
+        align-items: center;
+        min-width: 0;
+        gap: 3mm;
+    }
+
+    .letterhead-logo {
+        width: 28mm !important;
+        height: 28mm !important;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+
+    .letterhead-brand > div {
+        min-width: 0;
+    }
+
+    .letterhead-brand h1 {
+        font-size: 13pt;
+        line-height: 1.3;
+        letter-spacing: 0.1px;
+        margin: 0;
+    }
+
+    .invoice-paper .letterhead-brand p {
+        font-size: 8pt;
+        line-height: 1.4;
+        margin-top: 1.5mm;
+        white-space: normal;
+    }
+
+    .firm-motto {
+        font-size: 7.5pt;
+        margin-top: 1mm;
+        line-height: 1.4;
+    }
+
+    .firm-contact {
+        flex: 0 0 59mm !important;
+        max-width: 59mm;
+        font-size: 7.5pt;
+        line-height: 1.4;
+        text-align: right;
+    }
+
+    .firm-contact p {
+        margin: 0 0 0.7mm;
+        white-space: normal;
+    }
+
+    .letterhead-divider {
+        height: 0.8mm;
+        margin-bottom: 4mm;
+        background: var(--gold);
+    }
+
+
+    /* INVOICE TITLE */
+
+    .invoice-title-section {
+        margin-bottom: 3.5mm;
+        gap: 3mm;
+    }
+
+    .invoice-title-section h2 {
+        font-size: 12pt;
+        line-height: 1.3;
+        letter-spacing: 0.4px;
+    }
+
+    #previewMatterReference {
+        margin-top: 1mm;
+        font-size: 8pt;
+        line-height: 1.4;
+    }
+
+    .payment-status {
+        font-size: 8pt;
+        padding: 1.5mm 3mm;
+        border-radius: 2px;
+    }
+
+
+    /* CLIENT & INVOICE DETAILS */
+
+    .invoice-information {
+        grid-template-columns:
+            minmax(0, 1fr)
+            minmax(0, 1fr) !important;
+
+        gap: 5mm;
+        margin-bottom: 4mm;
+    }
+
+    .bill-to h3 {
+        font-size: 8pt;
+        margin-bottom: 1.5mm;
+    }
+
+    .bill-to strong {
+        font-size: 10pt;
+        margin-bottom: 1mm;
+    }
+
+    .bill-to p {
+        font-size: 8.5pt;
+        line-height: 1.4;
+    }
+
+    .invoice-meta {
+        padding-left: 4mm;
+        padding-top: 0;
+    }
+
+    .invoice-meta > div {
+        padding: 1mm 0;
+        font-size: 8.5pt;
+        line-height: 1.3;
+    }
+
+    .invoice-meta strong {
+        font-size: 8.5pt;
+    }
+
+
+    /* SERVICES TABLE */
+
+    .invoice-items-table {
+        margin-bottom: 4mm;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .invoice-items-table th {
+        padding: 2.2mm 2mm;
+        font-size: 8.5pt;
+        line-height: 1.3;
+        font-weight: 600;
+    }
+
+    .invoice-items-table td {
+        padding: 2mm;
+        font-size: 8.5pt;
+        line-height: 1.4;
+        vertical-align: middle;
+    }
+
+    .invoice-items-table th:nth-child(3),
+    .invoice-items-table td:nth-child(3) {
+        text-align: center;
+    }
+
+    .invoice-items-table th:nth-child(4),
+    .invoice-items-table th:nth-child(5),
+    .invoice-items-table td:nth-child(4),
+    .invoice-items-table td:nth-child(5) {
+        text-align: right;
+    }
+
+    .invoice-items-table thead {
+        display: table-header-group;
+    }
+
+    .invoice-items-table tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+
+    /* FINANCIAL SUMMARY */
+
+    .invoice-totals-section {
+        grid-template-columns:
+            minmax(0, 1fr)
+            minmax(0, 1fr) !important;
+
+        gap: 5mm;
+        margin-bottom: 4mm;
+        break-inside: avoid;
+    }
+
+    .amount-words {
+        padding: 2.5mm;
+        border-left: 0.7mm solid var(--gold);
+        background: #f7f6f2;
+    }
+
+    .amount-words h3 {
+        font-size: 7.5pt;
+        margin-bottom: 1.5mm;
+    }
+
+    .amount-words p {
+        font-size: 8.5pt;
+        line-height: 1.5;
+    }
+
+    .total-line {
+        padding: 1.2mm 0;
+        font-size: 8.5pt;
+        line-height: 1.35;
+    }
+
+    .total-line.grand-total {
+        padding: 2.2mm 2.5mm;
+        margin: 1.5mm 0;
+        border-radius: 2px;
+    }
+
+    .grand-total span,
+    .grand-total strong {
+        font-size: 10pt;
+    }
+
+    .total-line.balance-total {
+        margin-top: 1mm;
+        padding-top: 2mm;
+        padding-bottom: 1mm;
+        font-size: 9pt;
+    }
+
+
+    /* NOTES, PAYMENT & TERMS */
+
+    .invoice-payment-record,
+    .invoice-payment-details,
+    .invoice-notes,
+    .invoice-terms {
+        margin-bottom: 3mm;
+        padding-top: 2mm;
+    }
+
+    .invoice-payment-record h3,
+    .invoice-payment-details h3,
+    .invoice-notes h3,
+    .invoice-terms h3 {
+        font-size: 7.5pt;
+        margin-bottom: 1mm;
+        letter-spacing: 0.6px;
+        break-after: avoid;
+    }
+
+    .invoice-payment-record p,
+    .invoice-payment-details p,
+    .invoice-notes p,
+    .invoice-terms p {
+        font-size: 8pt;
+        line-height: 1.45;
+        orphans: 2;
+        widows: 2;
+    }
+
+
+    /* AUTHORISED SIGNATURE */
+
+    .invoice-signature {
+        margin-top: 2mm;
+        margin-bottom: 3mm;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .signature-block {
+        min-width: 48mm;
+    }
+
+    .signature-space {
+        height: 10mm;
+    }
+
+    .signature-block p,
+    .signature-block strong {
+        font-size: 8pt;
+        line-height: 1.4;
+    }
+
+    .signature-block strong {
+        padding-top: 1.5mm;
+    }
+
+
+    /* COMPACT PROFESSIONAL FOOTER */
+
+    .invoice-paper-footer {
+        margin-top: 2mm;
+        padding: 2.5mm 3mm;
+        background: var(--navy);
+        border-top: 0.6mm solid var(--gold);
+        text-align: center;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .invoice-paper-footer p {
+        font-size: 8pt;
+        line-height: 1.3;
+        margin-bottom: 1mm;
+        white-space: normal;
+    }
+
+    .invoice-paper-footer span {
+        font-size: 7pt;
+        line-height: 1.3;
+        letter-spacing: 0.3px;
+    }
+
+}
+
+
+/* =========================================================
+   END OF PREMIUM INVOICE OPTIMIZATION
+   ========================================================= */
