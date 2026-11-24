@@ -1,960 +1,2461 @@
-/* =====================================================
+
+/* =========================================================
    MNM LEGAL ASSOCIATES
-   Invoice Generator JavaScript
-===================================================== */
+   PROFESSIONAL INVOICE MANAGEMENT SYSTEM
+   Version 3.0
+   Justice, Integrity & Excellence
+   ========================================================= */
 
-/* ===========================
-   ELEMENTS
-=========================== */
+const KEYS = {
+    invoices: "mnmSavedBills",
+    sequence: "mnmNextInvoiceNumber",
+    payment: "mnmFirmPaymentSettings"
+};
 
-const invoiceNo = document.getElementById("invoiceNo");
-const invoiceDate = document.getElementById("invoiceDate");
-const previousBillNo = document.getElementById("previousBillNo");
+const $ = id => document.getElementById(id);
 
-const invoiceBody = document.getElementById("invoiceBody");
-const addItemBtn = document.getElementById("addItemBtn");
-const clearTableBtn = document.getElementById("clearTableBtn");
+const value = id => $(id).value;
 
-const subTotal = document.getElementById("subTotal");
-const grandTotal = document.getElementById("grandTotal");
-const discountInput = document.getElementById("discount");
-const amountWords = document.getElementById("amountWords");
+const set = (id, val) => {
+    $(id).value = val ?? "";
+};
 
-const totalFees = document.getElementById("totalFees");
-const receivedEarlier = document.getElementById("receivedEarlier");
-const receivedNow = document.getElementById("receivedNow");
-const balanceDue = document.getElementById("balanceDue");
+const display = (id, val) => {
+    $(id).textContent = val ?? "";
+};
 
-const printBtn = document.getElementById("printBtn");
-const printInvoiceBottom = document.getElementById("printInvoiceBottom");
+const show = (id, visible) => {
+    $(id).hidden = !visible;
+};
 
-const downloadPdf = document.getElementById("downloadPdf");
-const downloadPdfBottom = document.getElementById("downloadPdfBottom");
+const money = amount =>
+    new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        minimumFractionDigits: 2
+    }).format(amount);
 
-const previewBtn = document.getElementById("previewBtn");
-const clearInvoiceBtn = document.getElementById("clearInvoiceBtn");
+const statusLabels = {
+    paid: "Paid",
+    partial: "Partially Paid",
+    unpaid: "Unpaid"
+};
 
-const saveBillBtn = document.getElementById("saveBillBtn");
-const savedBillsBtn = document.getElementById("savedBillsBtn");
-const savedBillsPopup = document.getElementById("savedBillsPopup");
-const savedBillsList = document.getElementById("savedBillsList");
-const closeSavedBills = document.getElementById("closeSavedBills");
+let initialized = false;
+let editingId = null;
+let originalRecord = null;
+let paymentSettings = {};
+let dirty = false;
+let loadedSnapshot = null;
 
-const loadingPopup = document.getElementById("loadingPopup");
-const successPopup = document.getElementById("successPopup");
-const errorPopup = document.getElementById("errorPopup");
-const errorMessage = document.getElementById("errorMessage");
 
-const closeSuccessPopup = document.getElementById("closeSuccessPopup");
-const closeErrorPopup = document.getElementById("closeErrorPopup");
+/* =========================================================
+   STORAGE & EXISTING RECORD COMPATIBILITY
+   ========================================================= */
 
-const pdfFileName = document.getElementById("pdfFileName");
+function numeric(input) {
 
-let editingBillId = null;
+    if (input === "" || input == null) return 0;
 
-/* ===========================
-   INITIALIZE
-=========================== */
+    const n = Number(input);
 
-setTodayDate();
-setNextInvoiceNumber();
-bindExistingRows();
-calculateInvoice();
+    if (!Number.isFinite(n) || n < 0) {
+        throw new Error("Invalid numerical value.");
+    }
 
-/* ===========================
-   DATE
-=========================== */
+    return n;
 
-function setTodayDate() {
-  if (!invoiceDate) return;
-
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, "0");
-  const dd = String(today.getDate()).padStart(2, "0");
-
-  invoiceDate.value = `${yyyy}-${mm}-${dd}`;
 }
 
-/* ===========================
-   INVOICE NUMBER
-=========================== */
+function paise(input) {
 
-function getNextInvoiceNumber() {
-  return parseInt(localStorage.getItem("mnmNextInvoiceNumber") || "1", 10);
+    const result = Math.round(numeric(input) * 100);
+
+    if (!Number.isSafeInteger(result)) {
+        throw new Error("Amount exceeds supported limit.");
+    }
+
+    return result;
+
 }
 
-function setNextInvoiceNumber() {
-  if (!invoiceNo) return;
+function readInvoices() {
 
-  if (!invoiceNo.value.trim() || invoiceNo.value === "MNM//2026") {
-    const next = String(getNextInvoiceNumber()).padStart(3, "0");
-    invoiceNo.value = `MNM/${next}/2026`;
-  }
+    const raw = localStorage.getItem(KEYS.invoices);
+
+    if (raw === null) return [];
+
+    const records = JSON.parse(raw);
+
+    if (!Array.isArray(records)) {
+        throw new Error(
+            "Existing invoice storage is invalid. " +
+            "No records have been modified."
+        );
+    }
+
+    const ids = new Set();
+
+    for (const record of records) {
+
+        if (
+            !record ||
+            typeof record !== "object" ||
+            record.id == null ||
+            typeof record.invoiceNo !== "string" ||
+            !record.invoiceNo.trim() ||
+            !Array.isArray(record.items)
+        ) {
+            throw new Error(
+                "An existing invoice has an unsupported format."
+            );
+        }
+
+        const id = String(record.id);
+
+        if (ids.has(id)) {
+            throw new Error("Duplicate invoice record IDs detected.");
+        }
+
+        ids.add(id);
+
+    }
+
+    return records;
+
 }
 
-function increaseInvoiceNumber() {
-  const next = getNextInvoiceNumber() + 1;
-  localStorage.setItem("mnmNextInvoiceNumber", String(next));
+function readSequence() {
+
+    const raw = localStorage.getItem(KEYS.sequence);
+
+    if (raw === null) return 1;
+
+    if (!/^\d+$/.test(raw)) {
+        throw new Error("Existing invoice sequence is invalid.");
+    }
+
+    const number = Number(raw);
+
+    if (!Number.isSafeInteger(number) || number < 1) {
+        throw new Error("Existing invoice sequence is invalid.");
+    }
+
+    return number;
+
 }
 
-function formatManualInvoiceNumber() {
-  if (!invoiceNo) return;
+function nextSequence(records = readInvoices()) {
 
-  const value = invoiceNo.value.trim();
+    let sequence = readSequence();
 
-  if (!value) {
-    setNextInvoiceNumber();
-    return;
-  }
+    for (const record of records) {
 
-  if (value.startsWith("MNM/") && value.endsWith("/2026")) {
-    return;
-  }
+        const match = record.invoiceNo.match(
+            /^MNM\/(\d+)\/\d{4}$/i
+        );
 
-  if (value.startsWith("MNM/")) {
-    const middle = value.replace("MNM/", "").replace("/2026", "");
-    invoiceNo.value = `MNM/${middle}/2026`;
-    return;
-  }
+        if (match) {
 
-  invoiceNo.value = `MNM/${value}/2026`;
+            const number = Number(match[1]);
+
+            if (Number.isSafeInteger(number)) {
+                sequence = Math.max(sequence, number + 1);
+            }
+
+        }
+
+    }
+
+    if (!Number.isSafeInteger(sequence)) {
+        throw new Error("Invoice sequence exceeds supported limit.");
+    }
+
+    return sequence;
+
 }
 
-/* ===========================
-   MONEY FORMAT
-=========================== */
+function invoiceNumber(sequence, date) {
 
-function money(value) {
-  return Number(value || 0).toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+    const year = date
+        ? date.slice(0, 4)
+        : String(new Date().getFullYear());
+
+    return `MNM/${String(sequence).padStart(3, "0")}/${year}`;
+
 }
 
-/* ===========================
-   CREATE ROW
-=========================== */
+function readPaymentSettings() {
 
-function createRow() {
-  const tr = document.createElement("tr");
+    const raw = localStorage.getItem(KEYS.payment);
 
-  tr.innerHTML = `
-    <td class="serial"></td>
+    if (!raw) return {};
 
-    <td>
-      <input
-        type="text"
-        class="particular"
-        placeholder="Professional Charges"
-      >
-    </td>
+    const data = JSON.parse(raw);
 
-    <td>
-      <input
-        type="number"
-        class="qty"
-        value="1"
-        min="1"
-      >
-    </td>
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+        throw new Error("Invalid payment settings.");
+    }
 
-    <td>
-      <input
-        type="number"
-        class="rate"
-        value="0"
-        min="0"
-      >
-    </td>
+    return data;
 
-    <td class="amount">₹0.00</td>
-
-    <td>
-      <button type="button" class="delete-row">
-        <i class="fa-solid fa-trash"></i>
-      </button>
-    </td>
-  `;
-
-  invoiceBody.appendChild(tr);
-  bindRowEvents(tr);
-  updateSerialNumbers();
-  calculateInvoice();
 }
 
-/* ===========================
-   ROW EVENTS
-=========================== */
 
-function bindExistingRows() {
-  document.querySelectorAll("#invoiceBody tr").forEach((row) => {
-    bindRowEvents(row);
-  });
+/* =========================================================
+   LEGACY RECORD NORMALIZATION
+   Original stored records are not automatically rewritten.
+   ========================================================= */
 
-  updateSerialNumbers();
+function normalize(record) {
+
+    const items = record.items.map(item => ({
+        description: String(
+            item.description ?? item.particular ?? ""
+        ),
+        quantity: numeric(item.quantity ?? item.qty ?? 1),
+        rate: numeric(item.rate ?? 0)
+    }));
+
+    const earlier = numeric(record.receivedEarlier ?? 0);
+
+    const now = numeric(
+        record.receivedNow ??
+        record.amountPaid ??
+        0
+    );
+
+    return {
+        ...record,
+
+        id: String(record.id),
+
+        invoiceNo: record.invoiceNo,
+
+        invoiceDate: record.invoiceDate || "",
+
+        dueDate: record.dueDate || "",
+
+        previousBillNo: record.previousBillNo || "",
+
+        issuedBy: record.issuedBy || "MNM Legal Associates",
+
+        matterReference: record.matterReference || "",
+
+        clientName: record.clientName || "",
+
+        clientPhone:
+            record.clientPhone ??
+            record.clientMobile ??
+            "",
+
+        clientEmail: record.clientEmail || "",
+
+        clientAddress: record.clientAddress || "",
+
+        clientGSTIN: record.clientGSTIN || "",
+
+        items,
+
+        discountAmount: numeric(record.discountAmount ?? 0),
+
+        receivedEarlier: earlier,
+
+        receivedNow: now,
+
+        paymentMode: record.paymentMode || "",
+
+        paymentReference: record.paymentReference || "",
+
+        notes: record.notes || "",
+
+        terms: record.terms ?? DEFAULT_TERMS,
+
+        showPaymentDetails: Boolean(record.showPaymentDetails),
+
+        showSignature: record.showSignature !== false
+
+    };
+
 }
 
-function bindRowEvents(row) {
-  const qtyInput = row.querySelector(".qty");
-  const rateInput = row.querySelector(".rate");
-  const particularInput = row.querySelector(".particular");
-  const deleteBtn = row.querySelector(".delete-row");
 
-  if (qtyInput) {
-    qtyInput.addEventListener("input", calculateInvoice);
-  }
+/* =========================================================
+   DEFAULT INVOICE TERMS
+   ========================================================= */
 
-  if (rateInput) {
-    rateInput.addEventListener("input", calculateInvoice);
-  }
+const DEFAULT_TERMS = [
+    "Professional charges are exclusive of court fees, " +
+    "government fees, stamp duty and other statutory charges, " +
+    "wherever applicable.",
 
-  if (particularInput) {
-    particularInput.addEventListener("input", calculateInvoice);
-  }
+    "Out-of-pocket expenses shall be borne by the client " +
+    "as agreed between the parties.",
 
-  if (deleteBtn) {
-    deleteBtn.addEventListener("click", () => {
-      if (invoiceBody.rows.length === 1) {
-        showError("At least one invoice item is required.");
-        return;
-      }
+    "Additional legal services not covered by this invoice " +
+    "shall be subject to separate agreement."
+].join("\n");
 
-      row.remove();
-      updateSerialNumbers();
-      calculateInvoice();
+
+/* =========================================================
+   DATE UTILITIES
+   ========================================================= */
+
+function today() {
+
+    const date = new Date();
+
+    return [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, "0"),
+        String(date.getDate()).padStart(2, "0")
+    ].join("-");
+
+}
+
+function formatDate(date) {
+
+    if (!date) return "—";
+
+    return /^\d{4}-\d{2}-\d{2}$/.test(date)
+        ? date.split("-").reverse().join("/")
+        : date;
+
+}
+
+
+/* =========================================================
+   APPLICATION MESSAGES
+   ========================================================= */
+
+function message(text, type = "success") {
+
+    const element = $("appMessage");
+
+    element.className = `app-message no-print ${type}`;
+
+    element.textContent = text;
+
+    element.hidden = false;
+
+}
+
+function handleError(error) {
+
+    message(
+        error?.message || "An unexpected error occurred.",
+        "error"
+    );
+
+}
+
+function safeAction(action) {
+
+    return async event => {
+
+        try {
+
+            await action(event);
+
+        } catch (error) {
+
+            handleError(error);
+
+        }
+
+    };
+
+}
+
+
+/* =========================================================
+   CONFIRMATION DIALOG
+   ========================================================= */
+
+function confirmAction(title, text) {
+
+    const dialog = $("confirmationDialog");
+
+    if (!dialog.showModal) {
+        return Promise.resolve(window.confirm(text));
+    }
+
+    return new Promise(resolve => {
+
+        display("confirmationTitle", title);
+        display("confirmationMessage", text);
+
+        dialog.returnValue = "cancel";
+
+        $("acceptConfirmation").onclick = () => {
+            dialog.close("confirm");
+        };
+
+        $("cancelConfirmation").onclick = () => {
+            dialog.close("cancel");
+        };
+
+        dialog.addEventListener(
+            "close",
+            () => resolve(dialog.returnValue === "confirm"),
+            { once: true }
+        );
+
+        dialog.showModal();
+
     });
-  }
+
 }
 
-/* ===========================
-   SERIAL NUMBERS
-=========================== */
+async function allowDiscard() {
 
-function updateSerialNumbers() {
-  document.querySelectorAll("#invoiceBody tr").forEach((row, index) => {
-    const serialCell = row.querySelector(".serial");
+    if (!dirty) return true;
 
-    if (serialCell) {
-      serialCell.textContent = index + 1;
+    return confirmAction(
+        "Discard unsaved changes?",
+        "Your current unsaved changes will be lost."
+    );
+
+}
+
+
+/* =========================================================
+   ADD LEGACY FIELDS TO THE NEW HTML
+   ========================================================= */
+
+function insertLegacyFields() {
+
+    const paid = $("amountPaid");
+
+    paid.previousElementSibling.textContent =
+        "Received Now (₹)";
+
+    const earlierGroup = document.createElement("div");
+
+    earlierGroup.className = "form-group";
+
+    earlierGroup.innerHTML = `
+        <label for="receivedEarlier">
+            Received Earlier (₹)
+        </label>
+        <input type="number"
+               id="receivedEarlier"
+               min="0"
+               step="0.01"
+               value="0">
+    `;
+
+    paid.closest(".form-group").before(earlierGroup);
+
+    const referenceGroup = document.createElement("div");
+
+    referenceGroup.className = "form-group full-width";
+
+    referenceGroup.innerHTML = `
+        <label for="previousBillNo">
+            Previous Bill / Reference Number
+        </label>
+        <input type="text"
+               id="previousBillNo"
+               maxlength="200"
+               placeholder="Optional previous invoice reference">
+    `;
+
+    $("matterReference")
+        .closest(".form-group")
+        .after(referenceGroup);
+
+    const earlierLine = document.createElement("div");
+
+    earlierLine.className = "total-line";
+
+    earlierLine.innerHTML = `
+        <span>Received Earlier</span>
+        <strong id="previewEarlier">₹0.00</strong>
+    `;
+
+    const receivedLine = $("previewPaid").parentElement;
+
+    receivedLine.querySelector("span").textContent =
+        "Received Now";
+
+    receivedLine.before(earlierLine);
+
+}
+
+
+/* =========================================================
+   FEE PARTICULARS
+   ========================================================= */
+
+function addItem(item = {}) {
+
+    const fragment = $("invoiceItemTemplate")
+        .content.cloneNode(true);
+
+    const row = fragment.querySelector("tr");
+
+    row.querySelector(".item-description").value =
+        item.description ?? item.particular ?? "";
+
+    row.querySelector(".item-quantity").value =
+        item.quantity ?? item.qty ?? 1;
+
+    row.querySelector(".item-rate").value =
+        item.rate ?? 0;
+
+    row.querySelector(".remove-item-button")
+        .addEventListener("click", safeAction(() => {
+
+            if ($("itemsBody").rows.length <= 1) {
+
+                message(
+                    "At least one fee particular is required.",
+                    "warning"
+                );
+
+                return;
+
+            }
+
+            row.remove();
+
+            dirty = true;
+
+            updatePreview();
+
+        }));
+
+    $("itemsBody").appendChild(fragment);
+
+}
+
+function collectItems() {
+
+    return Array.from($("itemsBody").rows).map(row => ({
+        description: row.querySelector(
+            ".item-description"
+        ).value.trim(),
+
+        quantity: numeric(
+            row.querySelector(".item-quantity").value
+        ),
+
+        rate: numeric(
+            row.querySelector(".item-rate").value
+        )
+    }));
+
+}
+
+
+/* =========================================================
+   FINANCIAL CALCULATIONS
+   All monetary totals calculated in integer paise.
+   ========================================================= */
+
+function calculate(data) {
+
+    const lines = data.items.map(item => {
+
+        const quantity = numeric(item.quantity);
+
+        const rate = paise(item.rate);
+
+        const amount = Math.round(quantity * rate);
+
+        if (!Number.isSafeInteger(amount)) {
+            throw new Error("Fee amount exceeds supported limit.");
+        }
+
+        return {
+            ...item,
+            amount
+        };
+
+    });
+
+    const subtotal = lines.reduce(
+        (sum, item) => sum + item.amount,
+        0
+    );
+
+    const discount = paise(data.discountAmount);
+
+    const earlier = paise(data.receivedEarlier);
+
+    const now = paise(data.receivedNow);
+
+    const total = Math.max(0, subtotal - discount);
+
+    const paid = earlier + now;
+
+    const balance = Math.max(0, total - paid);
+
+    if (
+        !Number.isSafeInteger(subtotal) ||
+        !Number.isSafeInteger(paid)
+    ) {
+        throw new Error("Total exceeds supported limit.");
     }
-  });
+
+    const status = paid >= total
+        ? "paid"
+        : paid > 0
+            ? "partial"
+            : "unpaid";
+
+    return {
+        lines,
+        subtotal,
+        discount,
+        total,
+        earlier,
+        now,
+        paid,
+        balance,
+        status
+    };
+
 }
 
-/* ===========================
-   CALCULATION
-=========================== */
 
-function calculateInvoice() {
-  let total = 0;
+/* =========================================================
+   INDIAN AMOUNT IN WORDS
+   ========================================================= */
 
-  document.querySelectorAll("#invoiceBody tr").forEach((row) => {
-    const qty = parseFloat(row.querySelector(".qty")?.value) || 0;
-    const rate = parseFloat(row.querySelector(".rate")?.value) || 0;
-    const amount = qty * rate;
+function numberWords(number) {
 
-    const amountCell = row.querySelector(".amount");
+    const ones = [
+        "Zero", "One", "Two", "Three", "Four",
+        "Five", "Six", "Seven", "Eight", "Nine",
+        "Ten", "Eleven", "Twelve", "Thirteen",
+        "Fourteen", "Fifteen", "Sixteen",
+        "Seventeen", "Eighteen", "Nineteen"
+    ];
 
-    if (amountCell) {
-      amountCell.textContent = "₹" + money(amount);
+    const tens = [
+        "", "", "Twenty", "Thirty", "Forty",
+        "Fifty", "Sixty", "Seventy",
+        "Eighty", "Ninety"
+    ];
+
+    if (number < 20) return ones[number];
+
+    if (number < 100) {
+
+        return tens[Math.floor(number / 10)] +
+            (number % 10
+                ? " " + ones[number % 10]
+                : "");
+
     }
 
-    total += amount;
-  });
+    const units = [
+        [10000000, "Crore"],
+        [100000, "Lakh"],
+        [1000, "Thousand"],
+        [100, "Hundred"]
+    ];
 
-  const earlier = parseFloat(receivedEarlier?.value) || 0;
-  const now = parseFloat(receivedNow?.value) || 0;
-  const balance = Math.max(total - earlier - now, 0);
+    for (const [divisor, label] of units) {
 
-  if (subTotal) {
-    subTotal.textContent = "₹" + money(total);
-  }
+        if (number >= divisor) {
 
-  if (grandTotal) {
-    grandTotal.textContent = "₹" + money(total);
-  }
+            const remainder = number % divisor;
 
-  if (totalFees) {
-    totalFees.textContent = "₹" + money(total);
-  }
+            return numberWords(
+                Math.floor(number / divisor)
+            ) + " " + label +
+                (remainder
+                    ? " " + numberWords(remainder)
+                    : "");
 
-  if (balanceDue) {
-    balanceDue.textContent = "₹" + money(balance);
-  }
+        }
 
-  if (amountWords) {
-    amountWords.value = numberToWords(Math.round(now)) + " Rupees Only";
-  }
-}
+    }
 
-/* ===========================
-   NUMBER TO WORDS
-=========================== */
-
-function numberToWords(num) {
-  if (num === 0) {
     return "Zero";
-  }
 
-  const ones = [
-    "",
-    "One",
-    "Two",
-    "Three",
-    "Four",
-    "Five",
-    "Six",
-    "Seven",
-    "Eight",
-    "Nine",
-    "Ten",
-    "Eleven",
-    "Twelve",
-    "Thirteen",
-    "Fourteen",
-    "Fifteen",
-    "Sixteen",
-    "Seventeen",
-    "Eighteen",
-    "Nineteen"
-  ];
-
-  const tens = [
-    "",
-    "",
-    "Twenty",
-    "Thirty",
-    "Forty",
-    "Fifty",
-    "Sixty",
-    "Seventy",
-    "Eighty",
-    "Ninety"
-  ];
-
-  function convertBelowHundred(n) {
-    if (n < 20) {
-      return ones[n];
-    }
-
-    return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
-  }
-
-  function convertBelowThousand(n) {
-    let words = "";
-
-    if (n >= 100) {
-      words += ones[Math.floor(n / 100)] + " Hundred";
-
-      if (n % 100) {
-        words += " ";
-      }
-    }
-
-    words += convertBelowHundred(n % 100);
-
-    return words.trim();
-  }
-
-  let words = "";
-
-  const crore = Math.floor(num / 10000000);
-  num %= 10000000;
-
-  const lakh = Math.floor(num / 100000);
-  num %= 100000;
-
-  const thousand = Math.floor(num / 1000);
-  num %= 1000;
-
-  if (crore) {
-    words += convertBelowThousand(crore) + " Crore ";
-  }
-
-  if (lakh) {
-    words += convertBelowThousand(lakh) + " Lakh ";
-  }
-
-  if (thousand) {
-    words += convertBelowThousand(thousand) + " Thousand ";
-  }
-
-  if (num) {
-    words += convertBelowThousand(num);
-  }
-
-  return words.trim();
 }
 
-/* ===========================
-   VALIDATION
-=========================== */
+function amountInWords(amountPaise) {
+
+    const rupees = Math.floor(amountPaise / 100);
+
+    const remainder = amountPaise % 100;
+
+    return "Indian Rupees " +
+        numberWords(rupees) +
+        (remainder
+            ? " and " + numberWords(remainder) + " Paise"
+            : "") +
+        " Only";
+
+}
+
+
+/* =========================================================
+   COLLECT CURRENT INVOICE
+   ========================================================= */
+
+function collectInvoice() {
+
+    return {
+
+        id: editingId || crypto.randomUUID(),
+
+        invoiceNo: value("invoiceNumber"),
+
+        invoiceDate: value("invoiceDate"),
+
+        dueDate: value("dueDate"),
+
+        issuedBy: value("issuedBy"),
+
+        matterReference: value("matterReference").trim(),
+
+        previousBillNo: value("previousBillNo").trim(),
+
+        clientName: value("clientName").trim(),
+
+        clientPhone: value("clientPhone").trim(),
+
+        clientEmail: value("clientEmail").trim(),
+
+        clientAddress: value("clientAddress").trim(),
+
+        clientGSTIN: value("clientGSTIN")
+            .trim().toUpperCase(),
+
+        items: collectItems(),
+
+        discountAmount: numeric(value("discountAmount")),
+
+        receivedEarlier: numeric(value("receivedEarlier")),
+
+        receivedNow: numeric(value("amountPaid")),
+
+        paymentMode: value("paymentMode"),
+
+        paymentReference: value("paymentReference").trim(),
+
+        notes: value("invoiceNotes").trim(),
+
+        terms: value("invoiceTerms").trim(),
+
+        showPaymentDetails: $("showPaymentDetails").checked,
+
+        showSignature: $("showSignature").checked
+
+    };
+
+}
+
+
+/* =========================================================
+   LIVE INVOICE PREVIEW
+   ========================================================= */
+
+function updatePreview() {
+
+    const data = collectInvoice();
+
+    const totals = calculate(data);
+
+    Array.from($("itemsBody").rows).forEach((row, index) => {
+
+        row.querySelector(".item-amount").textContent =
+            money(totals.lines[index].amount / 100);
+
+    });
+
+    const outputs = {
+
+        subtotalDisplay: totals.subtotal,
+
+        discountDisplay: totals.discount,
+
+        grandTotalDisplay: totals.total,
+
+        paidDisplay: totals.paid,
+
+        balanceDisplay: totals.balance,
+
+        previewSubtotal: totals.subtotal,
+
+        previewDiscount: totals.discount,
+
+        previewGrandTotal: totals.total,
+
+        previewEarlier: totals.earlier,
+
+        previewPaid: totals.now,
+
+        previewBalance: totals.balance
+
+    };
+
+    for (const [id, amount] of Object.entries(outputs)) {
+
+        display(id, money(amount / 100));
+
+    }
+
+    set("paymentStatus", statusLabels[totals.status]);
+
+    display(
+        "previewPaymentStatus",
+        statusLabels[totals.status].toUpperCase()
+    );
+
+    $("previewPaymentStatus").className =
+        `payment-status ${totals.status}`;
+
+    display("previewInvoiceNumber", data.invoiceNo);
+
+    display(
+        "previewInvoiceDate",
+        formatDate(data.invoiceDate)
+    );
+
+    display(
+        "previewDueDate",
+        formatDate(data.dueDate)
+    );
+
+    show("previewDueDateRow", Boolean(data.dueDate));
+
+    display("previewIssuedBy", data.issuedBy);
+
+    display(
+        "previewMatterReference",
+        [
+            data.matterReference,
+            data.previousBillNo
+                ? "Previous Bill: " + data.previousBillNo
+                : ""
+        ].filter(Boolean).join("\n")
+    );
+
+    display(
+        "previewClientName",
+        data.clientName || "Client Name"
+    );
+
+    display("previewClientAddress", data.clientAddress);
+
+    display("previewClientPhone", data.clientPhone);
+
+    display("previewClientEmail", data.clientEmail);
+
+    display(
+        "previewClientGSTIN",
+        data.clientGSTIN
+            ? "GSTIN: " + data.clientGSTIN
+            : ""
+    );
+
+    const tbody = $("previewItemsBody");
+
+    tbody.replaceChildren();
+
+    totals.lines.forEach((item, index) => {
+
+        const row = document.createElement("tr");
+
+        const cells = [
+            index + 1,
+            item.description || "Professional Services",
+            item.quantity,
+            money(item.rate),
+            money(item.amount / 100)
+        ];
+
+        for (const text of cells) {
+
+            const cell = document.createElement("td");
+
+            cell.textContent = text;
+
+            row.appendChild(cell);
+
+        }
+
+        tbody.appendChild(row);
+
+    });
+
+    display(
+        "previewAmountWords",
+        amountInWords(totals.total)
+    );
+
+    display(
+        "previewPaymentMode",
+        data.paymentMode
+            ? "Payment Mode: " + data.paymentMode
+            : ""
+    );
+
+    display(
+        "previewPaymentReference",
+        data.paymentReference
+            ? "Reference: " + data.paymentReference
+            : ""
+    );
+
+    show(
+        "previewPaymentRecord",
+        Boolean(data.paymentMode || data.paymentReference)
+    );
+
+    display("previewNotes", data.notes);
+
+    show("previewNotesSection", Boolean(data.notes));
+
+    display("previewTerms", data.terms);
+
+    show("previewTermsSection", Boolean(data.terms));
+
+    show("previewSignatureSection", data.showSignature);
+
+    renderPaymentDetails(data.showPaymentDetails);
+
+    return totals;
+
+}
+
+
+/* =========================================================
+   FIRM PAYMENT DETAILS
+   ========================================================= */
+
+const paymentFields = {
+
+    firmAccountName: ["accountName", "previewAccountName", "Account Holder"],
+
+    firmBankName: ["bankName", "previewBankName", "Bank"],
+
+    firmAccountNumber: ["accountNumber", "previewAccountNumber", "Account No."],
+
+    firmIFSC: ["ifsc", "previewIFSC", "IFSC"],
+
+    firmUPI: ["upi", "previewUPI", "UPI ID"]
+
+};
+
+function renderPaymentDetails(visible) {
+
+    let hasDetails = false;
+
+    for (const [, [key, previewId, label]]
+        of Object.entries(paymentFields)) {
+
+        const text = paymentSettings[key] || "";
+
+        if (text) hasDetails = true;
+
+        display(
+            previewId,
+            text ? `${label}: ${text}` : ""
+        );
+
+    }
+
+    show(
+        "previewPaymentDetails",
+        visible && hasDetails
+    );
+
+}
+
+function loadPaymentSettings() {
+
+    paymentSettings = readPaymentSettings();
+
+    for (const [id, [key]]
+        of Object.entries(paymentFields)) {
+
+        set(id, paymentSettings[key] || "");
+
+    }
+
+}
+
+function savePaymentSettings(event) {
+
+    event.preventDefault();
+
+    const settings = {};
+
+    for (const [id, [key]]
+        of Object.entries(paymentFields)) {
+
+        settings[key] = value(id).trim();
+
+    }
+
+    settings.ifsc = settings.ifsc.toUpperCase();
+
+    if (
+        settings.ifsc &&
+        !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(settings.ifsc)
+    ) {
+        throw new Error("Please enter a valid IFSC code.");
+    }
+
+    localStorage.setItem(
+        KEYS.payment,
+        JSON.stringify(settings)
+    );
+
+    paymentSettings = settings;
+
+    updatePreview();
+
+    message("Firm payment details saved successfully.");
+
+}
+
+
+/* =========================================================
+   INVOICE VALIDATION
+   ========================================================= */
 
 function validateInvoice() {
-  formatManualInvoiceNumber();
 
-  if (!invoiceNo.value.trim()) {
-    showError("Please enter invoice number.");
-    invoiceNo.focus();
-    return false;
-  }
+    if (!$("invoiceForm").reportValidity()) {
 
-  if (!invoiceDate.value) {
-    showError("Please select invoice date.");
-    invoiceDate.focus();
-    return false;
-  }
+        throw new Error(
+            "Please complete the required invoice fields."
+        );
 
-  const clientName = document.getElementById("clientName");
-
-  if (!clientName.value.trim()) {
-    showError("Please enter client name.");
-    clientName.focus();
-    return false;
-  }
-
-  let hasValidItem = false;
-
-  document.querySelectorAll("#invoiceBody tr").forEach((row) => {
-    const particular = row.querySelector(".particular")?.value.trim();
-    const qty = parseFloat(row.querySelector(".qty")?.value) || 0;
-    const rate = parseFloat(row.querySelector(".rate")?.value) || 0;
-
-    if (particular && qty > 0 && rate > 0) {
-      hasValidItem = true;
     }
-  });
 
-  if (!hasValidItem) {
-    showError("Please enter at least one valid invoice item.");
-    return false;
-  }
+    const data = collectInvoice();
 
-  return true;
+    const totals = calculate(data);
+
+    if (!data.clientName) {
+        throw new Error("Please enter the client name.");
+    }
+
+    if (!data.invoiceDate) {
+        throw new Error("Please select the invoice date.");
+    }
+
+    if (
+        data.dueDate &&
+        data.dueDate < data.invoiceDate
+    ) {
+        throw new Error(
+            "Due date cannot precede invoice date."
+        );
+    }
+
+    if (
+        !data.items.length ||
+        data.items.some(item =>
+            !item.description || item.quantity <= 0
+        )
+    ) {
+        throw new Error(
+            "Please enter valid fee particulars."
+        );
+    }
+
+    if (totals.subtotal <= 0) {
+        throw new Error(
+            "Invoice amount must be greater than zero."
+        );
+    }
+
+    if (totals.discount > totals.subtotal) {
+        throw new Error(
+            "Discount cannot exceed the subtotal."
+        );
+    }
+
+    if (totals.paid > totals.total) {
+        throw new Error(
+            "Total payments exceed the invoice amount. " +
+            "Please verify the payment entries."
+        );
+    }
+
+    if (
+        data.clientGSTIN &&
+        !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/
+            .test(data.clientGSTIN)
+    ) {
+        throw new Error("Please verify the GSTIN format.");
+    }
+
+    return data;
+
 }
 
-/* ===========================
-   SAVED BILLS STORAGE
-=========================== */
 
-function getSavedBills() {
-  return JSON.parse(localStorage.getItem("mnmSavedBills")) || [];
+/* =========================================================
+   STORAGE WRITE LOCK
+   Prevent simultaneous writes across supported browser tabs.
+   ========================================================= */
+
+async function withStorageLock(action) {
+
+    if (!navigator.locks?.request) {
+
+        throw new Error(
+            "This browser does not support safe invoice " +
+            "write locking. Please use an updated browser."
+        );
+
+    }
+
+    return navigator.locks.request(
+        "mnm-invoice-storage-v3",
+        { mode: "exclusive" },
+        action
+    );
+
 }
 
-function setSavedBills(bills) {
-  localStorage.setItem("mnmSavedBills", JSON.stringify(bills));
+
+/* =========================================================
+   SAVE INVOICE
+   ========================================================= */
+
+async function saveInvoice(event) {
+
+    event.preventDefault();
+
+    const button = $("saveInvoiceButton");
+
+    button.disabled = true;
+
+    try {
+
+        const data = validateInvoice();
+
+        await withStorageLock(() => {
+
+            const records = readInvoices();
+
+            const isEditing = editingId !== null;
+
+            let index = -1;
+
+            if (isEditing) {
+
+                index = records.findIndex(
+                    record => String(record.id) === editingId
+                );
+
+                if (index < 0) {
+                    throw new Error(
+                        "This invoice no longer exists."
+                    );
+                }
+
+                if (
+                    JSON.stringify(records[index]) !==
+                    loadedSnapshot
+                ) {
+                    throw new Error(
+                        "This invoice was changed elsewhere. " +
+                        "Please reopen it before saving."
+                    );
+                }
+
+                data.invoiceNo = records[index].invoiceNo;
+
+                data.id = records[index].id;
+
+            } else {
+
+                const sequence = nextSequence(records);
+
+                data.invoiceNo = invoiceNumber(
+                    sequence,
+                    data.invoiceDate
+                );
+
+            }
+
+            if (records.some(record =>
+                record.invoiceNo === data.invoiceNo &&
+                String(record.id) !== String(data.id)
+            )) {
+                throw new Error(
+                    "Duplicate invoice number detected."
+                );
+            }
+
+            const saved = {
+
+                ...(isEditing ? records[index] : {}),
+
+                ...data,
+
+                schemaVersion: 3,
+
+                clientMobile: data.clientPhone,
+
+                amountPaid:
+                    data.receivedEarlier + data.receivedNow,
+
+                items: data.items.map(item => ({
+                    ...item,
+                    particular: item.description,
+                    qty: item.quantity
+                })),
+
+                createdAt:
+                    (isEditing && records[index].createdAt) ||
+                    new Date().toISOString(),
+
+                updatedAt: new Date().toISOString()
+
+            };
+
+            if (isEditing) {
+
+                records[index] = saved;
+
+            } else {
+
+                records.push(saved);
+
+            }
+
+            /*
+             * Write invoice first.
+             * Sequence can be recovered from saved numbers
+             * if updating the sequence key fails.
+             */
+
+            localStorage.setItem(
+                KEYS.invoices,
+                JSON.stringify(records)
+            );
+
+            editingId = String(saved.id);
+
+            originalRecord = saved;
+
+            loadedSnapshot = JSON.stringify(saved);
+
+            set("editingInvoiceId", editingId);
+
+            set("invoiceNumber", saved.invoiceNo);
+
+            dirty = false;
+
+            if (!isEditing) {
+
+                try {
+
+                    localStorage.setItem(
+                        KEYS.sequence,
+                        String(nextSequence(records))
+                    );
+
+                } catch {
+
+                    message(
+                        "Invoice saved. Sequence storage " +
+                        "could not be updated; it will be " +
+                        "recovered from saved invoice numbers.",
+                        "warning"
+                    );
+
+                }
+
+            }
+
+        });
+
+        display("saveInvoiceButton", "Update Invoice");
+
+        updatePreview();
+
+        refreshRecords();
+
+        message(
+            "Invoice " + value("invoiceNumber") +
+            " saved successfully."
+        );
+
+    } finally {
+
+        button.disabled = false;
+
+    }
+
 }
 
-function collectBillData() {
-  const items = [];
 
-  document.querySelectorAll("#invoiceBody tr").forEach((row) => {
-    items.push({
-      particular: row.querySelector(".particular")?.value || "",
-      qty: row.querySelector(".qty")?.value || "1",
-      rate: row.querySelector(".rate")?.value || "0"
+/* =========================================================
+   NEW INVOICE & RESET
+   ========================================================= */
+
+function resetForm() {
+
+    editingId = null;
+
+    originalRecord = null;
+
+    loadedSnapshot = null;
+
+    $("invoiceForm").reset();
+
+    set("editingInvoiceId", "");
+
+    set("invoiceDate", today());
+
+    set(
+        "invoiceNumber",
+        invoiceNumber(nextSequence(), today())
+    );
+
+    set("dueDate", "");
+
+    set("receivedEarlier", 0);
+
+    set("amountPaid", 0);
+
+    set("discountAmount", 0);
+
+    set("invoiceTerms", DEFAULT_TERMS);
+
+    $("itemsBody").replaceChildren();
+
+    addItem();
+
+    display("saveInvoiceButton", "Save Invoice");
+
+    dirty = false;
+
+    updatePreview();
+
+}
+
+async function newInvoice() {
+
+    if (!(await allowDiscard())) return;
+
+    resetForm();
+
+    activateTab("create");
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+}
+
+
+/* =========================================================
+   OPEN EXISTING INVOICE
+   ========================================================= */
+
+async function loadInvoice(id) {
+
+    if (!(await allowDiscard())) return false;
+
+    const record = readInvoices().find(
+        item => String(item.id) === String(id)
+    );
+
+    if (!record) {
+        throw new Error("Invoice could not be found.");
+    }
+
+    const data = normalize(record);
+
+    originalRecord = record;
+
+    editingId = String(record.id);
+
+    loadedSnapshot = JSON.stringify(record);
+
+    set("editingInvoiceId", editingId);
+
+    set("invoiceNumber", data.invoiceNo);
+
+    set("invoiceDate", data.invoiceDate);
+
+    set("dueDate", data.dueDate);
+
+    set("issuedBy", data.issuedBy);
+
+    set("matterReference", data.matterReference);
+
+    set("previousBillNo", data.previousBillNo);
+
+    set("clientName", data.clientName);
+
+    set("clientPhone", data.clientPhone);
+
+    set("clientEmail", data.clientEmail);
+
+    set("clientAddress", data.clientAddress);
+
+    set("clientGSTIN", data.clientGSTIN);
+
+    set("discountAmount", data.discountAmount);
+
+    set("receivedEarlier", data.receivedEarlier);
+
+    set("amountPaid", data.receivedNow);
+
+    set("paymentMode", data.paymentMode);
+
+    set("paymentReference", data.paymentReference);
+
+    set("invoiceNotes", data.notes);
+
+    set("invoiceTerms", data.terms);
+
+    $("showPaymentDetails").checked =
+        data.showPaymentDetails;
+
+    $("showSignature").checked =
+        data.showSignature;
+
+    $("itemsBody").replaceChildren();
+
+    data.items.forEach(addItem);
+
+    if (!data.items.length) addItem();
+
+    display("saveInvoiceButton", "Update Invoice");
+
+    dirty = false;
+
+    activateTab("create");
+
+    updatePreview();
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    return true;
+
+}
+
+
+/* =========================================================
+   DELETE SAVED INVOICE
+   Deleted invoice numbers are not intentionally reused.
+   ========================================================= */
+
+async function deleteInvoice(id) {
+
+    const confirmed = await confirmAction(
+        "Delete saved invoice?",
+        "This permanently removes the selected local invoice. " +
+        "Its invoice number will not be reused."
+    );
+
+    if (!confirmed) return;
+
+    await withStorageLock(() => {
+
+        const records = readInvoices();
+
+        const sequence = nextSequence(records);
+
+        const remaining = records.filter(
+            record => String(record.id) !== String(id)
+        );
+
+        localStorage.setItem(
+            KEYS.sequence,
+            String(sequence)
+        );
+
+        localStorage.setItem(
+            KEYS.invoices,
+            JSON.stringify(remaining)
+        );
+
     });
-  });
 
-  return {
-    id: editingBillId || Date.now(),
-    invoiceNo: invoiceNo.value,
-    invoiceDate: invoiceDate.value,
-    previousBillNo: previousBillNo?.value || "",
-    clientName: document.getElementById("clientName").value,
-    clientMobile: document.getElementById("clientMobile").value,
-    clientAddress: document.getElementById("clientAddress").value,
-    receivedEarlier: receivedEarlier?.value || "0",
-    receivedNow: receivedNow?.value || "0",
-    notes: document.getElementById("notes").value,
-    items
-  };
-}
-
-function saveBill() {
-  if (!validateInvoice()) {
-    return;
-  }
-
-  const bill = collectBillData();
-  const bills = getSavedBills();
-
-  if (editingBillId) {
-    const index = bills.findIndex((item) => item.id === editingBillId);
-
-    if (index !== -1) {
-      bills[index] = bill;
+    if (editingId === String(id)) {
+        resetForm();
     }
 
-    editingBillId = null;
-  } else {
-    bills.push(bill);
-    increaseInvoiceNumber();
-  }
+    refreshRecords();
 
-  setSavedBills(bills);
-  alert("Bill saved successfully.");
+    message("Selected invoice deleted.");
 
-  clearInvoiceWithoutConfirm();
-  setNextInvoiceNumber();
 }
 
-function showSavedBills() {
-  const bills = getSavedBills();
 
-  savedBillsList.innerHTML = "";
+/* =========================================================
+   SAVED INVOICE TABLE
+   ========================================================= */
 
-  if (bills.length === 0) {
-    savedBillsList.innerHTML = "<p>No saved bills found.</p>";
-  }
+function actionButton(label, callback, extraClass = "") {
 
-  bills
-    .slice()
-    .reverse()
-    .forEach((bill) => {
-      const div = document.createElement("div");
-      div.className = "saved-bill-item";
+    const button = document.createElement("button");
 
-      div.innerHTML = `
-        <div>
-          <strong>${bill.invoiceNo}</strong>
-          <span>${bill.clientName || "No Client Name"} | ${bill.invoiceDate || "No Date"}</span>
-        </div>
-        <button type="button" class="edit-saved-bill">Edit</button>
-        <button type="button" class="delete-saved-bill">Delete</button>
-      `;
+    button.type = "button";
 
-      div.querySelector(".edit-saved-bill").addEventListener("click", () => {
-        loadSavedBill(bill.id);
-      });
+    button.className =
+        `action-button ${extraClass}`;
 
-      div.querySelector(".delete-saved-bill").addEventListener("click", () => {
-        deleteSavedBill(bill.id);
-      });
+    button.textContent = label;
 
-      savedBillsList.appendChild(div);
+    button.addEventListener(
+        "click",
+        safeAction(callback)
+    );
+
+    return button;
+
+}
+
+function filteredInvoices() {
+
+    const query = value("invoiceSearch")
+        .trim().toLowerCase();
+
+    const status = value("statusFilter");
+
+    const year = value("yearFilter");
+
+    const sort = value("sortInvoices");
+
+    const records = readInvoices().map(record => {
+
+        const data = normalize(record);
+
+        return {
+            data,
+            totals: calculate(data)
+        };
+
     });
 
-  savedBillsPopup.style.display = "flex";
-}
+    const filtered = records.filter(({ data, totals }) => {
 
-function loadSavedBill(id) {
-  const bills = getSavedBills();
-  const bill = bills.find((item) => item.id === id);
+        const searchText = [
+            data.invoiceNo,
+            data.clientName,
+            data.clientPhone,
+            data.matterReference,
+            data.previousBillNo
+        ].join(" ").toLowerCase();
 
-  if (!bill) {
-    return;
-  }
+        return (
+            (!query || searchText.includes(query)) &&
+            (status === "all" || totals.status === status) &&
+            (
+                year === "all" ||
+                data.invoiceDate.slice(0, 4) === year
+            )
+        );
 
-  editingBillId = bill.id;
-
-  invoiceNo.value = bill.invoiceNo;
-  invoiceDate.value = bill.invoiceDate;
-  previousBillNo.value = bill.previousBillNo || "";
-  document.getElementById("clientName").value = bill.clientName;
-  document.getElementById("clientMobile").value = bill.clientMobile;
-  document.getElementById("clientAddress").value = bill.clientAddress;
-  receivedEarlier.value = bill.receivedEarlier || "0";
-  receivedNow.value = bill.receivedNow || "0";
-
-  invoiceBody.innerHTML = "";
-
-  bill.items.forEach((item) => {
-    createRow();
-    const row = invoiceBody.lastElementChild;
-
-    row.querySelector(".particular").value = item.particular;
-    row.querySelector(".qty").value = item.qty;
-    row.querySelector(".rate").value = item.rate;
-  });
-
-  updateSerialNumbers();
-  calculateInvoice();
-  savedBillsPopup.style.display = "none";
-}
-
-function deleteSavedBill(id) {
-  if (!confirm("Delete this saved bill?")) {
-    return;
-  }
-
-  const bills = getSavedBills().filter((item) => item.id !== id);
-  setSavedBills(bills);
-  showSavedBills();
-}
-
-/* ===========================
-   PRINT
-=========================== */
-
-function printInvoice() {
-  calculateInvoice();
-  buildPremiumInvoice();
-  window.print();
-}
-
-/* ===========================
-   PDF DOWNLOAD
-=========================== */
-
-function downloadInvoicePdf() {
-  if (!validateInvoice()) {
-    return;
-  }
-
-  calculateInvoice();
-  buildPremiumInvoice();
-  showLoading();
-
-  const element = document.getElementById("premiumPrintInvoice");
-  const fileName = buildPdfFileName();
-
-  const options = {
-    margin: 8,
-    filename: fileName,
-    image: {
-      type: "jpeg",
-      quality: 0.98
-    },
-    html2canvas: {
-      scale: 2,
-      useCORS: true
-    },
-    jsPDF: {
-      unit: "mm",
-      format: "a4",
-      orientation: "portrait"
-    }
-  };
-
-  html2pdf()
-    .set(options)
-    .from(element)
-    .save()
-    .then(() => {
-      hideLoading();
-      showSuccess();
-    })
-    .catch(() => {
-      hideLoading();
-      showError("Unable to generate PDF. Please try again.");
     });
+
+    filtered.sort((a, b) => {
+
+        if (sort === "amount-high") {
+            return b.totals.total - a.totals.total;
+        }
+
+        if (sort === "amount-low") {
+            return a.totals.total - b.totals.total;
+        }
+
+        if (sort === "oldest") {
+            return a.data.invoiceDate.localeCompare(
+                b.data.invoiceDate
+            );
+        }
+
+        return b.data.invoiceDate.localeCompare(
+            a.data.invoiceDate
+        );
+
+    });
+
+    return filtered;
+
 }
 
-function buildPdfFileName() {
-  const baseName = pdfFileName?.value || "MNM-Invoice";
-  const number = invoiceNo.value.trim() || "Draft";
+function renderSavedInvoices() {
 
-  return `${baseName}-${number}.pdf`;
-}
+    const records = filteredInvoices();
 
-/* ===========================
-   PREMIUM PRINT TEMPLATE
-=========================== */
+    const tbody = $("savedInvoicesBody");
 
-function buildPremiumInvoice() {
-  const printBox = document.getElementById("premiumPrintInvoice");
+    tbody.replaceChildren();
 
-  const invNo = invoiceNo.value || "";
-  const date = invoiceDate.value
-    ? invoiceDate.value.split("-").reverse().join("/")
-    : "";
+    for (const { data, totals } of records) {
 
-  const refNo = previousBillNo?.value || "";
-  const clientName = document.getElementById("clientName").value || "";
-  const clientMobile = document.getElementById("clientMobile").value || "";
-  const clientAddress = document.getElementById("clientAddress").value || "";
-  const words = amountWords.value || "";
+        const row = document.createElement("tr");
 
-  let rows = "";
-  let total = 0;
+        const values = [
 
-  document.querySelectorAll("#invoiceBody tr").forEach((row, index) => {
-    const particular = row.querySelector(".particular")?.value || "";
-    const qty = parseFloat(row.querySelector(".qty")?.value) || 0;
-    const rate = parseFloat(row.querySelector(".rate")?.value) || 0;
-    const amount = qty * rate;
+            data.invoiceNo,
 
-    total += amount;
+            formatDate(data.invoiceDate),
 
-    rows += `
-      <tr>
-        <td>${index + 1}.</td>
-        <td>${particular}</td>
-        <td>${qty}</td>
-        <td>${money(rate)}</td>
-        <td>${money(amount)}</td>
-      </tr>
-    `;
-  });
+            data.clientName,
 
-  const earlier = parseFloat(receivedEarlier?.value) || 0;
-  const now = parseFloat(receivedNow?.value) || 0;
-  const balance = Math.max(total - earlier - now, 0);
+            money(totals.total / 100),
 
-  printBox.innerHTML = `
-    <div class="premium-head">
-      <img src="images/letterhead-logo.png" alt="MNM Legal Associates">
-      <div class="premium-office">
-        <h1>MNM LEGAL ASSOCIATES</h1>
-        <div>Advocates & Legal Consultants</div>
-        <div>Office No. 511, Vedmata Cooperative Housing Society, IOC Road,</div>
-        <div>Chandkheda, Ahmedabad - 382424</div>
-        <div>Mob: +91 9898172734 | Email: mnmlegal.in@gmail.com |</div>
-        <div>Website: www.mnmlegal.in</div>
-      </div>
-    </div>
+            money(totals.paid / 100),
 
-    <div class="premium-title">TAX INVOICE / PROFESSIONAL BILL</div>
+            money(totals.balance / 100)
 
-    <div class="premium-meta">
-      <div>Bill No: ${invNo}</div>
-      <div>Date: ${date}</div>
-    </div>
+        ];
 
-    ${
-      refNo
-        ? `<div class="premium-reference"><strong>Reference / Previous Bill No:</strong> ${refNo}</div>`
-        : ""
+        for (const text of values) {
+
+            const cell = document.createElement("td");
+
+            cell.textContent = text;
+
+            row.appendChild(cell);
+
+        }
+
+        const statusCell = document.createElement("td");
+
+        const badge = document.createElement("span");
+
+        badge.className =
+            `status-badge ${totals.status}`;
+
+        badge.textContent = statusLabels[totals.status];
+
+        statusCell.appendChild(badge);
+
+        row.appendChild(statusCell);
+
+        const actionsCell = document.createElement("td");
+
+        const actions = document.createElement("div");
+
+        actions.className = "invoice-actions";
+
+        actions.append(
+
+            actionButton(
+                "Edit",
+                () => loadInvoice(data.id)
+            ),
+
+            actionButton(
+                "Print",
+                async () => {
+
+                    if (await loadInvoice(data.id)) {
+                        await printInvoice();
+                    }
+
+                }
+            ),
+
+            actionButton(
+                "Delete",
+                () => deleteInvoice(data.id),
+                "delete"
+            )
+
+        );
+
+        actionsCell.appendChild(actions);
+
+        row.appendChild(actionsCell);
+
+        tbody.appendChild(row);
+
     }
 
-    <div class="premium-billto">
-      <h3>BILL TO:</h3>
-      <p>${clientName}</p>
-      <p>Add: ${clientAddress}</p>
-      <p>Mo: ${clientMobile}</p>
-    </div>
+    show("emptyInvoices", records.length === 0);
 
-    <table class="premium-table">
-      <thead>
-        <tr>
-          <th>SR. NO</th>
-          <th>PARTICULARS</th>
-          <th>QTY.</th>
-          <th>FEE (₹)</th>
-          <th>AMOUNT (₹)</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows}
-        <tr>
-          <td colspan="4" class="premium-total-label">TOTAL FEES</td>
-          <td><strong>₹ ${money(total)}</strong></td>
-        </tr>
-      </tbody>
-    </table>
+    display(
+        "invoiceResultCount",
+        `${records.length} invoice(s) found`
+    );
 
-    <table class="premium-fee-summary">
-      <tr>
-        <td>Total Fees</td>
-        <td>₹ ${money(total)}</td>
-      </tr>
-      <tr>
-        <td>Received Earlier</td>
-        <td>₹ ${money(earlier)}</td>
-      </tr>
-      <tr>
-        <td>Received Now</td>
-        <td>₹ ${money(now)}</td>
-      </tr>
-      <tr class="pending-row">
-        <td>Balance Due</td>
-        <td>₹ ${money(balance)}</td>
-      </tr>
-    </table>
-
-    <div class="premium-words">
-      <strong>AMOUNT IN WORDS:</strong><br>
-      ${words}
-    </div>
-
-    <div class="premium-separator"></div>
-
-    <div class="premium-notes">
-      <h3>NOTES:</h3>
-      <ul>
-        <li>Professional charges are exclusive of court fees, government fees, stamp duty, registration charges and other statutory levies, wherever applicable.</li>
-        <li>All out-of-pocket expenses including travel, courier/postal charges, documentation, photocopying, miscellaneous expenses and any other incidental expenses shall be borne by the Client.</li>
-        <li>Fees for litigation, court appearances, appeals, execution proceedings or any additional legal work not specifically covered under this Invoice shall be charged separately.</li>
-        <li>Professional fees paid against services rendered shall not ordinarily be refundable once the work has commenced.</li>
-      </ul>
-    </div>
-
-    <div class="premium-sign">
-      FOR MNM LEGAL ASSOCIATES
-    </div>
-  `;
 }
 
-/* ===========================
-   PREVIEW
-=========================== */
 
-function previewInvoice() {
-  printInvoice();
-}
+/* =========================================================
+   FINANCIAL SUMMARY
+   ========================================================= */
 
-/* ===========================
-   CLEAR
-=========================== */
+function refreshRecords() {
 
-function clearTable() {
-  if (!confirm("Clear all invoice items?")) {
-    return;
-  }
+    const records = readInvoices();
 
-  invoiceBody.innerHTML = "";
-  createRow();
-  calculateInvoice();
-}
+    let billed = 0;
 
-function clearInvoice() {
-  if (!confirm("Clear the complete invoice?")) {
-    return;
-  }
+    let received = 0;
 
-  clearInvoiceWithoutConfirm();
-}
+    let outstanding = 0;
 
-function clearInvoiceWithoutConfirm() {
-  invoiceNo.value = "";
-  previousBillNo.value = "";
-  document.getElementById("clientName").value = "";
-  document.getElementById("clientMobile").value = "";
-  document.getElementById("clientAddress").value = "";
-  receivedEarlier.value = "0";
-  receivedNow.value = "0";
+    const years = new Set();
 
-  invoiceBody.innerHTML = "";
-  createRow();
+    for (const record of records) {
 
-  editingBillId = null;
-  setTodayDate();
-  setNextInvoiceNumber();
-  calculateInvoice();
-}
+        const data = normalize(record);
 
-/* ===========================
-   POPUPS
-=========================== */
+        const totals = calculate(data);
 
-function showLoading() {
-  if (loadingPopup) {
-    loadingPopup.style.display = "flex";
-  }
-}
+        billed += totals.total;
 
-function hideLoading() {
-  if (loadingPopup) {
-    loadingPopup.style.display = "none";
-  }
-}
+        received += totals.paid;
 
-function showSuccess() {
-  if (successPopup) {
-    successPopup.style.display = "flex";
-  }
-}
+        outstanding += totals.balance;
 
-function hideSuccess() {
-  if (successPopup) {
-    successPopup.style.display = "none";
-  }
-}
+        if (data.invoiceDate) {
+            years.add(data.invoiceDate.slice(0, 4));
+        }
 
-function showError(message) {
-  if (errorPopup && errorMessage) {
-    errorMessage.textContent = message;
-    errorPopup.style.display = "flex";
-  } else {
-    alert(message);
-  }
-}
-
-function hideError() {
-  if (errorPopup) {
-    errorPopup.style.display = "none";
-  }
-}
-
-/* ===========================
-   EVENTS
-=========================== */
-
-if (invoiceNo) {
-  invoiceNo.addEventListener("blur", formatManualInvoiceNumber);
-}
-
-if (addItemBtn) {
-  addItemBtn.addEventListener("click", createRow);
-}
-
-if (clearTableBtn) {
-  clearTableBtn.addEventListener("click", clearTable);
-}
-
-if (receivedEarlier) {
-  receivedEarlier.addEventListener("input", calculateInvoice);
-}
-
-if (receivedNow) {
-  receivedNow.addEventListener("input", calculateInvoice);
-}
-
-if (saveBillBtn) {
-  saveBillBtn.addEventListener("click", saveBill);
-}
-
-if (savedBillsBtn) {
-  savedBillsBtn.addEventListener("click", showSavedBills);
-}
-
-if (closeSavedBills) {
-  closeSavedBills.addEventListener("click", () => {
-    savedBillsPopup.style.display = "none";
-  });
-}
-
-if (printBtn) {
-  printBtn.addEventListener("click", printInvoice);
-}
-
-if (printInvoiceBottom) {
-  printInvoiceBottom.addEventListener("click", printInvoice);
-}
-
-if (downloadPdf) {
-  downloadPdf.addEventListener("click", downloadInvoicePdf);
-}
-
-if (downloadPdfBottom) {
-  downloadPdfBottom.addEventListener("click", downloadInvoicePdf);
-}
-
-if (previewBtn) {
-  previewBtn.addEventListener("click", previewInvoice);
-}
-
-if (clearInvoiceBtn) {
-  clearInvoiceBtn.addEventListener("click", clearInvoice);
-}
-
-if (closeSuccessPopup) {
-  closeSuccessPopup.addEventListener("click", hideSuccess);
-}
-
-if (closeErrorPopup) {
-  closeErrorPopup.addEventListener("click", hideError);
-}
-
-window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    hideSuccess();
-    hideError();
-    hideLoading();
-
-    if (savedBillsPopup) {
-      savedBillsPopup.style.display = "none";
     }
-  }
-});
+
+    display("totalInvoices", records.length);
+
+    display("totalBilled", money(billed / 100));
+
+    display("totalReceived", money(received / 100));
+
+    display("totalOutstanding", money(outstanding / 100));
+
+    display("storageInvoiceCount", records.length);
+
+    set("currentSequence", nextSequence(records));
+
+    set(
+        "numberingFormat",
+        "MNM/NNN/YYYY"
+    );
+
+    const yearFilter = $("yearFilter");
+
+    const selected = yearFilter.value;
+
+    yearFilter.replaceChildren(
+        new Option("All Years", "all")
+    );
+
+    [...years].sort().reverse().forEach(year => {
+
+        yearFilter.add(new Option(year, year));
+
+    });
+
+    yearFilter.value = years.has(selected)
+        ? selected
+        : "all";
+
+    renderSavedInvoices();
+
+}
+
+
+/* =========================================================
+   TAB NAVIGATION
+   ========================================================= */
+
+function activateTab(name) {
+
+    for (const tab of ["create", "saved", "settings"]) {
+
+        const active = tab === name;
+
+        $(tab + "Tab").classList.toggle("active", active);
+
+        $(tab + "Tab").setAttribute(
+            "aria-selected",
+            String(active)
+        );
+
+        $(tab + "Tab").tabIndex = active ? 0 : -1;
+
+        show(tab + "Panel", active);
+
+    }
+
+    if (name === "saved") {
+        refreshRecords();
+    }
+
+    if (name === "settings") {
+
+        set("currentSequence", nextSequence());
+
+        display(
+            "storageInvoiceCount",
+            readInvoices().length
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   PRINT & SAVE PDF
+   Unsaved invoices must be saved before official printing.
+   ========================================================= */
+
+async function printInvoice() {
+
+    if (!editingId || dirty) {
+
+        message(
+            "Please save the invoice before printing.",
+            "warning"
+        );
+
+        return;
+
+    }
+
+    const current = readInvoices().find(
+        record => String(record.id) === editingId
+    );
+
+    if (
+        !current ||
+        JSON.stringify(current) !== loadedSnapshot
+    ) {
+
+        throw new Error(
+            "Invoice has changed. Reopen it before printing."
+        );
+
+    }
+
+    activateTab("create");
+
+    updatePreview();
+
+    if (document.fonts?.ready) {
+        await document.fonts.ready;
+    }
+
+    const images = $("invoicePreview")
+        .querySelectorAll("img");
+
+    await Promise.all(
+        Array.from(images).map(image =>
+            image.decode
+                ? image.decode().catch(() => {})
+                : Promise.resolve()
+        )
+    );
+
+    const oldTitle = document.title;
+
+    document.title =
+        value("invoiceNumber").replaceAll("/", "-");
+
+    try {
+
+        window.print();
+
+    } finally {
+
+        document.title = oldTitle;
+
+    }
+
+}
+
+
+/* =========================================================
+   FILE DOWNLOAD UTILITY
+   ========================================================= */
+
+function downloadFile(content, filename, type) {
+
+    const blob = new Blob([content], { type });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+
+    link.download = filename;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    setTimeout(
+        () => URL.revokeObjectURL(url),
+        1000
+    );
+
+}
+
+
+/* =========================================================
+   CSV EXPORT
+   Protect against spreadsheet formula injection.
+   ========================================================= */
+
+function csvCell(input) {
+
+    let text = String(input ?? "");
+
+    if (/^[\s]*[=+\-@]/.test(text)) {
+        text = "'" + text;
+    }
+
+    return '"' + text.replaceAll('"', '""') + '"';
+
+}
+
+function exportCSV() {
+
+    const rows = [[
+
+        "Invoice Number",
+        "Invoice Date",
+        "Client Name",
+        "Total Amount",
+        "Received Earlier",
+        "Received Now",
+        "Total Received",
+        "Balance Due",
+        "Payment Status"
+
+    ]];
+
+    for (const { data, totals } of filteredInvoices()) {
+
+        rows.push([
+
+            data.invoiceNo,
+
+            data.invoiceDate,
+
+            data.clientName,
+
+            (totals.total / 100).toFixed(2),
+
+            (totals.earlier / 100).toFixed(2),
+
+            (totals.now / 100).toFixed(2),
+
+            (totals.paid / 100).toFixed(2),
+
+            (totals.balance / 100).toFixed(2),
+
+            statusLabels[totals.status]
+
+        ]);
+
+    }
+
+    const csv = "\uFEFF" + rows.map(
+        row => row.map(csvCell).join(",")
+    ).join("\r\n");
+
+    downloadFile(
+        csv,
+        `MNM-Invoices-${today()}.csv`,
+        "text/csv;charset=utf-8"
+    );
+
+    message("CSV export requested.");
+
+}
+
+
+/* =========================================================
+   OPTIONAL BACKUP DOWNLOAD
+   ========================================================= */
+
+function downloadBackup() {
+
+    const data = {};
+
+    for (const key of Object.values(KEYS)) {
+
+        data[key] = localStorage.getItem(key);
+
+    }
+
+    const backup = {
+
+        firm: "MNM Legal Associates",
+
+        backupVersion: 3,
+
+        backupDate: new Date().toISOString(),
+
+        source: location.origin,
+
+        data
+
+    };
+
+    downloadFile(
+
+        JSON.stringify(backup, null, 2),
+
+        `MNM-Invoice-Backup-${today()}.json`,
+
+        "application/json"
+
+    );
+
+    message(
+        "Backup download requested. " +
+        "Keep the file confidential."
+    );
+
+}
+
+
+/* =========================================================
+   BACKUP IMPORT
+   Merge only. Existing records are never replaced.
+   ========================================================= */
+
+async function importBackup(event) {
+
+    const file = event.target.files[0];
+
+    event.target.value = "";
+
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+
+        throw new Error("Backup file is too large.");
+
+    }
+
+    const backup = JSON.parse(await file.text());
+
+    if (
+        backup.firm !== "MNM Legal Associates" ||
+        !backup.data ||
+        ![1, 3].includes(backup.backupVersion)
+    ) {
+
+        throw new Error("Unsupported backup file.");
+
+    }
+
+    const raw = backup.data[KEYS.invoices];
+
+    const imported = raw == null ? [] : JSON.parse(raw);
+
+    if (!Array.isArray(imported)) {
+
+        throw new Error("Invalid invoice backup.");
+
+    }
+
+    for (const record of imported) {
+
+        if (
+            !record ||
+            record.id == null ||
+            typeof record.invoiceNo !== "string" ||
+            !record.invoiceNo.trim() ||
+            !Array.isArray(record.items)
+        ) {
+
+            throw new Error(
+                "Backup contains invalid invoice records."
+            );
+
+        }
+
+        calculate(normalize(record));
+
+    }
+
+    const confirmed = await confirmAction(
+
+        "Import invoice backup?",
+
+        `Merge ${imported.length} invoice record(s)? ` +
+        "Existing records will not be overwritten. " +
+        "Conflicting records will be skipped."
+
+    );
+
+    if (!confirmed) return;
+
+    let added = 0;
+
+    let skipped = 0;
+
+    await withStorageLock(() => {
+
+        const records = readInvoices();
+
+        const ids = new Set(
+            records.map(record => String(record.id))
+        );
+
+        const numbers = new Set(
+            records.map(record => record.invoiceNo)
+        );
+
+        for (const record of imported) {
+
+            if (
+                ids.has(String(record.id)) ||
+                numbers.has(record.invoiceNo)
+            ) {
+
+                skipped++;
+
+                continue;
+
+            }
+
+            records.push(record);
+
+            ids.add(String(record.id));
+
+            numbers.add(record.invoiceNo);
+
+            added++;
+
+        }
+
+        let sequence = nextSequence(records);
+
+        const backupSequence =
+            backup.data[KEYS.sequence];
+
+        if (backupSequence != null) {
+
+            const number = Number(backupSequence);
+
+            if (
+                !Number.isSafeInteger(number) ||
+                number < 1
+            ) {
+
+                throw new Error(
+                    "Backup sequence is invalid."
+                );
+
+            }
+
+            sequence = Math.max(sequence, number);
+
+        }
+
+        localStorage.setItem(
+            KEYS.sequence,
+            String(sequence)
+        );
+
+        localStorage.setItem(
+            KEYS.invoices,
+            JSON.stringify(records)
+        );
+
+    });
+
+    refreshRecords();
+
+    if (!editingId) {
+
+        set(
+            "invoiceNumber",
+            invoiceNumber(
+                nextSequence(),
+                value("invoiceDate")
+            )
+        );
+
+        updatePreview();
+
+    }
+
+    message(
+        `Import complete. Added: ${added}. ` +
+        `Skipped: ${skipped}.`
+    );
+
+}
+
+
+/* =========================================================
+   EVENT HANDLERS
+   ========================================================= */
+
+function bindEvents() {
+
+    $("invoiceForm").addEventListener(
+        "submit",
+        safeAction(saveInvoice)
+    );
+
+    $("invoiceForm").addEventListener(
+        "input",
+        safeAction(event => {
+
+            dirty = true;
+
+            if (
+                event.target.id === "invoiceDate" &&
+                !editingId
+            ) {
+
+                set(
+                    "invoiceNumber",
+                    invoiceNumber(
+                        nextSequence(),
+                        value("invoiceDate")
+                    )
+                );
+
+            }
+
+            updatePreview();
+
+        })
+    );
+
+    $("addItemButton").addEventListener(
+        "click",
+        safeAction(() => {
+
+            addItem();
+
+            dirty = true;
+
+            updatePreview();
+
+        })
+    );
+
+    $("newInvoiceButton").addEventListener(
+        "click",
+        safeAction(newInvoice)
+    );
+
+    $("resetInvoiceButton").addEventListener(
+        "click",
+        safeAction(newInvoice)
+    );
+
+    for (const id of [
+        "printInvoiceButton",
+        "previewPrintButton"
+    ]) {
+
+        $(id).addEventListener(
+            "click",
+            safeAction(printInvoice)
+        );
+
+    }
+
+    for (const name of ["create", "saved", "settings"]) {
+
+        $(name + "Tab").addEventListener(
+            "click",
+            safeAction(() => activateTab(name))
+        );
+
+    }
+
+    const tabNames = ["create", "saved", "settings"];
+
+    tabNames.forEach((name, index) => {
+
+        $(name + "Tab").addEventListener(
+            "keydown",
+            safeAction(event => {
+
+                let next;
+
+                if (event.key === "ArrowRight") {
+                    next = (index + 1) % tabNames.length;
+                } else if (event.key === "ArrowLeft") {
+                    next = (index + 2) % tabNames.length;
+                } else if (event.key === "Home") {
+                    next = 0;
+                } else if (event.key === "End") {
+                    next = tabNames.length - 1;
+                } else {
+                    return;
+                }
+
+                event.preventDefault();
+
+                activateTab(tabNames[next]);
+
+                $(tabNames[next] + "Tab").focus();
+
+            })
+        );
+
+    });
+
+    $("invoiceSearch").addEventListener(
+        "input",
+        safeAction(renderSavedInvoices)
+    );
+
+    for (const id of [
+        "statusFilter",
+        "yearFilter",
+        "sortInvoices"
+    ]) {
+
+        $(id).addEventListener(
+            "change",
+            safeAction(renderSavedInvoices)
+        );
+
+    }
+
+    $("paymentSettingsForm").addEventListener(
+        "submit",
+        safeAction(savePaymentSettings)
+    );
+
+    $("exportCSVButton").addEventListener(
+        "click",
+        safeAction(exportCSV)
+    );
+
+    $("downloadBackupButton").addEventListener(
+        "click",
+        safeAction(downloadBackup)
+    );
+
+    $("restoreBackupButton").addEventListener(
+        "click",
+        () => $("backupFileInput").click()
+    );
+
+    $("backupFileInput").addEventListener(
+        "change",
+        safeAction(importBackup)
+    );
+
+    window.addEventListener(
+        "beforeunload",
+        event => {
+
+            if (dirty) {
+
+                event.preventDefault();
+
+                event.returnValue = "";
+
+            }
+
+        }
+    );
+
+    window.addEventListener(
+        "storage",
+        safeAction(event => {
+
+            if (
+                event.key === KEYS.invoices ||
+                event.key === KEYS.sequence
+            ) {
+
+                refreshRecords();
+
+                if (!editingId) {
+
+                    set(
+                        "invoiceNumber",
+                        invoiceNumber(
+                            nextSequence(),
+                            value("invoiceDate")
+                        )
+                    );
+
+                    updatePreview();
+
+                }
+
+            }
+
+            if (event.key === KEYS.payment) {
+
+                loadPaymentSettings();
+
+                updatePreview();
+
+            }
+
+        })
+    );
+
+}
+
+
+/* =========================================================
+   FIREBASE AUTHENTICATED INITIALIZATION
+   Called from invoice.html after authentication.
+   ========================================================= */
+
+export async function initialiseInvoiceSystem(user) {
+
+    if (!user || !user.uid) {
+
+        throw new Error(
+            "Authentication is required."
+        );
+
+    }
+
+    if (initialized) return;
+
+    /*
+     * Verify existing data before enabling the application.
+     * Initialization does not overwrite invoice storage.
+     */
+
+    const records = readInvoices();
+
+    readSequence();
+
+    records.forEach(record => {
+
+        calculate(normalize(record));
+
+    });
+
+    insertLegacyFields();
+
+    loadPaymentSettings();
+
+    resetForm();
+
+    bindEvents();
+
+    refreshRecords();
+
+    activateTab("create");
+
+    initialized = true;
+
+}
+
+
+/* =========================================================
+   END OF INVOICE MANAGEMENT SYSTEM
+   MNM LEGAL ASSOCIATES
+   Justice, Integrity & Excellence
+   ========================================================= */
