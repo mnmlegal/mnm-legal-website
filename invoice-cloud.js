@@ -1,8 +1,8 @@
 
 /* =========================================================
    MNM LEGAL ASSOCIATES
-   CLOUD INVOICE MANAGEMENT
-   Version 1.0 - Migration Preparation
+   CENTRALIZED CLOUD INVOICE MANAGEMENT
+   Version 3.0 - Monthly Invoice Numbering
 
    Justice, Integrity & Excellence
    ========================================================= */
@@ -25,6 +25,7 @@ import {
     serverTimestamp,
     setDoc
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
+
 
 /* =========================================================
    STORAGE CONFIGURATION
@@ -49,6 +50,8 @@ const CLOUD_CONFIG = Object.freeze({
 
     sequence: "invoiceSequence",
 
+    monthlySequences: "invoiceSequences",
+
     payment: "firmPayment",
 
     migration: "invoiceMigration",
@@ -56,6 +59,45 @@ const CLOUD_CONFIG = Object.freeze({
     schemaVersion: 1
 
 });
+
+
+const CENTRAL_BILLING = Object.freeze({
+
+    collection: "invoices",
+
+    settingsCollection: "settings",
+
+    sequenceDocument: "invoiceSequence",
+
+    monthlySequenceCollection: "invoiceSequences",
+
+    paymentDocument: "firmPayment",
+
+    prefix: "MNM",
+
+    initialSequence: 1,
+
+    schemaVersion: 4
+
+});
+
+
+const MONTH_ABBREVIATIONS = Object.freeze([
+
+    "JAN",
+    "FEB",
+    "MAR",
+    "APR",
+    "MAY",
+    "JUN",
+    "JUL",
+    "AUG",
+    "SEP",
+    "OCT",
+    "NOV",
+    "DEC"
+
+]);
 
 
 /* =========================================================
@@ -96,6 +138,7 @@ async function requireAdministrator() {
 
 /* =========================================================
    LOCAL STORAGE READING
+   Legacy migration compatibility only.
    ========================================================= */
 
 function readJSON(key, fallback) {
@@ -206,7 +249,7 @@ function readLocalPaymentSettings() {
 
 
 /* =========================================================
-   RECORD VALIDATION
+   LEGACY RECORD VALIDATION
    ========================================================= */
 
 function validateInvoiceRecords(records) {
@@ -226,7 +269,6 @@ function validateInvoiceRecords(records) {
     const errors = [];
 
     let highestSequence = 0;
-
 
     records.forEach((record, index) => {
 
@@ -301,32 +343,34 @@ function validateInvoiceRecords(records) {
 
             numbers.add(invoiceNo);
 
-            const match = invoiceNo.match(
+            const legacyMatch = invoiceNo.match(
                 /^MNM\/(\d+)\/\d{4}$/
             );
 
-            if (match) {
+            const monthlyMatch = invoiceNo.match(
+                /^MNM\/(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\/(\d+)\/\d{4}$/
+            );
 
-                const sequence = Number(match[1]);
+            const sequence = legacyMatch
 
-                if (
-                    Number.isSafeInteger(sequence) &&
-                    sequence >= 1 &&
-                    sequence < Number.MAX_SAFE_INTEGER
-                ) {
+                ? Number(legacyMatch[1])
 
-                    highestSequence = Math.max(
-                        highestSequence,
-                        sequence
-                    );
+                : monthlyMatch
 
-                } else {
+                    ? Number(monthlyMatch[2])
 
-                    errors.push(
-                        `Invalid invoice sequence: ${invoiceNo}`
-                    );
+                    : 0;
 
-                }
+            if (
+                Number.isSafeInteger(sequence) &&
+                sequence >= 1 &&
+                sequence < Number.MAX_SAFE_INTEGER
+            ) {
+
+                highestSequence = Math.max(
+                    highestSequence,
+                    sequence
+                );
 
             } else {
 
@@ -392,7 +436,6 @@ function validateInvoiceRecords(records) {
 
     });
 
-
     return {
 
         valid: errors.length === 0,
@@ -409,7 +452,7 @@ function validateInvoiceRecords(records) {
 
 
 /* =========================================================
-   SAFE SEQUENCE CALCULATION
+   LEGACY SEQUENCE CALCULATION
    ========================================================= */
 
 function calculateNextSequence(records, storedSequence) {
@@ -676,7 +719,7 @@ async function prepareMigration() {
     if (cloud.sequenceConfigured) {
 
         warnings.push(
-            "A cloud invoice sequence already exists."
+            "A legacy cloud invoice sequence already exists."
         );
 
     }
@@ -762,33 +805,135 @@ export {
 
 
 /* =========================================================
-   CENTRALIZED CLOUD INVOICE STORAGE
-   MNM LEGAL ASSOCIATES
-   Version 2.0
+   INDIAN STANDARD TIME DATE
    ========================================================= */
+
+export function getIndianDate() {
+
+    const parts = new Intl.DateTimeFormat("en-GB", {
+
+        timeZone: "Asia/Kolkata",
+
+        year: "numeric",
+
+        month: "2-digit",
+
+        day: "2-digit"
+
+    }).formatToParts(new Date());
+
+    const year = parts.find(
+        part => part.type === "year"
+    ).value;
+
+    const month = parts.find(
+        part => part.type === "month"
+    ).value;
+
+    const day = parts.find(
+        part => part.type === "day"
+    ).value;
+
+    return `${year}-${month}-${day}`;
+
+}
 
 
 /* =========================================================
-   CENTRAL BILLING CONFIGURATION
+   BILLING PERIOD VALIDATION
    ========================================================= */
 
-const CENTRAL_BILLING = Object.freeze({
+export function getBillingPeriod(invoiceDate) {
 
-    collection: "invoices",
+    if (
+        typeof invoiceDate !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(invoiceDate)
+    ) {
 
-    settingsCollection: "settings",
+        throw new Error(
+            "Invalid invoice date."
+        );
 
-    sequenceDocument: "invoiceSequence",
+    }
 
-    paymentDocument: "firmPayment",
+    const date = new Date(
+        invoiceDate + "T00:00:00Z"
+    );
 
-    prefix: "MNM",
+    if (
+        !Number.isFinite(date.getTime()) ||
+        date.toISOString().slice(0, 10) !== invoiceDate
+    ) {
 
-    initialSequence: 1,
+        throw new Error(
+            "Invalid calendar date."
+        );
 
-    schemaVersion: 4
+    }
 
-});
+    const year = invoiceDate.slice(0, 4);
+
+    const month = Number(
+        invoiceDate.slice(5, 7)
+    );
+
+    const abbreviation =
+        MONTH_ABBREVIATIONS[month - 1];
+
+    return {
+
+        year,
+
+        month,
+
+        abbreviation,
+
+        monthId: invoiceDate.slice(0, 7)
+
+    };
+
+}
+
+
+/* =========================================================
+   MONTHLY INVOICE NUMBER FORMAT
+
+   MNM/NOV/001/2026
+   MNM/DEC/001/2026
+   MNM/JAN/001/2027
+   ========================================================= */
+
+export function formatMonthlyInvoiceNumber(
+    sequence,
+    invoiceDate
+) {
+
+    if (
+        !Number.isSafeInteger(sequence) ||
+        sequence < 1
+    ) {
+
+        throw new Error(
+            "Invalid invoice sequence."
+        );
+
+    }
+
+    const period = getBillingPeriod(invoiceDate);
+
+    return [
+
+        CENTRAL_BILLING.prefix,
+
+        period.abbreviation,
+
+        String(sequence).padStart(3, "0"),
+
+        period.year
+
+    ].join("/");
+
+}
 
 
 /* =========================================================
@@ -802,27 +947,33 @@ function validateCloudInvoice(data) {
         typeof data !== "object" ||
         Array.isArray(data)
     ) {
-        throw new Error("Invalid invoice data.");
+
+        throw new Error(
+            "Invalid invoice data."
+        );
+
     }
 
     if (!String(data.clientName || "").trim()) {
-        throw new Error("Client name is required.");
+
+        throw new Error(
+            "Client name is required."
+        );
+
     }
 
     if (
         !Array.isArray(data.items) ||
         data.items.length === 0
     ) {
-        throw new Error("At least one service is required.");
+
+        throw new Error(
+            "At least one service is required."
+        );
+
     }
 
-    if (
-        !/^\d{4}-\d{2}-\d{2}$/.test(
-            data.invoiceDate || ""
-        )
-    ) {
-        throw new Error("Invalid invoice date.");
-    }
+    getBillingPeriod(data.invoiceDate);
 
     for (const item of data.items) {
 
@@ -838,43 +989,174 @@ function validateCloudInvoice(data) {
             !Number.isFinite(rate) ||
             rate < 0
         ) {
-            throw new Error("Invalid service amount.");
+
+            throw new Error(
+                "Invalid service amount."
+            );
+
         }
 
     }
 
-    return JSON.parse(JSON.stringify(data));
+    return JSON.parse(
+        JSON.stringify(data)
+    );
 
 }
 
 
 /* =========================================================
-   READ CENTRAL INVOICE SEQUENCE
+   INITIAL MONTHLY SEQUENCE
+
+   Existing legacy invoices remain unchanged.
+   Existing cancelled invoices are also counted.
    ========================================================= */
 
-export async function getCentralSequence() {
+async function getInitialMonthlySequence(period) {
+
+    const records = await readCloudInvoices();
+
+    let highestMonthlySequence = 0;
+
+    let legacyInvoiceCount = 0;
+
+    for (const entry of records) {
+
+        const record = entry.data;
+
+        if (
+            typeof record.invoiceDate !== "string" ||
+            record.invoiceDate.slice(0, 7) !== period.monthId
+        ) {
+
+            continue;
+
+        }
+
+        const invoiceNo = String(
+            record.invoiceNo || ""
+        );
+
+        const monthlyMatch = invoiceNo.match(
+
+            /^MNM\/([A-Z]{3})\/(\d+)\/(\d{4})$/
+
+        );
+
+        if (monthlyMatch) {
+
+            if (
+                monthlyMatch[1] !== period.abbreviation ||
+                monthlyMatch[3] !== period.year
+            ) {
+
+                throw new Error(
+                    "Existing invoice billing period mismatch."
+                );
+
+            }
+
+            const sequence = Number(
+                monthlyMatch[2]
+            );
+
+            if (
+                !Number.isSafeInteger(sequence) ||
+                sequence < 1
+            ) {
+
+                throw new Error(
+                    "Invalid existing invoice sequence."
+                );
+
+            }
+
+            highestMonthlySequence = Math.max(
+
+                highestMonthlySequence,
+
+                sequence
+
+            );
+
+            continue;
+
+        }
+
+        const legacyMatch = invoiceNo.match(
+
+            /^MNM\/(\d+)\/(\d{4})$/
+
+        );
+
+        if (legacyMatch) {
+
+            legacyInvoiceCount++;
+
+        } else {
+
+            throw new Error(
+                "Unsupported existing invoice number: " +
+                invoiceNo
+            );
+
+        }
+
+    }
+
+    const nextSequence = Math.max(
+
+        CENTRAL_BILLING.initialSequence,
+
+        highestMonthlySequence + 1,
+
+        legacyInvoiceCount + 1
+
+    );
+
+    if (
+        !Number.isSafeInteger(nextSequence) ||
+        nextSequence >= Number.MAX_SAFE_INTEGER
+    ) {
+
+        throw new Error(
+            "Monthly invoice sequence exceeds supported limit."
+        );
+
+    }
+
+    return nextSequence;
+
+}
+
+
+/* =========================================================
+   READ CENTRALIZED MONTHLY SEQUENCE
+   ========================================================= */
+
+export async function getCentralSequence(
+    invoiceDate = getIndianDate()
+) {
 
     await requireAdministrator();
 
+    const period = getBillingPeriod(invoiceDate);
+
     const reference = doc(
+
         db,
-        CENTRAL_BILLING.settingsCollection,
-        CENTRAL_BILLING.sequenceDocument
+
+        CENTRAL_BILLING.monthlySequenceCollection,
+
+        period.monthId
+
     );
 
     const snapshot = await getDocFromServer(reference);
 
     if (!snapshot.exists()) {
 
-        const records = await readCloudInvoices();
-
-        if (records.length > 0) {
-            throw new Error(
-                "Cloud invoices exist but the sequence is missing."
-            );
-        }
-
-        return CENTRAL_BILLING.initialSequence;
+        return await getInitialMonthlySequence(period);
 
     }
 
@@ -882,9 +1164,14 @@ export async function getCentralSequence() {
 
     if (
         !Number.isSafeInteger(sequence) ||
-        sequence < 1
+        sequence < 1 ||
+        sequence >= Number.MAX_SAFE_INTEGER
     ) {
-        throw new Error("Invalid central invoice sequence.");
+
+        throw new Error(
+            "Invalid monthly invoice sequence."
+        );
+
     }
 
     return sequence;
@@ -893,8 +1180,40 @@ export async function getCentralSequence() {
 
 
 /* =========================================================
-   CREATE NEW CLOUD INVOICE
-   Atomic transaction prevents duplicate numbering.
+   READ ALL MONTHLY COUNTERS
+   Useful for independent cloud backup.
+   ========================================================= */
+
+export async function fetchMonthlySequences() {
+
+    await requireAdministrator();
+
+    const reference = collection(
+
+        db,
+
+        CENTRAL_BILLING.monthlySequenceCollection
+
+    );
+
+    const snapshot = await getDocsFromServer(reference);
+
+    return snapshot.docs.map(item => ({
+
+        ...item.data(),
+
+        monthId: item.id
+
+    }));
+
+}
+
+
+/* =========================================================
+   CREATE NEW MONTHLY CLOUD INVOICE
+
+   Invoice record and monthly sequence are written
+   together using an atomic Firestore transaction.
    ========================================================= */
 
 export async function createCloudInvoice(invoiceData) {
@@ -903,27 +1222,59 @@ export async function createCloudInvoice(invoiceData) {
 
     const data = validateCloudInvoice(invoiceData);
 
+    const period = getBillingPeriod(data.invoiceDate);
+
     const invoiceId = String(
+
         data.id || crypto.randomUUID()
+
     );
 
     if (!/^[a-zA-Z0-9_-]{1,128}$/.test(invoiceId)) {
-        throw new Error("Invalid invoice ID.");
+
+        throw new Error(
+            "Invalid invoice ID."
+        );
+
     }
 
+
+    /* INVOICE DOCUMENT */
+
     const invoiceRef = doc(
+
         db,
+
         CENTRAL_BILLING.collection,
+
         invoiceId
+
     );
+
+
+    /* MONTHLY COUNTER DOCUMENT */
 
     const sequenceRef = doc(
+
         db,
-        CENTRAL_BILLING.settingsCollection,
-        CENTRAL_BILLING.sequenceDocument
+
+        CENTRAL_BILLING.monthlySequenceCollection,
+
+        period.monthId
+
     );
 
-    const startingSequence = await getCentralSequence();
+
+    /* INITIAL MONTHLY COUNTER */
+
+    const startingSequence = await getCentralSequence(
+
+        data.invoiceDate
+
+    );
+
+
+    /* ATOMIC TRANSACTION */
 
     await runTransaction(db, async transaction => {
 
@@ -933,8 +1284,11 @@ export async function createCloudInvoice(invoiceData) {
         if (existingInvoice.exists()) {
 
             throw new Error(
-                "This invoice ID already exists. " +
-                "Reopen the saved invoice before continuing."
+
+                "This invoice already exists. " +
+
+                "Please reopen it from Saved Invoices."
+
             );
 
         }
@@ -953,15 +1307,26 @@ export async function createCloudInvoice(invoiceData) {
             sequence < 1 ||
             sequence >= Number.MAX_SAFE_INTEGER
         ) {
-            throw new Error("Invalid invoice sequence.");
+
+            throw new Error(
+                "Invalid monthly invoice sequence."
+            );
+
         }
 
-        const year = data.invoiceDate.slice(0, 4);
 
-        const invoiceNo =
-            CENTRAL_BILLING.prefix + "/" +
-            String(sequence).padStart(3, "0") + "/" +
-            year;
+        /* FINAL INVOICE NUMBER */
+
+        const invoiceNo = formatMonthlyInvoiceNumber(
+
+            sequence,
+
+            data.invoiceDate
+
+        );
+
+
+        /* INVOICE RECORD */
 
         const record = {
 
@@ -972,6 +1337,14 @@ export async function createCloudInvoice(invoiceData) {
             invoiceNo,
 
             sequenceNumber: sequence,
+
+            billingMonth: period.monthId,
+
+            billingMonthName: period.abbreviation,
+
+            billingYear: Number(period.year),
+
+            numberingFormat: "MONTHLY",
 
             schemaVersion:
                 CENTRAL_BILLING.schemaVersion,
@@ -990,29 +1363,65 @@ export async function createCloudInvoice(invoiceData) {
 
         };
 
-        transaction.set(invoiceRef, record);
 
-        transaction.set(sequenceRef, {
+        /* SAVE INVOICE RECORD */
 
-            nextSequence: sequence + 1,
+        transaction.set(
 
-            lastInvoiceNumber: invoiceNo,
+            invoiceRef,
 
-            updatedAt: serverTimestamp(),
+            record
 
-            updatedBy: administrator.uid
+        );
 
-        }, { merge: true });
+
+        /* ADVANCE MONTHLY COUNTER */
+
+        transaction.set(
+
+            sequenceRef,
+
+            {
+
+                monthId: period.monthId,
+
+                month: period.abbreviation,
+
+                year: Number(period.year),
+
+                nextSequence: sequence + 1,
+
+                lastInvoiceNumber: invoiceNo,
+
+                lastInvoiceId: invoiceId,
+
+                updatedAt: serverTimestamp(),
+
+                updatedBy: administrator.uid
+
+            },
+
+            { merge: true }
+
+        );
 
     });
+
+
+    /* VERIFY CLOUD SAVE */
 
     const saved = await getDocFromServer(invoiceRef);
 
     if (!saved.exists()) {
+
         throw new Error(
+
             "Cloud invoice confirmation failed. " +
-            "Check saved invoices before retrying."
+
+            "Check Saved Invoices before retrying."
+
         );
+
     }
 
     return saved.data();
@@ -1022,13 +1431,19 @@ export async function createCloudInvoice(invoiceData) {
 
 /* =========================================================
    UPDATE EXISTING CLOUD INVOICE
-   Original invoice number remains unchanged.
+
+   Original invoice number, date and billing period
+   remain unchanged.
    ========================================================= */
 
 export async function updateCloudInvoice(
+
     invoiceId,
+
     invoiceData,
+
     expectedRevision
+
 ) {
 
     const administrator = await requireAdministrator();
@@ -1036,9 +1451,13 @@ export async function updateCloudInvoice(
     const data = validateCloudInvoice(invoiceData);
 
     const reference = doc(
+
         db,
+
         CENTRAL_BILLING.collection,
+
         String(invoiceId)
+
     );
 
     await runTransaction(db, async transaction => {
@@ -1047,34 +1466,50 @@ export async function updateCloudInvoice(
             await transaction.get(reference);
 
         if (!snapshot.exists()) {
-            throw new Error("Invoice does not exist.");
+
+            throw new Error(
+                "Invoice does not exist."
+            );
+
         }
 
         const existing = snapshot.data();
 
         if (existing.recordStatus === "cancelled") {
+
             throw new Error(
                 "Cancelled invoices cannot be modified."
             );
+
         }
 
         if (
             !Number.isSafeInteger(expectedRevision) ||
             existing.revision !== expectedRevision
         ) {
+
             throw new Error(
+
                 "Invoice was modified elsewhere. " +
+
                 "Please reopen it before updating."
+
             );
+
         }
 
         if (data.invoiceDate !== existing.invoiceDate) {
+
             throw new Error(
                 "The original invoice date cannot be changed."
             );
+
         }
 
-        transaction.set(reference, {
+
+        /* PRESERVE ORIGINAL NUMBERING METADATA */
+
+        const updatedRecord = {
 
             ...existing,
 
@@ -1083,6 +1518,8 @@ export async function updateCloudInvoice(
             id: existing.id,
 
             invoiceNo: existing.invoiceNo,
+
+            invoiceDate: existing.invoiceDate,
 
             sequenceNumber: existing.sequenceNumber,
 
@@ -1101,11 +1538,56 @@ export async function updateCloudInvoice(
 
             updatedBy: administrator.uid
 
-        });
+        };
+
+        for (const field of [
+
+            "billingMonth",
+
+            "billingMonthName",
+
+            "billingYear",
+
+            "numberingFormat"
+
+        ]) {
+
+            if (
+                Object.prototype.hasOwnProperty.call(
+                    existing,
+                    field
+                )
+            ) {
+
+                updatedRecord[field] = existing[field];
+
+            } else {
+
+                delete updatedRecord[field];
+
+            }
+
+        }
+
+        transaction.set(
+
+            reference,
+
+            updatedRecord
+
+        );
 
     });
 
     const saved = await getDocFromServer(reference);
+
+    if (!saved.exists()) {
+
+        throw new Error(
+            "Invoice update confirmation failed."
+        );
+
+    }
 
     return saved.data();
 
@@ -1114,6 +1596,9 @@ export async function updateCloudInvoice(
 
 /* =========================================================
    FETCH ALL CENTRALIZED INVOICES
+
+   Latest invoice date first.
+   Monthly sequence used within the same date.
    ========================================================= */
 
 export async function fetchCentralInvoices() {
@@ -1121,8 +1606,11 @@ export async function fetchCentralInvoices() {
     await requireAdministrator();
 
     const reference = collection(
+
         db,
+
         CENTRAL_BILLING.collection
+
     );
 
     const snapshot = await getDocsFromServer(reference);
@@ -1137,24 +1625,44 @@ export async function fetchCentralInvoices() {
 
         }))
 
-        .sort((a, b) =>
+        .sort((a, b) => {
 
-            Number(b.sequenceNumber || 0) -
-            Number(a.sequenceNumber || 0)
+            const dateComparison = String(
+                b.invoiceDate || ""
+            ).localeCompare(
+                String(a.invoiceDate || "")
+            );
 
-        );
+            if (dateComparison !== 0) {
+
+                return dateComparison;
+
+            }
+
+            return Number(b.sequenceNumber || 0) -
+
+                Number(a.sequenceNumber || 0);
+
+        });
 
 }
 
 
 /* =========================================================
    CANCEL INVOICE WITHOUT PERMANENT DELETION
+
+   Cancelled invoice numbers are never reused
+   through the normal application workflow.
    ========================================================= */
 
 export async function cancelCloudInvoice(
+
     invoiceId,
+
     reason,
+
     expectedRevision
+
 ) {
 
     const administrator = await requireAdministrator();
@@ -1163,15 +1671,21 @@ export async function cancelCloudInvoice(
         String(reason || "").trim();
 
     if (!cancellationReason) {
+
         throw new Error(
             "Cancellation reason is required."
         );
+
     }
 
     const reference = doc(
+
         db,
+
         CENTRAL_BILLING.collection,
+
         String(invoiceId)
+
     );
 
     await runTransaction(db, async transaction => {
@@ -1180,21 +1694,29 @@ export async function cancelCloudInvoice(
             await transaction.get(reference);
 
         if (!snapshot.exists()) {
-            throw new Error("Invoice does not exist.");
+
+            throw new Error(
+                "Invoice does not exist."
+            );
+
         }
 
         const existing = snapshot.data();
 
         if (existing.recordStatus === "cancelled") {
+
             throw new Error(
                 "Invoice is already cancelled."
             );
+
         }
 
         if (existing.revision !== expectedRevision) {
+
             throw new Error(
                 "Invoice was modified elsewhere. Reopen it."
             );
+
         }
 
         transaction.update(reference, {
@@ -1235,18 +1757,28 @@ export async function saveCentralPaymentSettings(settings) {
         typeof settings !== "object" ||
         Array.isArray(settings)
     ) {
-        throw new Error("Invalid payment settings.");
+
+        throw new Error(
+            "Invalid payment settings."
+        );
+
     }
 
     const reference = doc(
+
         db,
+
         CENTRAL_BILLING.settingsCollection,
+
         CENTRAL_BILLING.paymentDocument
+
     );
 
     await setDoc(reference, {
 
-        ...JSON.parse(JSON.stringify(settings)),
+        ...JSON.parse(
+            JSON.stringify(settings)
+        ),
 
         updatedAt: serverTimestamp(),
 
@@ -1264,25 +1796,29 @@ export async function getCentralPaymentSettings() {
     await requireAdministrator();
 
     const reference = doc(
+
         db,
+
         CENTRAL_BILLING.settingsCollection,
+
         CENTRAL_BILLING.paymentDocument
+
     );
 
     const snapshot = await getDocFromServer(reference);
 
     return snapshot.exists()
+
         ? snapshot.data()
+
         : {};
 
 }
 
 
 /* =========================================================
-   END OF CENTRALIZED CLOUD STORAGE ENGINE
-   ========================================================= */
+   END OF MONTHLY CLOUD INVOICE MANAGEMENT
 
-/* =========================================================
-   END OF CLOUD INVOICE MANAGEMENT
    MNM LEGAL ASSOCIATES
+   Justice, Integrity & Excellence
    ========================================================= */
