@@ -2,7 +2,7 @@
 /* =========================================================
    MNM LEGAL ASSOCIATES
    PROFESSIONAL CLOUD INVOICE MANAGEMENT SYSTEM
-   Version 4.0
+   Version 5.0 - Monthly Invoice Numbering
    Justice, Integrity & Excellence
    ========================================================= */
 
@@ -10,18 +10,19 @@ import {
     createCloudInvoice,
     updateCloudInvoice,
     fetchCentralInvoices,
-    getCentralSequence,
     getCentralPaymentSettings,
     saveCentralPaymentSettings,
-    cancelCloudInvoice
+    cancelCloudInvoice,
+    fetchMonthlySequences,
+    formatMonthlyInvoiceNumber,
+    getBillingPeriod,
+    getIndianDate
 } from "./invoice-cloud.js";
 
-/* =========================================================
-   APPLICATION STATE
-   ========================================================= */
+/* APPLICATION STATE */
 
 let cloudRecords = [];
-let cloudSequence = 1;
+let cloudMonthlySequences = {};
 let cloudPaymentSettings = {};
 let pendingCreateId = null;
 let cloudSaving = false;
@@ -34,7 +35,6 @@ let loadedSnapshot = null;
 let syncPromise = null;
 
 const $ = id => document.getElementById(id);
-
 const value = id => $(id).value;
 
 const set = (id, val) => {
@@ -72,10 +72,10 @@ async function syncCloudData() {
 
     syncPromise = (async () => {
 
-        const [records, sequence, settings] =
+        const [records, sequences, settings] =
             await Promise.all([
                 fetchCentralInvoices(),
-                getCentralSequence(),
+                fetchMonthlySequences(),
                 getCentralPaymentSettings()
             ]);
 
@@ -83,11 +83,25 @@ async function syncCloudData() {
             throw new Error("Invalid cloud invoice records.");
         }
 
-        if (
-            !Number.isSafeInteger(sequence) ||
-            sequence < 1
-        ) {
-            throw new Error("Invalid cloud invoice sequence.");
+        if (!Array.isArray(sequences)) {
+            throw new Error("Invalid monthly invoice counters.");
+        }
+
+        const monthlyCounters = {};
+
+        for (const counter of sequences) {
+
+            if (
+                !/^\d{4}-(0[1-9]|1[0-2])$/.test(counter.monthId) ||
+                !Number.isSafeInteger(counter.nextSequence) ||
+                counter.nextSequence < 1 ||
+                counter.nextSequence >= Number.MAX_SAFE_INTEGER
+            ) {
+                throw new Error("Invalid monthly invoice counter.");
+            }
+
+            monthlyCounters[counter.monthId] =
+                counter.nextSequence;
         }
 
         const ids = new Set();
@@ -115,13 +129,12 @@ async function syncCloudData() {
             numbers.add(record.invoiceNo);
 
             calculate(normalize(record));
-
         }
 
         if (cloudSaving) return;
 
         cloudRecords = records;
-        cloudSequence = Math.max(cloudSequence, sequence);
+        cloudMonthlySequences = monthlyCounters;
         cloudPaymentSettings = settings || {};
 
     })();
@@ -131,7 +144,6 @@ async function syncCloudData() {
     } finally {
         syncPromise = null;
     }
-
 }
 
 /* =========================================================
@@ -149,7 +161,6 @@ function numeric(input) {
     }
 
     return n;
-
 }
 
 function paise(input) {
@@ -161,11 +172,11 @@ function paise(input) {
     }
 
     return result;
-
 }
 
 /* =========================================================
-   CLOUD RECORD ACCESS
+   MONTHLY INVOICE NUMBERING
+   Format: MNM/NOV/001/2026
    ========================================================= */
 
 function readInvoices() {
@@ -173,59 +184,102 @@ function readInvoices() {
     return cloudRecords.filter(
         record => record.recordStatus !== "cancelled"
     );
-
 }
 
-function readSequence() {
+function readSequence(date = value("invoiceDate") || today()) {
 
-    return cloudSequence;
+    const period = getBillingPeriod(date);
 
+    return cloudMonthlySequences[period.monthId] || 1;
 }
 
-function nextSequence(records = cloudRecords) {
+function nextSequence(date = value("invoiceDate") || today()) {
 
-    let sequence = readSequence();
+    const period = getBillingPeriod(date);
 
-    for (const record of records) {
+    let sequence = readSequence(date);
+    let legacyCount = 0;
 
-        const match = record.invoiceNo.match(
-            /^MNM\/(\d+)\/\d{4}$/i
-        );
+    for (const record of cloudRecords) {
 
-        if (match) {
-
-            const number = Number(match[1]);
-
-            if (Number.isSafeInteger(number)) {
-                sequence = Math.max(sequence, number + 1);
-            }
-
+        if (
+            !record.invoiceDate ||
+            record.invoiceDate.slice(0, 7) !== period.monthId
+        ) {
+            continue;
         }
 
+        const monthlyMatch = String(record.invoiceNo).match(
+            /^MNM\/([A-Z]{3})\/(\d+)\/(\d{4})$/
+        );
+
+        const legacyMatch = String(record.invoiceNo).match(
+            /^MNM\/(\d+)\/\d{4}$/
+        );
+
+        if (monthlyMatch) {
+
+            if (
+                monthlyMatch[1] !== period.abbreviation ||
+                monthlyMatch[3] !== period.year
+            ) {
+                throw new Error("Invoice billing period mismatch.");
+            }
+
+            const number = Number(monthlyMatch[2]);
+
+            if (
+                !Number.isSafeInteger(number) ||
+                number < 1
+            ) {
+                throw new Error("Invalid invoice sequence.");
+            }
+
+            sequence = Math.max(sequence, number + 1);
+
+        } else if (legacyMatch) {
+
+            legacyCount++;
+
+        } else {
+
+            throw new Error("Unsupported invoice number.");
+        }
     }
 
-    if (!Number.isSafeInteger(sequence)) {
-        throw new Error("Invalid invoice sequence.");
+    sequence = Math.max(sequence, legacyCount + 1);
+
+    if (
+        !Number.isSafeInteger(sequence) ||
+        sequence >= Number.MAX_SAFE_INTEGER
+    ) {
+        throw new Error("Invalid monthly invoice sequence.");
     }
 
     return sequence;
-
 }
 
 function invoiceNumber(sequence, date) {
 
-    const year = date
-        ? date.slice(0, 4)
-        : String(new Date().getFullYear());
+    if (!date) return "";
 
-    return `MNM/${String(sequence).padStart(3, "0")}/${year}`;
+    return formatMonthlyInvoiceNumber(sequence, date);
+}
 
+function refreshDraftNumber() {
+
+    if (editingId) return;
+
+    const date = value("invoiceDate");
+
+    set(
+        "invoiceNumber",
+        date ? invoiceNumber(nextSequence(date), date) : ""
+    );
 }
 
 function readPaymentSettings() {
-
     return cloudPaymentSettings;
-
 }
 
 /* =========================================================
@@ -253,98 +307,49 @@ const DEFAULT_TERMS = [
 function normalize(record) {
 
     const items = record.items.map(item => ({
-
         description: String(
             item.description ?? item.particular ?? ""
         ),
-
-        quantity: numeric(
-            item.quantity ?? item.qty ?? 1
-        ),
-
+        quantity: numeric(item.quantity ?? item.qty ?? 1),
         rate: numeric(item.rate ?? 0)
-
     }));
 
     return {
-
         ...record,
-
         id: String(record.id),
-
         invoiceNo: record.invoiceNo,
-
         invoiceDate: record.invoiceDate || "",
-
         dueDate: record.dueDate || "",
-
         previousBillNo: record.previousBillNo || "",
-
-        issuedBy:
-            record.issuedBy || "MNM Legal Associates",
-
+        issuedBy: record.issuedBy || "MNM Legal Associates",
         matterReference: record.matterReference || "",
-
         clientName: record.clientName || "",
-
         clientPhone:
-            record.clientPhone ??
-            record.clientMobile ??
-            "",
-
+            record.clientPhone ?? record.clientMobile ?? "",
         clientEmail: record.clientEmail || "",
-
         clientAddress: record.clientAddress || "",
-
         clientGSTIN: record.clientGSTIN || "",
-
         items,
-
-        discountAmount:
-            numeric(record.discountAmount ?? 0),
-
-        receivedEarlier:
-            numeric(record.receivedEarlier ?? 0),
-
-        receivedNow:
-            numeric(
-                record.receivedNow ??
-                record.amountPaid ??
-                0
-            ),
-
+        discountAmount: numeric(record.discountAmount ?? 0),
+        receivedEarlier: numeric(record.receivedEarlier ?? 0),
+        receivedNow: numeric(
+            record.receivedNow ?? record.amountPaid ?? 0
+        ),
         paymentMode: record.paymentMode || "",
-
         paymentReference: record.paymentReference || "",
-
         notes: record.notes || "",
-
         terms: record.terms ?? DEFAULT_TERMS,
-
-        showPaymentDetails:
-            Boolean(record.showPaymentDetails),
-
-        showSignature:
-            record.showSignature !== false
-
+        showPaymentDetails: Boolean(record.showPaymentDetails),
+        showSignature: record.showSignature !== false
     };
-
 }
 
 /* =========================================================
-   DATE UTILITIES
+   DATE UTILITIES - INDIAN STANDARD TIME
    ========================================================= */
 
 function today() {
-
-    const date = new Date();
-
-    return [
-        date.getFullYear(),
-        String(date.getMonth() + 1).padStart(2, "0"),
-        String(date.getDate()).padStart(2, "0")
-    ].join("-");
-
+    return getIndianDate();
 }
 
 function formatDate(date) {
@@ -354,7 +359,6 @@ function formatDate(date) {
     return /^\d{4}-\d{2}-\d{2}$/.test(date)
         ? date.split("-").reverse().join("/")
         : date;
-
 }
 
 /* =========================================================
@@ -365,13 +369,9 @@ function message(text, type = "success") {
 
     const element = $("appMessage");
 
-    element.className =
-        `app-message no-print ${type}`;
-
+    element.className = `app-message no-print ${type}`;
     element.textContent = text;
-
     element.hidden = false;
-
 }
 
 function handleError(error) {
@@ -382,7 +382,6 @@ function handleError(error) {
         error?.message || "An unexpected error occurred.",
         "error"
     );
-
 }
 
 function safeAction(action) {
@@ -390,17 +389,11 @@ function safeAction(action) {
     return async event => {
 
         try {
-
             await action(event);
-
         } catch (error) {
-
             handleError(error);
-
         }
-
     };
-
 }
 
 /* =========================================================
@@ -418,7 +411,6 @@ function confirmAction(title, text) {
     return new Promise(resolve => {
 
         display("confirmationTitle", title);
-
         display("confirmationMessage", text);
 
         dialog.returnValue = "cancel";
@@ -433,29 +425,23 @@ function confirmAction(title, text) {
 
         dialog.addEventListener(
             "close",
-            () => resolve(
-                dialog.returnValue === "confirm"
-            ),
+            () => resolve(dialog.returnValue === "confirm"),
             { once: true }
         );
 
         dialog.showModal();
-
     });
-
 }
 
 async function allowDiscard() {
 
     if (cloudSaving) return false;
-
     if (!dirty) return true;
 
     return confirmAction(
         "Discard unsaved changes?",
         "Your current unsaved changes will be lost."
     );
-
 }
 
 /* =========================================================
@@ -471,8 +457,7 @@ function insertLegacyFields() {
 
     if (!$("receivedEarlier")) {
 
-        const earlierGroup =
-            document.createElement("div");
+        const earlierGroup = document.createElement("div");
 
         earlierGroup.className = "form-group";
 
@@ -488,16 +473,13 @@ function insertLegacyFields() {
         `;
 
         paid.closest(".form-group").before(earlierGroup);
-
     }
 
     if (!$("previousBillNo")) {
 
-        const referenceGroup =
-            document.createElement("div");
+        const referenceGroup = document.createElement("div");
 
-        referenceGroup.className =
-            "form-group full-width";
+        referenceGroup.className = "form-group full-width";
 
         referenceGroup.innerHTML = `
             <label for="previousBillNo">
@@ -512,13 +494,11 @@ function insertLegacyFields() {
         $("matterReference")
             .closest(".form-group")
             .after(referenceGroup);
-
     }
 
     if (!$("previewEarlier")) {
 
-        const earlierLine =
-            document.createElement("div");
+        const earlierLine = document.createElement("div");
 
         earlierLine.className = "total-line";
 
@@ -527,16 +507,13 @@ function insertLegacyFields() {
             <strong id="previewEarlier">₹0.00</strong>
         `;
 
-        const receivedLine =
-            $("previewPaid").parentElement;
+        const receivedLine = $("previewPaid").parentElement;
 
         receivedLine.querySelector("span").textContent =
             "Received Now";
 
         receivedLine.before(earlierLine);
-
     }
-
 }
 
 /* =========================================================
@@ -572,26 +549,20 @@ function addItem(item = {}) {
                 );
 
                 return;
-
             }
 
             row.remove();
-
             dirty = true;
-
             updatePreview();
-
         }));
 
     $("itemsBody").appendChild(fragment);
-
 }
 
 function collectItems() {
 
     return Array.from($("itemsBody").rows)
         .map(row => ({
-
             description: row.querySelector(
                 ".item-description"
             ).value.trim(),
@@ -603,9 +574,7 @@ function collectItems() {
             rate: numeric(
                 row.querySelector(".item-rate").value
             )
-
         }));
-
 }
 
 /* =========================================================
@@ -618,20 +587,14 @@ function calculate(data) {
     const lines = data.items.map(item => {
 
         const quantity = numeric(item.quantity);
-
         const rate = paise(item.rate);
-
         const amount = Math.round(quantity * rate);
 
         if (!Number.isSafeInteger(amount)) {
             throw new Error("Fee amount exceeds supported limit.");
         }
 
-        return {
-            ...item,
-            amount
-        };
-
+        return { ...item, amount };
     });
 
     const subtotal = lines.reduce(
@@ -640,15 +603,10 @@ function calculate(data) {
     );
 
     const discount = paise(data.discountAmount);
-
     const earlier = paise(data.receivedEarlier);
-
     const now = paise(data.receivedNow);
-
     const total = Math.max(0, subtotal - discount);
-
     const paid = earlier + now;
-
     const balance = Math.max(0, total - paid);
 
     if (
@@ -675,7 +633,6 @@ function calculate(data) {
         balance,
         status
     };
-
 }
 
 /* =========================================================
@@ -688,14 +645,13 @@ function numberWords(number) {
         "Zero", "One", "Two", "Three", "Four",
         "Five", "Six", "Seven", "Eight", "Nine",
         "Ten", "Eleven", "Twelve", "Thirteen",
-        "Fourteen", "Fifteen", "Sixteen",
-        "Seventeen", "Eighteen", "Nineteen"
+        "Fourteen", "Fifteen", "Sixteen", "Seventeen",
+        "Eighteen", "Nineteen"
     ];
 
     const tens = [
         "", "", "Twenty", "Thirty", "Forty",
-        "Fifty", "Sixty", "Seventy",
-        "Eighty", "Ninety"
+        "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
     ];
 
     if (number < 20) return ones[number];
@@ -706,7 +662,6 @@ function numberWords(number) {
             (number % 10
                 ? " " + ones[number % 10]
                 : "");
-
     }
 
     const units = [
@@ -728,19 +683,15 @@ function numberWords(number) {
                 (remainder
                     ? " " + numberWords(remainder)
                     : "");
-
         }
-
     }
 
     return "Zero";
-
 }
 
 function amountInWords(amountPaise) {
 
     const rupees = Math.floor(amountPaise / 100);
-
     const remainder = amountPaise % 100;
 
     return "Indian Rupees " +
@@ -749,7 +700,6 @@ function amountInWords(amountPaise) {
             ? " and " + numberWords(remainder) + " Paise"
             : "") +
         " Only";
-
 }
 
 /* =========================================================
@@ -759,69 +709,29 @@ function amountInWords(amountPaise) {
 function collectInvoice() {
 
     return {
-
         id: editingId || pendingCreateId || crypto.randomUUID(),
-
         invoiceNo: value("invoiceNumber"),
-
         invoiceDate: value("invoiceDate"),
-
         dueDate: value("dueDate"),
-
         issuedBy: value("issuedBy"),
-
-        matterReference:
-            value("matterReference").trim(),
-
-        previousBillNo:
-            value("previousBillNo").trim(),
-
-        clientName:
-            value("clientName").trim(),
-
-        clientPhone:
-            value("clientPhone").trim(),
-
-        clientEmail:
-            value("clientEmail").trim(),
-
-        clientAddress:
-            value("clientAddress").trim(),
-
-        clientGSTIN:
-            value("clientGSTIN").trim().toUpperCase(),
-
+        matterReference: value("matterReference").trim(),
+        previousBillNo: value("previousBillNo").trim(),
+        clientName: value("clientName").trim(),
+        clientPhone: value("clientPhone").trim(),
+        clientEmail: value("clientEmail").trim(),
+        clientAddress: value("clientAddress").trim(),
+        clientGSTIN: value("clientGSTIN").trim().toUpperCase(),
         items: collectItems(),
-
-        discountAmount:
-            numeric(value("discountAmount")),
-
-        receivedEarlier:
-            numeric(value("receivedEarlier")),
-
-        receivedNow:
-            numeric(value("amountPaid")),
-
-        paymentMode:
-            value("paymentMode"),
-
-        paymentReference:
-            value("paymentReference").trim(),
-
-        notes:
-            value("invoiceNotes").trim(),
-
-        terms:
-            value("invoiceTerms").trim(),
-
-        showPaymentDetails:
-            $("showPaymentDetails").checked,
-
-        showSignature:
-            $("showSignature").checked
-
+        discountAmount: numeric(value("discountAmount")),
+        receivedEarlier: numeric(value("receivedEarlier")),
+        receivedNow: numeric(value("amountPaid")),
+        paymentMode: value("paymentMode"),
+        paymentReference: value("paymentReference").trim(),
+        notes: value("invoiceNotes").trim(),
+        terms: value("invoiceTerms").trim(),
+        showPaymentDetails: $("showPaymentDetails").checked,
+        showSignature: $("showSignature").checked
     };
-
 }
 
 /* =========================================================
@@ -831,7 +741,6 @@ function collectInvoice() {
 function updatePreview() {
 
     const data = collectInvoice();
-
     const totals = calculate(data);
 
     Array.from($("itemsBody").rows)
@@ -839,45 +748,27 @@ function updatePreview() {
 
             row.querySelector(".item-amount").textContent =
                 money(totals.lines[index].amount / 100);
-
         });
 
     const outputs = {
-
         subtotalDisplay: totals.subtotal,
-
         discountDisplay: totals.discount,
-
         grandTotalDisplay: totals.total,
-
         paidDisplay: totals.paid,
-
         balanceDisplay: totals.balance,
-
         previewSubtotal: totals.subtotal,
-
         previewDiscount: totals.discount,
-
         previewGrandTotal: totals.total,
-
         previewEarlier: totals.earlier,
-
         previewPaid: totals.now,
-
         previewBalance: totals.balance
-
     };
 
     for (const [id, amount] of Object.entries(outputs)) {
-
         display(id, money(amount / 100));
-
     }
 
-    set(
-        "paymentStatus",
-        statusLabels[totals.status]
-    );
+    set("paymentStatus", statusLabels[totals.status]);
 
     display(
         "previewPaymentStatus",
@@ -887,10 +778,7 @@ function updatePreview() {
     $("previewPaymentStatus").className =
         `payment-status ${totals.status}`;
 
-    display(
-        "previewInvoiceNumber",
-        data.invoiceNo
-    );
+    display("previewInvoiceNumber", data.invoiceNo);
 
     display(
         "previewInvoiceDate",
@@ -902,15 +790,9 @@ function updatePreview() {
         formatDate(data.dueDate)
     );
 
-    show(
-        "previewDueDateRow",
-        Boolean(data.dueDate)
-    );
+    show("previewDueDateRow", Boolean(data.dueDate));
 
-    display(
-        "previewIssuedBy",
-        data.issuedBy
-    );
+    display("previewIssuedBy", data.issuedBy);
 
     display(
         "previewMatterReference",
@@ -928,9 +810,7 @@ function updatePreview() {
     );
 
     display("previewClientAddress", data.clientAddress);
-
     display("previewClientPhone", data.clientPhone);
-
     display("previewClientEmail", data.clientEmail);
 
     display(
@@ -959,15 +839,11 @@ function updatePreview() {
         for (const text of cells) {
 
             const cell = document.createElement("td");
-
             cell.textContent = text;
-
             row.appendChild(cell);
-
         }
 
         tbody.appendChild(row);
-
     });
 
     display(
@@ -991,37 +867,20 @@ function updatePreview() {
 
     show(
         "previewPaymentRecord",
-        Boolean(
-            data.paymentMode ||
-            data.paymentReference
-        )
+        Boolean(data.paymentMode || data.paymentReference)
     );
 
     display("previewNotes", data.notes);
-
-    show(
-        "previewNotesSection",
-        Boolean(data.notes)
-    );
+    show("previewNotesSection", Boolean(data.notes));
 
     display("previewTerms", data.terms);
+    show("previewTermsSection", Boolean(data.terms));
 
-    show(
-        "previewTermsSection",
-        Boolean(data.terms)
-    );
+    show("previewSignatureSection", data.showSignature);
 
-    show(
-        "previewSignatureSection",
-        data.showSignature
-    );
-
-    renderPaymentDetails(
-        data.showPaymentDetails
-    );
+    renderPaymentDetails(data.showPaymentDetails);
 
     return totals;
-
 }
 
 /* =========================================================
@@ -1059,7 +918,6 @@ const paymentFields = {
         "previewUPI",
         "UPI ID"
     ]
-
 };
 
 function renderPaymentDetails(visible) {
@@ -1077,29 +935,20 @@ function renderPaymentDetails(visible) {
             previewId,
             text ? `${label}: ${text}` : ""
         );
-
     }
 
-    show(
-        "previewPaymentDetails",
-        visible && hasDetails
-    );
-
+    show("previewPaymentDetails", visible && hasDetails);
 }
 
 function loadPaymentSettings() {
 
-    paymentSettings = {
-        ...readPaymentSettings()
-    };
+    paymentSettings = { ...readPaymentSettings() };
 
     for (const [id, [key]]
         of Object.entries(paymentFields)) {
 
         set(id, paymentSettings[key] || "");
-
     }
-
 }
 
 async function savePaymentSettings(event) {
@@ -1114,7 +963,6 @@ async function savePaymentSettings(event) {
         of Object.entries(paymentFields)) {
 
         settings[key] = value(id).trim();
-
     }
 
     settings.ifsc = settings.ifsc.toUpperCase();
@@ -1137,7 +985,6 @@ async function savePaymentSettings(event) {
         await saveCentralPaymentSettings(settings);
 
         cloudPaymentSettings = settings;
-
         paymentSettings = settings;
 
         updatePreview();
@@ -1149,11 +996,8 @@ async function savePaymentSettings(event) {
     } finally {
 
         form.inert = false;
-
         cloudSaving = false;
-
     }
-
 }
 
 /* =========================================================
@@ -1163,15 +1007,12 @@ async function savePaymentSettings(event) {
 function validateInvoice() {
 
     if (!$("invoiceForm").reportValidity()) {
-
         throw new Error(
             "Please complete the required invoice fields."
         );
-
     }
 
     const data = collectInvoice();
-
     const totals = calculate(data);
 
     if (!data.clientName) {
@@ -1182,15 +1023,15 @@ function validateInvoice() {
         throw new Error("Please select the invoice date.");
     }
 
+    getBillingPeriod(data.invoiceDate);
+
     if (
         data.dueDate &&
         data.dueDate < data.invoiceDate
     ) {
-
         throw new Error(
             "Due date cannot precede invoice date."
         );
-
     }
 
     if (
@@ -1199,35 +1040,21 @@ function validateInvoice() {
             !item.description || item.quantity <= 0
         )
     ) {
-
-        throw new Error(
-            "Please enter valid fee particulars."
-        );
-
+        throw new Error("Please enter valid fee particulars.");
     }
 
     if (totals.subtotal <= 0) {
-
         throw new Error(
             "Invoice amount must be greater than zero."
         );
-
     }
 
     if (totals.discount > totals.subtotal) {
-
-        throw new Error(
-            "Discount cannot exceed the subtotal."
-        );
-
+        throw new Error("Discount cannot exceed the subtotal.");
     }
 
     if (totals.paid > totals.total) {
-
-        throw new Error(
-            "Total payments exceed the invoice amount."
-        );
-
+        throw new Error("Total payments exceed the invoice amount.");
     }
 
     if (
@@ -1235,19 +1062,15 @@ function validateInvoice() {
         !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/
             .test(data.clientGSTIN)
     ) {
-
-        throw new Error(
-            "Please verify the GSTIN format."
-        );
-
+        throw new Error("Please verify the GSTIN format.");
     }
 
     return data;
-
 }
 
 /* =========================================================
    CLOUD INVOICE SAVING
+   Final number allocated by Firestore transaction.
    ========================================================= */
 
 async function saveInvoice(event) {
@@ -1257,39 +1080,27 @@ async function saveInvoice(event) {
     if (cloudSaving) return;
 
     const button = $("saveInvoiceButton");
-
     const form = $("invoiceForm");
 
     cloudSaving = true;
-
     button.disabled = true;
 
     try {
 
         const data = validateInvoice();
-
         const isEditing = editingId !== null;
 
         const payload = {
-
             ...data,
-
             clientMobile: data.clientPhone,
-
             amountPaid:
-                data.receivedEarlier +
-                data.receivedNow,
+                data.receivedEarlier + data.receivedNow,
 
             items: data.items.map(item => ({
-
                 ...item,
-
                 particular: item.description,
-
                 qty: item.quantity
-
             }))
-
         };
 
         form.inert = true;
@@ -1304,21 +1115,15 @@ async function saveInvoice(event) {
         if (isEditing) {
 
             if (!originalRecord) {
-
                 throw new Error(
                     "Please reopen the saved invoice."
                 );
-
             }
 
             saved = await updateCloudInvoice(
-
                 editingId,
-
                 payload,
-
                 originalRecord.revision
-
             );
 
         } else {
@@ -1329,20 +1134,17 @@ async function saveInvoice(event) {
             payload.id = pendingCreateId;
 
             saved = await createCloudInvoice(payload);
-
         }
 
         editingId = String(saved.id);
-
         originalRecord = saved;
-
         loadedSnapshot = JSON.stringify(saved);
-
         pendingCreateId = null;
 
         set("editingInvoiceId", editingId);
-
         set("invoiceNumber", saved.invoiceNo);
+
+        $("invoiceDate").readOnly = true;
 
         dirty = false;
 
@@ -1351,22 +1153,22 @@ async function saveInvoice(event) {
         );
 
         if (index >= 0) {
-
             cloudRecords[index] = saved;
-
         } else {
-
             cloudRecords.push(saved);
-
         }
 
-        cloudSequence = Math.max(
-            cloudSequence,
-            Number(saved.sequenceNumber) + 1
-        );
+        if (saved.numberingFormat === "MONTHLY") {
+
+            const monthId = saved.invoiceDate.slice(0, 7);
+
+            cloudMonthlySequences[monthId] = Math.max(
+                cloudMonthlySequences[monthId] || 1,
+                Number(saved.sequenceNumber) + 1
+            );
+        }
 
         updatePreview();
-
         refreshRecords();
 
         message(
@@ -1394,18 +1196,14 @@ async function saveInvoice(event) {
     } finally {
 
         cloudSaving = false;
-
         form.inert = false;
-
         button.disabled = false;
 
         display(
             "saveInvoiceButton",
             editingId ? "Update Invoice" : "Save Invoice"
         );
-
     }
-
 }
 
 /* =========================================================
@@ -1415,49 +1213,34 @@ async function saveInvoice(event) {
 function resetForm() {
 
     editingId = null;
-
     originalRecord = null;
-
     loadedSnapshot = null;
-
     pendingCreateId = null;
 
     $("invoiceForm").reset();
 
     set("editingInvoiceId", "");
-
     set("invoiceDate", today());
 
     $("invoiceDate").readOnly = false;
 
-    set(
-        "invoiceNumber",
-        invoiceNumber(nextSequence(), today())
-    );
+    refreshDraftNumber();
 
     set("dueDate", "");
-
     set("receivedEarlier", 0);
-
     set("amountPaid", 0);
-
     set("discountAmount", 0);
-
     set("invoiceTerms", DEFAULT_TERMS);
 
     $("itemsBody").replaceChildren();
 
     addItem();
 
-    display(
-        "saveInvoiceButton",
-        "Save Invoice"
-    );
+    display("saveInvoiceButton", "Save Invoice");
 
     dirty = false;
 
     updatePreview();
-
 }
 
 async function newInvoice() {
@@ -1476,7 +1259,6 @@ async function newInvoice() {
         top: 0,
         behavior: "smooth"
     });
-
 }
 
 /* =========================================================
@@ -1496,61 +1278,39 @@ async function loadInvoice(id) {
     );
 
     if (!record) {
-
         throw new Error(
             "Invoice could not be found or has been cancelled."
         );
-
     }
 
     const data = normalize(record);
 
     originalRecord = record;
-
     editingId = String(record.id);
-
     loadedSnapshot = JSON.stringify(record);
-
     pendingCreateId = null;
 
     set("editingInvoiceId", editingId);
-
     set("invoiceNumber", data.invoiceNo);
-
     set("invoiceDate", data.invoiceDate);
 
     $("invoiceDate").readOnly = true;
 
     set("dueDate", data.dueDate);
-
     set("issuedBy", data.issuedBy);
-
     set("matterReference", data.matterReference);
-
     set("previousBillNo", data.previousBillNo);
-
     set("clientName", data.clientName);
-
     set("clientPhone", data.clientPhone);
-
     set("clientEmail", data.clientEmail);
-
     set("clientAddress", data.clientAddress);
-
     set("clientGSTIN", data.clientGSTIN);
-
     set("discountAmount", data.discountAmount);
-
     set("receivedEarlier", data.receivedEarlier);
-
     set("amountPaid", data.receivedNow);
-
     set("paymentMode", data.paymentMode);
-
     set("paymentReference", data.paymentReference);
-
     set("invoiceNotes", data.notes);
-
     set("invoiceTerms", data.terms);
 
     $("showPaymentDetails").checked =
@@ -1565,10 +1325,7 @@ async function loadInvoice(id) {
 
     if (!data.items.length) addItem();
 
-    display(
-        "saveInvoiceButton",
-        "Update Invoice"
-    );
+    display("saveInvoiceButton", "Update Invoice");
 
     dirty = false;
 
@@ -1582,7 +1339,6 @@ async function loadInvoice(id) {
     });
 
     return true;
-
 }
 
 /* =========================================================
@@ -1595,11 +1351,9 @@ async function deleteInvoice(id) {
     if (cloudSaving) return;
 
     if (editingId === String(id) && dirty) {
-
         throw new Error(
             "Save or discard your unsaved changes first."
         );
-
     }
 
     await syncCloudData();
@@ -1609,21 +1363,14 @@ async function deleteInvoice(id) {
     );
 
     if (!record) {
-
-        throw new Error(
-            "Invoice is unavailable."
-        );
-
+        throw new Error("Invoice is unavailable.");
     }
 
     const confirmed = await confirmAction(
-
         "Cancel saved invoice?",
-
         "The invoice will be marked as cancelled. " +
         "Its record and invoice number will remain " +
         "preserved in Firebase Cloud."
-
     );
 
     if (!confirmed) return;
@@ -1641,13 +1388,9 @@ async function deleteInvoice(id) {
     try {
 
         await cancelCloudInvoice(
-
             record.id,
-
             reason.trim(),
-
             record.revision
-
         );
 
         cloudRecords = cloudRecords.map(item =>
@@ -1661,48 +1404,34 @@ async function deleteInvoice(id) {
                 }
 
                 : item
-
         );
 
     } finally {
 
         cloudSaving = false;
-
     }
 
     await syncCloudData();
 
     if (editingId === String(id)) {
-
         resetForm();
-
     }
 
     refreshRecords();
 
-    message(
-        "Invoice cancelled. Cloud record preserved."
-    );
-
+    message("Invoice cancelled. Cloud record preserved.");
 }
 
 /* =========================================================
    SAVED INVOICE TABLE
    ========================================================= */
 
-function actionButton(
-    label,
-    callback,
-    extraClass = ""
-) {
+function actionButton(label, callback, extraClass = "") {
 
     const button = document.createElement("button");
 
     button.type = "button";
-
-    button.className =
-        `action-button ${extraClass}`;
-
+    button.className = `action-button ${extraClass}`;
     button.textContent = label;
 
     button.addEventListener(
@@ -1711,7 +1440,6 @@ function actionButton(
     );
 
     return button;
-
 }
 
 function filteredInvoices() {
@@ -1720,9 +1448,7 @@ function filteredInvoices() {
         .trim().toLowerCase();
 
     const status = value("statusFilter");
-
     const year = value("yearFilter");
-
     const sort = value("sortInvoices");
 
     const records = readInvoices().map(record => {
@@ -1733,76 +1459,60 @@ function filteredInvoices() {
             data,
             totals: calculate(data)
         };
-
     });
 
     const filtered = records.filter(({ data, totals }) => {
 
         const searchText = [
-
             data.invoiceNo,
-
             data.clientName,
-
             data.clientPhone,
-
             data.matterReference,
-
             data.previousBillNo
-
         ].join(" ").toLowerCase();
 
         return (
-
             (!query || searchText.includes(query)) &&
-
             (status === "all" || totals.status === status) &&
-
             (
                 year === "all" ||
                 data.invoiceDate.slice(0, 4) === year
             )
-
         );
-
     });
 
     filtered.sort((a, b) => {
 
         if (sort === "amount-high") {
-
             return b.totals.total - a.totals.total;
-
         }
 
         if (sort === "amount-low") {
-
             return a.totals.total - b.totals.total;
-
         }
 
-        if (sort === "oldest") {
-
-            return a.data.invoiceDate.localeCompare(
+        const dateComparison =
+            a.data.invoiceDate.localeCompare(
                 b.data.invoiceDate
             );
 
+        const sequenceComparison =
+            Number(a.data.sequenceNumber || 0) -
+            Number(b.data.sequenceNumber || 0);
+
+        if (sort === "oldest") {
+            return dateComparison || sequenceComparison;
         }
 
-        return b.data.invoiceDate.localeCompare(
-            a.data.invoiceDate
-        );
-
+        return -dateComparison || -sequenceComparison;
     });
 
     return filtered;
-
 }
 
 function renderSavedInvoices() {
 
     const records = filteredInvoices();
-
     const tbody = $("savedInvoicesBody");
 
     tbody.replaceChildren();
@@ -1812,36 +1522,23 @@ function renderSavedInvoices() {
         const row = document.createElement("tr");
 
         const values = [
-
             data.invoiceNo,
-
             formatDate(data.invoiceDate),
-
             data.clientName,
-
             money(totals.total / 100),
-
             money(totals.paid / 100),
-
             money(totals.balance / 100)
-
         ];
 
         for (const text of values) {
 
             const cell = document.createElement("td");
-
             cell.textContent = text;
-
             row.appendChild(cell);
-
         }
 
-        const statusCell =
-            document.createElement("td");
-
-        const badge =
-            document.createElement("span");
+        const statusCell = document.createElement("td");
+        const badge = document.createElement("span");
 
         badge.className =
             `status-badge ${totals.status}`;
@@ -1850,14 +1547,10 @@ function renderSavedInvoices() {
             statusLabels[totals.status];
 
         statusCell.appendChild(badge);
-
         row.appendChild(statusCell);
 
-        const actionsCell =
-            document.createElement("td");
-
-        const actions =
-            document.createElement("div");
+        const actionsCell = document.createElement("td");
+        const actions = document.createElement("div");
 
         actions.className = "invoice-actions";
 
@@ -1871,13 +1564,9 @@ function renderSavedInvoices() {
             actionButton(
                 "Print",
                 async () => {
-
                     if (await loadInvoice(data.id)) {
-
                         await printInvoice();
-
                     }
-
                 }
             ),
 
@@ -1886,27 +1575,19 @@ function renderSavedInvoices() {
                 () => deleteInvoice(data.id),
                 "delete"
             )
-
         );
 
         actionsCell.appendChild(actions);
-
         row.appendChild(actionsCell);
-
         tbody.appendChild(row);
-
     }
 
-    show(
-        "emptyInvoices",
-        records.length === 0
-    );
+    show("emptyInvoices", records.length === 0);
 
     display(
         "invoiceResultCount",
         `${records.length} invoice(s) found`
     );
-
 }
 
 /* =========================================================
@@ -1918,9 +1599,7 @@ function refreshRecords() {
     const records = readInvoices();
 
     let billed = 0;
-
     let received = 0;
-
     let outstanding = 0;
 
     const years = new Set();
@@ -1928,47 +1607,27 @@ function refreshRecords() {
     for (const record of records) {
 
         const data = normalize(record);
-
         const totals = calculate(data);
 
         billed += totals.total;
-
         received += totals.paid;
-
         outstanding += totals.balance;
 
         if (data.invoiceDate) {
-
-            years.add(
-                data.invoiceDate.slice(0, 4)
-            );
-
+            years.add(data.invoiceDate.slice(0, 4));
         }
-
     }
 
     display("totalInvoices", records.length);
-
     display("totalBilled", money(billed / 100));
-
     display("totalReceived", money(received / 100));
+    display("totalOutstanding", money(outstanding / 100));
+    display("storageInvoiceCount", records.length);
 
-    display(
-        "totalOutstanding",
-        money(outstanding / 100)
-    );
-
-    display(
-        "storageInvoiceCount",
-        records.length
-    );
-
-    set("currentSequence", nextSequence());
-
-    set("numberingFormat", "MNM/NNN/YYYY");
+    set("currentSequence", nextSequence(today()));
+    set("numberingFormat", "MNM/MMM/NNN/YYYY");
 
     const yearFilter = $("yearFilter");
-
     const selected = yearFilter.value;
 
     yearFilter.replaceChildren(
@@ -1977,10 +1636,7 @@ function refreshRecords() {
 
     [...years].sort().reverse().forEach(year => {
 
-        yearFilter.add(
-            new Option(year, year)
-        );
-
+        yearFilter.add(new Option(year, year));
     });
 
     yearFilter.value = years.has(selected)
@@ -1988,7 +1644,6 @@ function refreshRecords() {
         : "all";
 
     renderSavedInvoices();
-
 }
 
 /* =========================================================
@@ -2001,43 +1656,31 @@ function activateTab(name) {
 
         const active = tab === name;
 
-        $(tab + "Tab").classList.toggle(
-            "active",
-            active
-        );
+        $(tab + "Tab").classList.toggle("active", active);
 
         $(tab + "Tab").setAttribute(
             "aria-selected",
             String(active)
         );
 
-        $(tab + "Tab").tabIndex =
-            active ? 0 : -1;
+        $(tab + "Tab").tabIndex = active ? 0 : -1;
 
         show(tab + "Panel", active);
-
     }
 
     if (name === "saved") {
-
         refreshRecords();
-
     }
 
     if (name === "settings") {
 
-        set(
-            "currentSequence",
-            nextSequence()
-        );
+        set("currentSequence", nextSequence(today()));
 
         display(
             "storageInvoiceCount",
             readInvoices().length
         );
-
     }
-
 }
 
 async function openTab(name) {
@@ -2050,15 +1693,18 @@ async function openTab(name) {
 
         refreshRecords();
 
+        if (!editingId) {
+            refreshDraftNumber();
+            updatePreview();
+        }
     }
 
     activateTab(name);
-
 }
 
 /* =========================================================
    PRINT AND SAVE PDF
-   Existing A4 design remains controlled by invoice.css.
+   Existing A4 design controlled by invoice.css.
    ========================================================= */
 
 async function printInvoice() {
@@ -2079,7 +1725,6 @@ async function printInvoice() {
         $("saveInvoiceButton").focus();
 
         return;
-
     }
 
     await syncCloudData();
@@ -2093,12 +1738,10 @@ async function printInvoice() {
         !originalRecord ||
         current.revision !== originalRecord.revision
     ) {
-
         throw new Error(
             "Invoice has changed or been cancelled. " +
             "Please reopen it before printing."
         );
-
     }
 
     activateTab("create");
@@ -2106,9 +1749,7 @@ async function printInvoice() {
     updatePreview();
 
     if (document.fonts?.ready) {
-
         await document.fonts.ready;
-
     }
 
     const images = $("invoicePreview")
@@ -2119,13 +1760,9 @@ async function printInvoice() {
         Array.from(images).map(image =>
 
             image.decode
-
                 ? image.decode().catch(() => {})
-
                 : Promise.resolve()
-
         )
-
     );
 
     const oldTitle = document.title;
@@ -2134,15 +1771,10 @@ async function printInvoice() {
         value("invoiceNumber").replaceAll("/", "-");
 
     try {
-
         window.print();
-
     } finally {
-
         document.title = oldTitle;
-
     }
-
 }
 
 /* =========================================================
@@ -2151,30 +1783,23 @@ async function printInvoice() {
 
 function downloadFile(content, filename, type) {
 
-    const blob = new Blob(
-        [content],
-        { type }
-    );
+    const blob = new Blob([content], { type });
 
     const url = URL.createObjectURL(blob);
-
     const link = document.createElement("a");
 
     link.href = url;
-
     link.download = filename;
 
     document.body.appendChild(link);
 
     link.click();
-
     link.remove();
 
     setTimeout(
         () => URL.revokeObjectURL(url),
         1000
     );
-
 }
 
 /* =========================================================
@@ -2186,13 +1811,10 @@ function csvCell(input) {
     let text = String(input ?? "");
 
     if (/^[\s]*[=+\-@]/.test(text)) {
-
         text = "'" + text;
-
     }
 
     return '"' + text.replaceAll('"', '""') + '"';
-
 }
 
 async function exportCSV() {
@@ -2204,76 +1826,48 @@ async function exportCSV() {
     refreshRecords();
 
     const rows = [[
-
         "Invoice Number",
-
         "Invoice Date",
-
         "Client Name",
-
         "Total Amount",
-
         "Received Earlier",
-
         "Received Now",
-
         "Total Received",
-
         "Balance Due",
-
         "Payment Status"
-
     ]];
 
     for (const { data, totals } of filteredInvoices()) {
 
         rows.push([
-
             data.invoiceNo,
-
             data.invoiceDate,
-
             data.clientName,
-
             (totals.total / 100).toFixed(2),
-
             (totals.earlier / 100).toFixed(2),
-
             (totals.now / 100).toFixed(2),
-
             (totals.paid / 100).toFixed(2),
-
             (totals.balance / 100).toFixed(2),
-
             statusLabels[totals.status]
-
         ]);
-
     }
 
     const csv = "\uFEFF" + rows.map(
-
         row => row.map(csvCell).join(",")
-
     ).join("\r\n");
 
     downloadFile(
-
         csv,
-
         `MNM-Invoices-${today()}.csv`,
-
         "text/csv;charset=utf-8"
-
     );
 
     message("Cloud invoice CSV export requested.");
-
 }
 
 /* =========================================================
-   CLOUD BACKUP DOWNLOAD
-   Includes active and cancelled invoices.
+   CLOUD BACKUP
+   Includes monthly counters and cancelled invoices.
    ========================================================= */
 
 async function downloadBackup() {
@@ -2283,47 +1877,30 @@ async function downloadBackup() {
     await syncCloudData();
 
     const backup = {
-
         firm: "MNM Legal Associates",
-
-        backupVersion: 4,
-
+        backupVersion: 5,
         backupDate: new Date().toISOString(),
-
         source: location.origin,
-
         storage: "Firebase Cloud Firestore",
+        numberingFormat: "MNM/MMM/NNN/YYYY",
 
         data: {
-
             invoices: cloudRecords,
-
-            nextSequence: nextSequence(),
-
+            monthlySequences: cloudMonthlySequences,
             paymentSettings: cloudPaymentSettings
-
         }
-
     };
 
     downloadFile(
-
         JSON.stringify(backup, null, 2),
-
         `MNM-Cloud-Backup-${today()}.json`,
-
         "application/json"
-
     );
 
     message(
-
         "Cloud backup download requested. " +
-
         "Keep this confidential file in a secure location."
-
     );
-
 }
 
 /* =========================================================
@@ -2333,21 +1910,14 @@ async function downloadBackup() {
 async function importBackup(event) {
 
     if (event?.target) {
-
         event.target.value = "";
-
     }
 
     window.alert(
-
         "Automatic backup restoration is disabled " +
-
         "to protect centralized invoice records " +
-
         "and invoice numbering."
-
     );
-
 }
 
 /* =========================================================
@@ -2366,24 +1936,10 @@ async function refreshCloudView() {
 
     if (!editingId) {
 
-        set(
-
-            "invoiceNumber",
-
-            invoiceNumber(
-
-                nextSequence(),
-
-                value("invoiceDate")
-
-            )
-
-        );
+        refreshDraftNumber();
 
         updatePreview();
-
     }
-
 }
 
 /* =========================================================
@@ -2393,17 +1949,12 @@ async function refreshCloudView() {
 function bindEvents() {
 
     $("invoiceForm").addEventListener(
-
         "submit",
-
         safeAction(saveInvoice)
-
     );
 
     $("invoiceForm").addEventListener(
-
         "input",
-
         safeAction(event => {
 
             if (cloudSaving) return;
@@ -2411,39 +1962,38 @@ function bindEvents() {
             dirty = true;
 
             if (
-
                 event.target.id === "invoiceDate" &&
-
                 !editingId
-
             ) {
-
-                set(
-
-                    "invoiceNumber",
-
-                    invoiceNumber(
-
-                        nextSequence(),
-
-                        value("invoiceDate")
-
-                    )
-
-                );
-
+                refreshDraftNumber();
             }
 
             updatePreview();
-
         })
+    );
 
+    $("invoiceForm").addEventListener(
+        "change",
+        safeAction(event => {
+
+            if (cloudSaving) return;
+
+            if (
+                event.target.id === "invoiceDate" &&
+                !editingId
+            ) {
+
+                dirty = true;
+
+                refreshDraftNumber();
+
+                updatePreview();
+            }
+        })
     );
 
     $("addItemButton").addEventListener(
-
         "click",
-
         safeAction(() => {
 
             if (cloudSaving) return;
@@ -2453,81 +2003,52 @@ function bindEvents() {
             dirty = true;
 
             updatePreview();
-
         })
-
     );
 
     $("newInvoiceButton").addEventListener(
-
         "click",
-
         safeAction(newInvoice)
-
     );
 
     $("resetInvoiceButton").addEventListener(
-
         "click",
-
         safeAction(newInvoice)
-
     );
 
     for (const id of [
-
         "printInvoiceButton",
-
         "previewPrintButton"
-
     ]) {
 
         $(id).addEventListener(
-
             "click",
-
             safeAction(printInvoice)
-
         );
-
     }
 
     for (const name of [
-
         "create",
-
         "saved",
-
         "settings"
-
     ]) {
 
         $(name + "Tab").addEventListener(
-
             "click",
-
             safeAction(() => openTab(name))
-
         );
-
     }
 
     const tabNames = [
-
         "create",
-
         "saved",
-
         "settings"
-
     ];
 
     tabNames.forEach((name, index) => {
 
         $(name + "Tab").addEventListener(
-
             "keydown",
-
             safeAction(async event => {
 
                 let next;
@@ -2551,7 +2072,6 @@ function bindEvents() {
                 } else {
 
                     return;
-
                 }
 
                 event.preventDefault();
@@ -2559,85 +2079,54 @@ function bindEvents() {
                 await openTab(tabNames[next]);
 
                 $(tabNames[next] + "Tab").focus();
-
             })
-
         );
-
     });
 
     $("invoiceSearch").addEventListener(
-
         "input",
-
         safeAction(renderSavedInvoices)
-
     );
 
     for (const id of [
-
         "statusFilter",
-
         "yearFilter",
-
         "sortInvoices"
-
     ]) {
 
         $(id).addEventListener(
-
             "change",
-
             safeAction(renderSavedInvoices)
-
         );
-
     }
 
     $("paymentSettingsForm").addEventListener(
-
         "submit",
-
         safeAction(savePaymentSettings)
-
     );
 
     $("exportCSVButton").addEventListener(
-
         "click",
-
         safeAction(exportCSV)
-
     );
 
     $("downloadBackupButton").addEventListener(
-
         "click",
-
         safeAction(downloadBackup)
-
     );
 
     $("restoreBackupButton").addEventListener(
-
         "click",
-
         safeAction(() => importBackup())
-
     );
 
     $("backupFileInput").addEventListener(
-
         "change",
-
         safeAction(importBackup)
-
     );
 
     window.addEventListener(
-
         "beforeunload",
-
         event => {
 
             if (dirty || cloudSaving) {
@@ -2645,44 +2134,29 @@ function bindEvents() {
                 event.preventDefault();
 
                 event.returnValue = "";
-
             }
-
         }
-
     );
 
     window.addEventListener(
-
         "focus",
-
         safeAction(refreshCloudView)
-
     );
 
     window.addEventListener(
-
         "online",
-
         safeAction(refreshCloudView)
-
     );
-
 }
 
 /* =========================================================
    FIREBASE AUTHENTICATED INITIALIZATION
-   Called from invoice.html after staff authorization.
    ========================================================= */
 
 export async function initialiseInvoiceSystem(user) {
 
     if (!user || !user.uid) {
-
-        throw new Error(
-            "Authentication is required."
-        );
-
+        throw new Error("Authentication is required.");
     }
 
     if (initialized) return;
@@ -2704,14 +2178,15 @@ export async function initialiseInvoiceSystem(user) {
     initialized = true;
 
     message(
-        "Invoice system connected to Firebase Cloud."
+        "Invoice system connected to Firebase Cloud. " +
+        "Monthly invoice numbering is active."
     );
-
 }
 
 /* =========================================================
    END OF PROFESSIONAL CLOUD INVOICE MANAGEMENT SYSTEM
 
    MNM LEGAL ASSOCIATES
+   Version 5.0
    Justice, Integrity & Excellence
    ========================================================= */
