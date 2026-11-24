@@ -20,9 +20,11 @@ import {
     collection,
     doc,
     getDocFromServer,
-    getDocsFromServer
+    getDocsFromServer,
+    runTransaction,
+    serverTimestamp,
+    setDoc
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
-
 
 /* =========================================================
    STORAGE CONFIGURATION
