@@ -1,0 +1,1996 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <meta name="robots" content="noindex, nofollow">
+
+    <meta name="theme-color" content="#101d30">
+
+    <title>
+        Invoice Migration Centre | MNM Legal Associates
+    </title>
+
+    <link rel="icon" href="/images/logo.png">
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <style>
+
+        :root {
+
+            --navy: #101d30;
+            --navy-dark: #0a1422;
+            --navy-light: #1c2d44;
+            --gold: #c3a16b;
+            --gold-dark: #80612e;
+            --background: #f7f6f2;
+            --white: #ffffff;
+            --text: #263345;
+            --muted: #657184;
+            --border: #e4e1da;
+            --success: #23643c;
+            --warning: #946200;
+            --danger: #a72b2b;
+
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        body {
+
+            margin: 0;
+            font-family: "DM Sans", sans-serif;
+            background: var(--background);
+            color: var(--text);
+
+        }
+
+        a {
+
+            color: inherit;
+            text-decoration: none;
+
+        }
+
+        button {
+
+            font: inherit;
+            cursor: pointer;
+
+        }
+
+        button:disabled {
+
+            opacity: .55;
+            cursor: not-allowed;
+
+        }
+
+        :focus-visible {
+
+            outline: 3px solid var(--gold);
+            outline-offset: 3px;
+
+        }
+
+
+        /* AUTHORIZATION SCREEN */
+
+        .auth-loading {
+
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 25px;
+            text-align: center;
+            background: var(--navy);
+            color: white;
+
+        }
+
+        .auth-loading img {
+
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            padding: 7px;
+            background: white;
+            border-radius: 8px;
+
+        }
+
+        .auth-loading h1 {
+
+            font-family: "Libre Baskerville", serif;
+            font-size: 23px;
+
+        }
+
+        .auth-loading p {
+
+            color: #c5cfdb;
+            font-size: 14px;
+            line-height: 1.8;
+
+        }
+
+        .auth-loading a {
+
+            color: var(--gold);
+            font-size: 13px;
+
+        }
+
+        .spinner {
+
+            width: 32px;
+            height: 32px;
+            margin: 25px auto;
+            border: 3px solid #ffffff25;
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+
+        }
+
+        @keyframes spin {
+
+            to {
+                transform: rotate(360deg);
+            }
+
+        }
+
+
+        /* HEADER */
+
+        .header {
+
+            background: var(--navy);
+            color: white;
+            border-bottom: 3px solid var(--gold);
+
+        }
+
+        .header-inner {
+
+            max-width: 1400px;
+            margin: auto;
+            padding: 18px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+
+        }
+
+        .brand {
+
+            display: flex;
+            align-items: center;
+            gap: 13px;
+
+        }
+
+        .brand img {
+
+            width: 48px;
+            height: 48px;
+            background: white;
+            object-fit: contain;
+            padding: 4px;
+            border-radius: 5px;
+
+        }
+
+        .brand strong {
+
+            display: block;
+            font-family: "Libre Baskerville", serif;
+            font-size: 15px;
+
+        }
+
+        .brand small {
+
+            color: var(--gold);
+            font-size: 9px;
+            letter-spacing: 1.4px;
+
+        }
+
+        .header-actions {
+
+            display: flex;
+            align-items: center;
+            gap: 18px;
+
+        }
+
+        .staff-profile {
+
+            text-align: right;
+
+        }
+
+        .staff-profile strong {
+
+            display: block;
+            font-size: 13px;
+
+        }
+
+        .staff-profile small {
+
+            color: var(--gold);
+            font-size: 11px;
+
+        }
+
+        .logout {
+
+            border: 1px solid #ffffff35;
+            border-radius: 6px;
+            background: transparent;
+            color: white;
+            padding: 10px 15px;
+            font-size: 12px;
+
+        }
+
+
+        /* MAIN CONTENT */
+
+        .container {
+
+            width: 100%;
+            max-width: 1400px;
+            margin: auto;
+            padding: 28px;
+
+        }
+
+        .breadcrumb {
+
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 24px;
+
+        }
+
+        .breadcrumb a {
+
+            color: var(--gold-dark);
+
+        }
+
+        .hero {
+
+            background: linear-gradient(
+                120deg,
+                var(--navy-dark),
+                var(--navy-light)
+            );
+
+            border-left: 4px solid var(--gold);
+            border-radius: 10px;
+            color: white;
+            padding: 35px;
+            margin-bottom: 25px;
+
+        }
+
+        .eyebrow {
+
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--gold);
+
+        }
+
+        .hero h1 {
+
+            font-family: "Libre Baskerville", serif;
+            font-weight: 400;
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.5;
+
+        }
+
+        .hero p {
+
+            color: #c5cfdb;
+            font-size: 13px;
+            line-height: 1.9;
+            max-width: 750px;
+
+        }
+
+
+        /* STATISTICS */
+
+        .stats-grid {
+
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+
+        }
+
+        .stat-card {
+
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 24px;
+
+        }
+
+        .stat-icon {
+
+            width: 45px;
+            height: 45px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: #f3ede2;
+            color: var(--gold-dark);
+            font-size: 19px;
+            margin-bottom: 17px;
+
+        }
+
+        .stat-label {
+
+            color: var(--muted);
+            font-size: 12px;
+
+        }
+
+        .stat-value {
+
+            font-size: 27px;
+            font-weight: 700;
+            color: var(--navy);
+            margin: 9px 0;
+            overflow-wrap: anywhere;
+
+        }
+
+        .stat-caption {
+
+            font-size: 11px;
+            color: var(--muted);
+
+        }
+
+
+        /* PANELS */
+
+        .panel {
+
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 27px;
+            margin-bottom: 22px;
+
+        }
+
+        .panel h2 {
+
+            font-family: "Libre Baskerville", serif;
+            font-size: 19px;
+            line-height: 1.5;
+            margin: 0 0 12px;
+
+        }
+
+        .panel-description {
+
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.8;
+
+        }
+
+        .check-row {
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #eeece7;
+            font-size: 13px;
+
+        }
+
+        .check-row:last-child {
+
+            border-bottom: 0;
+
+        }
+
+        .check-label {
+
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+        }
+
+        .check-label i {
+
+            color: var(--gold-dark);
+            width: 20px;
+
+        }
+
+        .status {
+
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+            text-align: right;
+
+        }
+
+        .status.success {
+
+            color: var(--success);
+
+        }
+
+        .status.warning {
+
+            color: var(--warning);
+
+        }
+
+        .status.error {
+
+            color: var(--danger);
+
+        }
+
+
+        /* ACTION BUTTONS */
+
+        .actions {
+
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 25px;
+
+        }
+
+        .button {
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            border-radius: 6px;
+            padding: 13px 19px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid transparent;
+
+        }
+
+        .button-primary {
+
+            background: var(--navy);
+            color: white;
+
+        }
+
+        .button-primary:hover:not(:disabled) {
+
+            background: var(--navy-light);
+
+        }
+
+        .button-secondary {
+
+            background: white;
+            border-color: var(--border);
+            color: var(--navy);
+
+        }
+
+
+        /* APPLICATION MESSAGES */
+
+        .message {
+
+            padding: 17px 20px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: white;
+            font-size: 13px;
+            line-height: 1.8;
+            margin-bottom: 22px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+
+        }
+
+        .message.success {
+
+            color: var(--success);
+            border-color: #b7d6c0;
+
+        }
+
+        .message.warning {
+
+            color: var(--warning);
+            border-color: #e5cfaa;
+
+        }
+
+        .message.error {
+
+            color: var(--danger);
+            border-color: #e5bcbc;
+
+        }
+
+        .warning-list {
+
+            padding-left: 22px;
+            color: var(--warning);
+            font-size: 13px;
+            line-height: 1.9;
+
+        }
+
+        .warning-list li {
+
+            margin-bottom: 8px;
+
+        }
+
+        .details-row {
+
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 13px 0;
+            border-bottom: 1px solid #eeece7;
+            font-size: 13px;
+
+        }
+
+        .details-row span {
+
+            color: var(--muted);
+
+        }
+
+        .details-row strong {
+
+            text-align: right;
+            overflow-wrap: anywhere;
+
+        }
+
+        .security-note {
+
+            border-left: 3px solid var(--gold);
+            padding: 18px;
+            background: #f7f4ee;
+            border-radius: 5px;
+            font-size: 12px;
+            line-height: 1.9;
+            color: var(--text);
+
+        }
+
+        footer {
+
+            border-top: 1px solid var(--border);
+            padding: 25px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.9;
+
+        }
+
+
+        /* RESPONSIVE DESIGN */
+
+        @media (max-width: 1000px) {
+
+            .stats-grid {
+
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .header-inner {
+
+                padding: 15px;
+
+            }
+
+            .brand strong {
+
+                font-size: 12px;
+
+            }
+
+            .brand small {
+
+                font-size: 8px;
+
+            }
+
+            .brand img {
+
+                width: 38px;
+                height: 38px;
+
+            }
+
+            .staff-profile {
+
+                display: none;
+
+            }
+
+            .logout span {
+
+                display: none;
+
+            }
+
+            .container {
+
+                padding: 16px;
+
+            }
+
+            .hero {
+
+                padding: 24px;
+
+            }
+
+            .stats-grid {
+
+                gap: 12px;
+
+            }
+
+            .stat-card {
+
+                padding: 16px;
+
+            }
+
+            .stat-value {
+
+                font-size: 22px;
+
+            }
+
+            .panel {
+
+                padding: 19px;
+
+            }
+
+            .check-row {
+
+                font-size: 12px;
+
+            }
+
+            .actions .button {
+
+                width: 100%;
+
+            }
+
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *, *::before, *::after {
+
+                animation-duration: .01ms !important;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+
+    <!-- AUTHORIZATION SCREEN -->
+
+    <div id="authLoading" class="auth-loading">
+
+        <div>
+
+            <img src="/images/logo.png"
+                 alt="MNM Legal Associates">
+
+            <h1>MNM Legal Associates</h1>
+
+            <div id="loadingSpinner"
+                 class="spinner"></div>
+
+            <p id="loadingMessage" role="status">
+
+                Verifying administrator authorization...
+
+            </p>
+
+            <a href="/login.html">
+
+                Return to Staff Login
+
+            </a>
+
+            <noscript>
+
+                <p>JavaScript is required.</p>
+
+            </noscript>
+
+        </div>
+
+    </div>
+
+
+    <!-- PROTECTED MIGRATION CENTRE -->
+
+    <div id="protectedContent" hidden>
+
+
+        <header class="header">
+
+            <div class="header-inner">
+
+                <a href="/dashboard.html" class="brand">
+
+                    <img src="/images/logo.png"
+                         alt="MNM Legal Associates">
+
+                    <div>
+
+                        <strong>MNM Legal Associates</strong>
+
+                        <small>OFFICE MANAGEMENT SYSTEM</small>
+
+                    </div>
+
+                </a>
+
+                <div class="header-actions">
+
+                    <div class="staff-profile">
+
+                        <strong id="staffName">
+
+                            Administrator
+
+                        </strong>
+
+                        <small>Administrator Access</small>
+
+                    </div>
+
+                    <button id="logoutButton"
+                            class="logout"
+                            aria-label="Sign out">
+
+                        <i class="fa-solid fa-right-from-bracket"></i>
+
+                        <span>Sign Out</span>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <main class="container">
+
+            <nav class="breadcrumb"
+                 aria-label="Breadcrumb">
+
+                <a href="/dashboard.html">Dashboard</a>
+
+                <i class="fa-solid fa-angle-right"></i>
+
+                <a href="/invoice.html">Invoice Generator</a>
+
+                <i class="fa-solid fa-angle-right"></i>
+
+                <span>Migration Centre</span>
+
+            </nav>
+
+
+            <section class="hero">
+
+                <div class="eyebrow">
+
+                    DATABASE MANAGEMENT
+
+                </div>
+
+                <h1>Invoice Migration Centre</h1>
+
+                <p>
+
+                    Review existing invoice records, verify
+                    invoice numbering and assess readiness
+                    for migration to Cloud Firestore.
+
+                    This assessment does not modify your
+                    existing billing records.
+
+                </p>
+
+            </section>
+
+
+            <div id="appMessage"
+                 class="message"
+                 role="status"
+                 hidden></div>
+
+
+            <!-- STATISTICS -->
+
+            <section class="stats-grid"
+                     aria-label="Migration statistics">
+
+                <article class="stat-card">
+
+                    <div class="stat-icon">
+
+                        <i class="fa-solid fa-file-invoice"></i>
+
+                    </div>
+
+                    <div class="stat-label">
+
+                        Local Invoices
+
+                    </div>
+
+                    <div id="localCount"
+                         class="stat-value">—</div>
+
+                    <div class="stat-caption">
+
+                        Current browser records
+
+                    </div>
+
+                </article>
+
+
+                <article class="stat-card">
+
+                    <div class="stat-icon">
+
+                        <i class="fa-solid fa-cloud"></i>
+
+                    </div>
+
+                    <div class="stat-label">
+
+                        Cloud Invoices
+
+                    </div>
+
+                    <div id="cloudCount"
+                         class="stat-value">—</div>
+
+                    <div class="stat-caption">
+
+                        Firestore records
+
+                    </div>
+
+                </article>
+
+
+                <article class="stat-card">
+
+                    <div class="stat-icon">
+
+                        <i class="fa-solid fa-list-ol"></i>
+
+                    </div>
+
+                    <div class="stat-label">
+
+                        Proposed Next Sequence
+
+                    </div>
+
+                    <div id="nextSequence"
+                         class="stat-value">—</div>
+
+                    <div class="stat-caption">
+
+                        Based on existing local records
+
+                    </div>
+
+                </article>
+
+
+                <article class="stat-card">
+
+                    <div class="stat-icon">
+
+                        <i class="fa-solid fa-database"></i>
+
+                    </div>
+
+                    <div class="stat-label">
+
+                        Cloud Connection
+
+                    </div>
+
+                    <div id="cloudConnection"
+                         class="stat-value">—</div>
+
+                    <div class="stat-caption">
+
+                        Server connectivity
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- MIGRATION ASSESSMENT -->
+
+            <section class="panel">
+
+                <h2>Migration Readiness Assessment</h2>
+
+                <p class="panel-description">
+
+                    Run the assessment to validate your
+                    existing invoice records and verify
+                    database access before migration.
+
+                </p>
+
+
+                <div class="check-row">
+
+                    <div class="check-label">
+
+                        <i class="fa-solid fa-user-shield"></i>
+
+                        Administrator Authorization
+
+                    </div>
+
+                    <span id="adminStatus"
+                          class="status">Pending</span>
+
+                </div>
+
+
+                <div class="check-row">
+
+                    <div class="check-label">
+
+                        <i class="fa-solid fa-file-circle-check"></i>
+
+                        Local Invoice Validation
+
+                    </div>
+
+                    <span id="validationStatus"
+                          class="status">Pending</span>
+
+                </div>
+
+
+                <div class="check-row">
+
+                    <div class="check-label">
+
+                        <i class="fa-solid fa-copy"></i>
+
+                        Local Duplicate Detection
+
+                    </div>
+
+                    <span id="duplicateStatus"
+                          class="status">Pending</span>
+
+                </div>
+
+
+                <div class="check-row">
+
+                    <div class="check-label">
+
+                        <i class="fa-solid fa-list-ol"></i>
+
+                        Serial Number Verification
+
+                    </div>
+
+                    <span id="sequenceStatus"
+                          class="status">Pending</span>
+
+                </div>
+
+
+                <div class="check-row">
+
+                    <div class="check-label">
+
+                        <i class="fa-solid fa-cloud"></i>
+
+                        Cloud Database Connectivity
+
+                    </div>
+
+                    <span id="connectionStatus"
+                          class="status">Pending</span>
+
+                </div>
+
+
+                <div class="check-row">
+
+                    <div class="check-label">
+
+                        <i class="fa-solid fa-building-columns"></i>
+
+                        Payment Settings
+
+                    </div>
+
+                    <span id="paymentStatus"
+                          class="status">Pending</span>
+
+                </div>
+
+
+                <div class="actions">
+
+                    <button id="assessmentButton"
+                            class="button button-primary"
+                            disabled>
+
+                        <i class="fa-solid fa-magnifying-glass"></i>
+
+                        Run Migration Assessment
+
+                    </button>
+
+                    <a href="/invoice.html"
+                       class="button button-secondary">
+
+                        <i class="fa-solid fa-arrow-left"></i>
+
+                        Back to Invoice Generator
+
+                    </a>
+
+                </div>
+
+            </section>
+
+
+            <!-- ASSESSMENT DETAILS -->
+
+            <section id="reportPanel"
+                     class="panel"
+                     hidden>
+
+                <h2>Assessment Report</h2>
+
+                <div class="details-row">
+
+                    <span>Existing Local Invoices</span>
+
+                    <strong id="reportLocalCount">—</strong>
+
+                </div>
+
+                <div class="details-row">
+
+                    <span>Stored Local Sequence</span>
+
+                    <strong id="reportStoredSequence">—</strong>
+
+                </div>
+
+                <div class="details-row">
+
+                    <span>Proposed Next Sequence</span>
+
+                    <strong id="reportNextSequence">—</strong>
+
+                </div>
+
+                <div class="details-row">
+
+                    <span>Existing Cloud Invoices</span>
+
+                    <strong id="reportCloudCount">—</strong>
+
+                </div>
+
+                <div class="details-row">
+
+                    <span>Local Payment Settings</span>
+
+                    <strong id="reportPayment">—</strong>
+
+                </div>
+
+                <div class="details-row">
+
+                    <span>Assessment Date</span>
+
+                    <strong id="reportDate">—</strong>
+
+                </div>
+
+                <div class="details-row">
+
+                    <span>Migration Status</span>
+
+                    <strong>
+
+                        Not Performed
+
+                    </strong>
+
+                </div>
+
+                <div id="warningsPanel" hidden>
+
+                    <h3>Items Requiring Review</h3>
+
+                    <ul id="warningList"
+                        class="warning-list"></ul>
+
+                </div>
+
+            </section>
+
+
+            <!-- DATA PROTECTION -->
+
+            <section class="panel">
+
+                <h2>
+
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                    Data Protection
+
+                </h2>
+
+                <div class="security-note">
+
+                    <strong>Assessment Mode Only</strong>
+
+                    <p>
+
+                        This page reads existing local
+                        invoice records and checks Cloud
+                        Firestore connectivity.
+
+                    </p>
+
+                    <p>
+
+                        No invoice will be uploaded,
+                        overwritten or deleted during
+                        this assessment.
+
+                    </p>
+
+                    <p>
+
+                        Existing local invoice records
+                        remain the primary billing data
+                        until migration and reconciliation
+                        have been completed.
+
+                    </p>
+
+                    <p>
+
+                        Do not clear browser storage or
+                        change invoice numbering during
+                        migration preparation.
+
+                    </p>
+
+                </div>
+
+            </section>
+
+        </main>
+
+
+        <footer>
+
+            &copy; <span id="currentYear"></span>
+
+            MNM Legal Associates.
+
+            <br>
+
+            Justice, Integrity &amp; Excellence
+
+        </footer>
+
+    </div>
+
+
+    <!-- MIGRATION APPLICATION -->
+
+    <script type="module">
+
+        const $ = id => document.getElementById(id);
+
+        let cloudModule = null;
+
+        let logoutInProgress = false;
+
+        let assessmentInProgress = false;
+
+
+        function setText(id, text) {
+
+            $(id).textContent = text ?? "—";
+
+        }
+
+
+        function setStatus(id, text, type = "") {
+
+            const element = $(id);
+
+            element.textContent = text;
+
+            element.className = "status " + type;
+
+        }
+
+
+        function showMessage(text, type = "") {
+
+            const element = $("appMessage");
+
+            element.textContent = text;
+
+            element.className = "message " + type;
+
+            element.hidden = false;
+
+        }
+
+
+        function showLoadingError(text) {
+
+            $("protectedContent").hidden = true;
+
+            $("authLoading").hidden = false;
+
+            $("loadingSpinner").hidden = true;
+
+            setText("loadingMessage", text);
+
+        }
+
+
+        function resetAssessment() {
+
+            $("reportPanel").hidden = true;
+
+            $("warningsPanel").hidden = true;
+
+            $("warningList").replaceChildren();
+
+            $("appMessage").hidden = true;
+
+            [
+
+                "localCount",
+
+                "cloudCount",
+
+                "nextSequence",
+
+                "cloudConnection"
+
+            ].forEach(id => setText(id, "—"));
+
+            [
+
+                "validationStatus",
+
+                "duplicateStatus",
+
+                "sequenceStatus",
+
+                "connectionStatus",
+
+                "paymentStatus"
+
+            ].forEach(id => setStatus(id, "Pending"));
+
+        }
+
+
+        /* DISPLAY ASSESSMENT REPORT */
+
+        function renderReport(report) {
+
+            setText(
+
+                "localCount",
+
+                report.localInvoiceCount
+
+            );
+
+            setText(
+
+                "cloudCount",
+
+                report.cloudInvoiceCount
+
+            );
+
+            setText(
+
+                "nextSequence",
+
+                report.proposedNextSequence
+
+            );
+
+            setText(
+
+                "cloudConnection",
+
+                report.cloudConnected
+                    ? "Connected"
+                    : "Unavailable"
+
+            );
+
+            setText(
+
+                "reportLocalCount",
+
+                report.localInvoiceCount
+
+            );
+
+            setText(
+
+                "reportStoredSequence",
+
+                report.localStoredSequence
+
+            );
+
+            setText(
+
+                "reportNextSequence",
+
+                report.proposedNextSequence
+
+            );
+
+            setText(
+
+                "reportCloudCount",
+
+                report.cloudInvoiceCount
+
+            );
+
+            setText(
+
+                "reportPayment",
+
+                report.localPaymentSettingsAvailable
+                    ? "Available"
+                    : "Not Configured"
+
+            );
+
+            setText(
+
+                "reportDate",
+
+                new Date(report.preparedAt).toLocaleString(
+
+                    "en-IN",
+
+                    { timeZone: "Asia/Kolkata" }
+
+                )
+
+            );
+
+            setStatus(
+
+                "validationStatus",
+
+                "Passed",
+
+                "success"
+
+            );
+
+            setStatus(
+
+                "duplicateStatus",
+
+                "No Local Duplicates Detected",
+
+                "success"
+
+            );
+
+            setStatus(
+
+                "sequenceStatus",
+
+                "Calculated",
+
+                "success"
+
+            );
+
+            setStatus(
+
+                "connectionStatus",
+
+                report.cloudConnected
+                    ? "Connected"
+                    : "Unavailable",
+
+                report.cloudConnected
+                    ? "success"
+                    : "error"
+
+            );
+
+            setStatus(
+
+                "paymentStatus",
+
+                report.localPaymentSettingsAvailable
+                    ? "Available"
+                    : "Not Configured",
+
+                report.localPaymentSettingsAvailable
+                    ? "success"
+                    : "warning"
+
+            );
+
+
+            /* DISPLAY WARNINGS SAFELY */
+
+            const warningList = $("warningList");
+
+            warningList.replaceChildren();
+
+            for (const warning of report.warnings) {
+
+                const item = document.createElement("li");
+
+                item.textContent = warning;
+
+                warningList.appendChild(item);
+
+            }
+
+            $("warningsPanel").hidden =
+
+                report.warnings.length === 0;
+
+            $("reportPanel").hidden = false;
+
+            if (report.warnings.length > 0) {
+
+                showMessage(
+
+                    "Assessment completed. Review the " +
+                    "identified warnings before migration. " +
+                    "No records have been modified.",
+
+                    "warning"
+
+                );
+
+            } else {
+
+                showMessage(
+
+                    "Preliminary assessment completed " +
+                    "successfully. Migration has not yet " +
+                    "been performed.",
+
+                    "success"
+
+                );
+
+            }
+
+        }
+
+
+        /* RUN READ-ONLY ASSESSMENT */
+
+        async function runAssessment() {
+
+            if (
+                assessmentInProgress ||
+                !cloudModule
+            ) return;
+
+            assessmentInProgress = true;
+
+            const button = $("assessmentButton");
+
+            button.disabled = true;
+
+            button.textContent = "Running Assessment...";
+
+            resetAssessment();
+
+            setStatus(
+
+                "adminStatus",
+
+                "Verifying"
+
+            );
+
+            let phase = "authorization";
+
+            try {
+
+                await cloudModule.requireAdministrator();
+
+                setStatus(
+
+                    "adminStatus",
+
+                    "Verified",
+
+                    "success"
+
+                );
+
+                phase = "local";
+
+                const snapshot =
+
+                    cloudModule.captureLocalSnapshot();
+
+                setText(
+
+                    "localCount",
+
+                    snapshot.invoiceCount
+
+                );
+
+                setText(
+
+                    "nextSequence",
+
+                    snapshot.nextSequence
+
+                );
+
+                setStatus(
+
+                    "validationStatus",
+
+                    "Passed",
+
+                    "success"
+
+                );
+
+                setStatus(
+
+                    "duplicateStatus",
+
+                    "No Local Duplicates Detected",
+
+                    "success"
+
+                );
+
+                setStatus(
+
+                    "sequenceStatus",
+
+                    "Calculated",
+
+                    "success"
+
+                );
+
+                setStatus(
+
+                    "paymentStatus",
+
+                    Object.keys(snapshot.paymentSettings).length
+                        ? "Available"
+                        : "Not Configured",
+
+                    Object.keys(snapshot.paymentSettings).length
+                        ? "success"
+                        : "warning"
+
+                );
+
+                phase = "cloud";
+
+                const report =
+
+                    await cloudModule.prepareMigration();
+
+                if (
+
+                    report.localInvoiceCount !==
+                        snapshot.invoiceCount ||
+
+                    report.proposedNextSequence !==
+                        snapshot.nextSequence ||
+
+                    report.localStoredSequence !==
+                        snapshot.storedSequence
+
+                ) {
+
+                    throw new Error(
+
+                        "Local invoice data changed during " +
+                        "assessment. Please run it again."
+
+                    );
+
+                }
+
+                await cloudModule.requireAdministrator();
+
+                renderReport(report);
+
+            } catch (error) {
+
+                console.error(
+
+                    "MNM MIGRATION ASSESSMENT ERROR:",
+
+                    error?.code,
+
+                    error?.message
+
+                );
+
+                if (phase === "authorization") {
+
+                    setStatus(
+
+                        "adminStatus",
+
+                        "Failed",
+
+                        "error"
+
+                    );
+
+                } else if (phase === "local") {
+
+                    setStatus(
+
+                        "validationStatus",
+
+                        "Failed",
+
+                        "error"
+
+                    );
+
+                } else {
+
+                    setText(
+
+                        "cloudConnection",
+
+                        "Unverified"
+
+                    );
+
+                    setStatus(
+
+                        "connectionStatus",
+
+                        "Assessment Failed",
+
+                        "error"
+
+                    );
+
+                }
+
+                showMessage(
+
+                    "Assessment could not be completed.\n" +
+
+                    (error?.message || "Unknown error.") +
+
+                    "\nNo invoice records have been modified.",
+
+                    "error"
+
+                );
+
+            } finally {
+
+                assessmentInProgress = false;
+
+                button.disabled = false;
+
+                button.textContent =
+
+                    "Run Migration Assessment";
+
+            }
+
+        }
+
+
+        /* INITIALIZE ADMINISTRATOR WORKSPACE */
+
+        async function initialiseMigrationCentre() {
+
+            try {
+
+                const {
+
+                    protectPage,
+
+                    logoutUser
+
+                } = await import("./auth.js");
+
+
+                protectPage({
+
+                    contentSelector: "#protectedContent",
+
+                    loadingSelector: "#authLoading",
+
+                    allowedRoles: ["admin"],
+
+                    onAuthenticated: async (user, profile) => {
+
+                        if (
+
+                            !user?.uid ||
+
+                            profile?.uid !== user.uid ||
+
+                            profile?.role !== "admin" ||
+
+                            profile?.active !== true
+
+                        ) {
+
+                            throw new Error(
+
+                                "Administrator access required."
+
+                            );
+
+                        }
+
+                        setText(
+
+                            "staffName",
+
+                            profile.name || "Administrator"
+
+                        );
+
+                        setText(
+
+                            "currentYear",
+
+                            new Intl.DateTimeFormat(
+
+                                "en-IN",
+
+                                {
+
+                                    year: "numeric",
+
+                                    timeZone: "Asia/Kolkata"
+
+                                }
+
+                            ).format(new Date())
+
+                        );
+
+                        setStatus(
+
+                            "adminStatus",
+
+                            "Verified",
+
+                            "success"
+
+                        );
+
+                        cloudModule =
+
+                            await import("./invoice-cloud.js");
+
+                        $("assessmentButton").disabled = false;
+
+                    }
+
+                });
+
+
+                $("assessmentButton").addEventListener(
+
+                    "click",
+
+                    runAssessment
+
+                );
+
+
+                $("logoutButton").addEventListener(
+
+                    "click",
+
+                    async () => {
+
+                        if (logoutInProgress) return;
+
+                        logoutInProgress = true;
+
+                        $("logoutButton").disabled = true;
+
+                        try {
+
+                            const result = await logoutUser();
+
+                            if (!result.success) {
+
+                                showMessage(
+
+                                    result.message,
+
+                                    "error"
+
+                                );
+
+                            }
+
+                        } catch {
+
+                            showMessage(
+
+                                "Unable to sign out. Please try again.",
+
+                                "error"
+
+                            );
+
+                        } finally {
+
+                            logoutInProgress = false;
+
+                            $("logoutButton").disabled = false;
+
+                        }
+
+                    }
+
+                );
+
+            } catch (error) {
+
+                console.error(
+
+                    "MNM MIGRATION INITIALIZATION ERROR:",
+
+                    error?.code,
+
+                    error?.message
+
+                );
+
+                showLoadingError(
+
+                    "Migration Centre is unavailable. " +
+
+                    "Please refresh or return to Staff Login."
+
+                );
+
+            }
+
+        }
+
+
+        initialiseMigrationCentre();
+
+    </script>
+
+</body>
+
+</html>
