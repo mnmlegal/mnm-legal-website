@@ -3988,3 +3988,78 @@ input[type="date"] {
 /* =========================================================
    END OF PREMIUM INVOICE OPTIMIZATION
    ========================================================= */
+/* =========================================================
+   37. PROFESSIONAL TERMS & CONDITIONS FORMATTING
+   ========================================================= */
+
+.invoice-terms {
+
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+
+}
+
+.invoice-terms h3 {
+
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: var(--navy);
+    margin-bottom: 10px;
+
+}
+
+.invoice-terms p {
+
+    font-size: 11px;
+    line-height: 1.65;
+    color: #263345;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    text-align: left;
+
+}
+
+/* PRINT OPTIMIZATION */
+
+@media print {
+
+    .invoice-terms {
+
+        margin-top: 2mm;
+        margin-bottom: 4mm;
+        padding-top: 3mm;
+        border-top: 0.3mm solid #c5c5c5;
+
+    }
+
+    .invoice-terms h3 {
+
+        font-size: 9.5pt;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: #101d30;
+        margin-bottom: 2mm;
+        break-after: avoid;
+
+    }
+
+    .invoice-terms p {
+
+        font-size: 9pt;
+        line-height: 1.45;
+        color: #202733;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        text-align: left;
+        orphans: 2;
+        widows: 2;
+
+    }
+
+}
+
+/* =========================================================
+   END OF TERMS & CONDITIONS FORMATTING
+   ========================================================= */
