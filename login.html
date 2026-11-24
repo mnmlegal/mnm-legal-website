@@ -1,145 +1,1780 @@
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>MNM Admin Login</title>
+    <meta charset="UTF-8">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta name="robots" content="noindex, nofollow">
 
-    body {
-      min-height: 100vh;
-      background: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: "Poppins", sans-serif;
-      padding: 20px;
-    }
+    <meta name="theme-color" content="#101d30">
 
-    .login-box {
-      width: 100%;
-      max-width: 380px;
-      background: #111;
-      padding: 40px;
-      border: 1px solid #d4af37;
-      border-radius: 15px;
-      text-align: center;
-      box-shadow: 0 0 25px rgba(212, 175, 55, 0.15);
-    }
+    <title>Staff Login | MNM Legal Associates</title>
 
-    .login-box img {
-      width: 90px;
-      margin-bottom: 20px;
-    }
+    <link rel="icon" href="/images/logo.png">
 
-    .login-box h2 {
-      color: #d4af37;
-      margin-bottom: 30px;
-      font-size: 26px;
-    }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
 
-    .login-box input {
-      width: 100%;
-      padding: 14px;
-      margin: 10px 0;
-      background: #222;
-      border: 1px solid #444;
-      color: #fff;
-      border-radius: 8px;
-      font-size: 15px;
-      outline: none;
-    }
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com" crossorigin>
 
-    .login-box input:focus {
-      border-color: #d4af37;
-    }
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap"
+          rel="stylesheet">
 
-    .login-box button {
-      width: 100%;
-      padding: 15px;
-      margin-top: 14px;
-      background: #d4af37;
-      color: #000;
-      font-weight: 700;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-    }
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
-    .login-box button:hover {
-      background: #f0c94b;
-    }
+    <style>
 
-    #error {
-      color: #ff4d4d;
-      margin-top: 15px;
-      font-size: 14px;
-      min-height: 20px;
-    }
+        /* =============================================
+           MNM LEGAL ASSOCIATES
+           STAFF LOGIN SYSTEM
+           ============================================= */
 
-    @media (max-width: 480px) {
-      .login-box {
-        padding: 30px 22px;
-      }
+        :root {
 
-      .login-box h2 {
-        font-size: 22px;
-      }
-    }
-  </style>
+            --navy: #101d30;
+            --navy-dark: #0a1422;
+            --navy-light: #1c2d44;
+            --gold: #c3a16b;
+            --gold-dark: #80612e;
+            --white: #ffffff;
+            --ivory: #f7f6f2;
+            --text: #263345;
+            --muted: #657184;
+            --border: #dedfe3;
+            --danger: #a72b2b;
+            --success: #23643c;
+
+        }
+
+        * {
+
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+
+        }
+
+        [hidden] {
+
+            display: none !important;
+
+        }
+
+        body {
+
+            min-height: 100vh;
+            min-height: 100dvh;
+            font-family: "DM Sans", sans-serif;
+            background: var(--ivory);
+            color: var(--text);
+
+        }
+
+        button,
+        input {
+
+            font: inherit;
+
+        }
+
+        button,
+        a,
+        input {
+
+            -webkit-tap-highlight-color: transparent;
+
+        }
+
+        a {
+
+            text-decoration: none;
+            color: inherit;
+
+        }
+
+        button {
+
+            cursor: pointer;
+
+        }
+
+        button:disabled {
+
+            opacity: 0.65;
+            cursor: not-allowed;
+
+        }
+
+        :focus-visible {
+
+            outline: 3px solid var(--gold);
+            outline-offset: 4px;
+
+        }
+
+
+        /* =============================================
+           MAIN LAYOUT
+           ============================================= */
+
+        .login-layout {
+
+            display: grid;
+            grid-template-columns: 44% 56%;
+            min-height: 100vh;
+            min-height: 100dvh;
+
+        }
+
+
+        /* =============================================
+           BRAND PANEL
+           ============================================= */
+
+        .brand-panel {
+
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            padding: 55px;
+            color: var(--white);
+
+            background:
+                linear-gradient(
+                    150deg,
+                    rgba(10, 20, 34, 0.96),
+                    rgba(16, 29, 48, 0.94)
+                ),
+                url("/images/hero-bg.jpg")
+                center / cover no-repeat;
+
+        }
+
+        .brand-panel::before {
+
+            content: "";
+            position: absolute;
+            inset: 24px;
+            border: 1px solid rgba(195, 161, 107, 0.20);
+            pointer-events: none;
+
+        }
+
+        .brand-header {
+
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+
+        }
+
+        .brand-logo {
+
+            width: 66px;
+            height: 66px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: var(--white);
+            padding: 5px;
+
+        }
+
+        .brand-name {
+
+            font-family: "Libre Baskerville", serif;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.5;
+
+        }
+
+        .brand-subtitle {
+
+            font-size: 11px;
+            color: var(--gold);
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+
+        }
+
+        .brand-content {
+
+            position: relative;
+            padding: 65px 0;
+
+        }
+
+        .brand-eyebrow {
+
+            color: var(--gold);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 24px;
+
+        }
+
+        .brand-content h1 {
+
+            font-family: "Libre Baskerville", serif;
+            font-size: clamp(30px, 3.4vw, 52px);
+            line-height: 1.4;
+            font-weight: 400;
+            margin-bottom: 24px;
+
+        }
+
+        .gold-line {
+
+            width: 65px;
+            height: 2px;
+            background: var(--gold);
+            margin: 24px 0;
+
+        }
+
+        .brand-description {
+
+            color: #c5cfdb;
+            font-size: 15px;
+            line-height: 1.9;
+            max-width: 440px;
+
+        }
+
+        .brand-features {
+
+            margin-top: 35px;
+            display: grid;
+            gap: 20px;
+
+        }
+
+        .brand-feature {
+
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #e3e8ef;
+            font-size: 14px;
+
+        }
+
+        .brand-feature i {
+
+            color: var(--gold);
+            width: 24px;
+            text-align: center;
+
+        }
+
+        .brand-footer {
+
+            position: relative;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            padding-top: 24px;
+
+        }
+
+        .brand-footer p {
+
+            font-size: 13px;
+            color: var(--gold);
+            letter-spacing: 1px;
+
+        }
+
+        .brand-footer small {
+
+            display: block;
+            margin-top: 8px;
+            font-size: 11px;
+            color: #aebacb;
+
+        }
+
+
+        /* =============================================
+           LOGIN PANEL
+           ============================================= */
+
+        .login-panel {
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 55px 30px;
+            position: relative;
+
+        }
+
+        .back-home {
+
+            position: absolute;
+            top: 30px;
+            right: 35px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+
+        }
+
+        .back-home:hover {
+
+            color: var(--gold-dark);
+
+        }
+
+        .login-wrapper {
+
+            width: 100%;
+            max-width: 440px;
+
+        }
+
+        .login-card {
+
+            background: var(--white);
+            padding: 42px;
+            border: 1px solid #e7e4dd;
+            border-radius: 12px;
+            box-shadow: 0 15px 50px rgba(16,29,48,0.06);
+
+        }
+
+        .login-header {
+
+            text-align: center;
+            margin-bottom: 30px;
+
+        }
+
+        .security-icon {
+
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: #f5efe4;
+            color: var(--gold-dark);
+            font-size: 25px;
+
+        }
+
+        .login-header h2 {
+
+            font-family: "Libre Baskerville", serif;
+            font-size: 27px;
+            color: var(--navy);
+            margin-bottom: 10px;
+
+        }
+
+        .login-header p {
+
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.7;
+
+        }
+
+        .restricted-label {
+
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--gold-dark);
+            margin-top: 15px;
+
+        }
+
+
+        /* =============================================
+           FORM ELEMENTS
+           ============================================= */
+
+        .form-group {
+
+            margin-bottom: 21px;
+
+        }
+
+        .form-group label {
+
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 9px;
+            color: var(--navy);
+
+        }
+
+        .input-wrapper {
+
+            position: relative;
+
+        }
+
+        .input-icon {
+
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8993a1;
+            font-size: 14px;
+            pointer-events: none;
+
+        }
+
+        .form-input {
+
+            width: 100%;
+            min-height: 51px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 13px 43px;
+            background: #ffffff;
+            color: var(--text);
+            font-size: 14px;
+            transition: border-color 0.2s,
+                        box-shadow 0.2s;
+
+        }
+
+        .form-input::placeholder {
+
+            color: #929aa6;
+
+        }
+
+        .form-input:focus {
+
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(195,161,107,0.15);
+
+        }
+
+        .password-toggle {
+
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            width: 42px;
+            height: 42px;
+            border-radius: 5px;
+
+        }
+
+        .password-toggle:hover {
+
+            color: var(--navy);
+
+        }
+
+        .form-options {
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 25px;
+
+        }
+
+        .remember-option {
+
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+            cursor: pointer;
+
+        }
+
+        .remember-option input {
+
+            width: 15px;
+            height: 15px;
+            accent-color: var(--navy);
+
+        }
+
+        .forgot-password {
+
+            background: none;
+            border: none;
+            color: var(--gold-dark);
+            font-size: 12px;
+            font-weight: 700;
+
+        }
+
+        .forgot-password:hover {
+
+            text-decoration: underline;
+
+        }
+
+
+        /* =============================================
+           BUTTONS
+           ============================================= */
+
+        .login-button {
+
+            width: 100%;
+            min-height: 52px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            background: var(--navy);
+            color: var(--white);
+            border: 1px solid var(--navy);
+            border-radius: 7px;
+            font-size: 14px;
+            font-weight: 700;
+            transition: background 0.2s;
+
+        }
+
+        .login-button:hover:not(:disabled) {
+
+            background: var(--navy-light);
+
+        }
+
+        .secondary-button {
+
+            width: 100%;
+            min-height: 45px;
+            margin-top: 12px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: var(--white);
+            color: var(--navy);
+            font-size: 13px;
+            font-weight: 600;
+
+        }
+
+
+        /* =============================================
+           STATUS MESSAGES
+           ============================================= */
+
+        .message {
+
+            padding: 12px 14px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+
+        }
+
+        .message.error {
+
+            background: #fff1f1;
+            border-color: #edcccc;
+            color: var(--danger);
+
+        }
+
+        .message.success {
+
+            background: #edf8f0;
+            border-color: #c9e5d1;
+            color: var(--success);
+
+        }
+
+        .message.info {
+
+            background: #edf2f8;
+            border-color: #d6e0ec;
+            color: var(--navy);
+
+        }
+
+        .spinner {
+
+            width: 17px;
+            height: 17px;
+            border: 2px solid rgba(255,255,255,0.35);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+
+        }
+
+        @keyframes spin {
+
+            to {
+
+                transform: rotate(360deg);
+
+            }
+
+        }
+
+
+        /* =============================================
+           LOGIN FOOTER
+           ============================================= */
+
+        .card-footer {
+
+            margin-top: 26px;
+            padding-top: 22px;
+            border-top: 1px solid #e9e7e1;
+            text-align: center;
+
+        }
+
+        .card-footer p {
+
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.8;
+
+        }
+
+        .card-footer i {
+
+            color: var(--gold-dark);
+            margin-right: 4px;
+
+        }
+
+        .support-link {
+
+            display: inline-block;
+            margin-top: 10px;
+            color: var(--gold-dark);
+            font-size: 12px;
+            font-weight: 600;
+
+        }
+
+        .page-footer {
+
+            margin-top: 25px;
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.8;
+            color: var(--muted);
+
+        }
+
+        .footer-links {
+
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin-top: 8px;
+
+        }
+
+        .footer-links a:hover {
+
+            color: var(--gold-dark);
+
+        }
+
+        .noscript-warning {
+
+            padding: 15px;
+            background: #fff1f1;
+            color: var(--danger);
+            text-align: center;
+
+        }
+
+
+        /* =============================================
+           RESPONSIVE DESIGN
+           ============================================= */
+
+        @media (max-width: 1050px) {
+
+            .brand-panel {
+
+                padding: 40px;
+
+            }
+
+            .login-layout {
+
+                grid-template-columns: 42% 58%;
+
+            }
+
+        }
+
+        @media (max-width: 800px) {
+
+            .login-layout {
+
+                grid-template-columns: 1fr;
+
+            }
+
+            .brand-panel {
+
+                padding: 24px 25px;
+
+            }
+
+            .brand-panel::before {
+
+                inset: 10px;
+
+            }
+
+            .brand-logo {
+
+                width: 48px;
+                height: 48px;
+
+            }
+
+            .brand-name {
+
+                font-size: 16px;
+
+            }
+
+            .brand-subtitle {
+
+                font-size: 9px;
+
+            }
+
+            .brand-content,
+            .brand-footer {
+
+                display: none;
+
+            }
+
+            .login-panel {
+
+                padding: 70px 20px 35px;
+
+            }
+
+            .back-home {
+
+                top: 24px;
+                right: 22px;
+
+            }
+
+            .login-card {
+
+                padding: 30px;
+
+            }
+
+        }
+
+        @media (max-width: 380px) {
+
+            .login-panel {
+
+                padding-left: 14px;
+                padding-right: 14px;
+
+            }
+
+            .login-card {
+
+                padding: 23px;
+
+            }
+
+            .login-header h2 {
+
+                font-size: 23px;
+
+            }
+
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+
+            }
+
+        }
+
+    </style>
+
 </head>
 
 <body>
-  <div class="login-box">
-    <img src="images/logo.png" alt="MNM Legal Associates Logo">
 
-    <h2>MNM Admin Panel</h2>
+    <noscript>
 
-    <input type="text" id="username" placeholder="Username" autocomplete="username">
-    <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+        <div class="noscript-warning">
 
-    <button type="button" id="loginBtn">LOGIN</button>
+            JavaScript is required to use the staff
+            authentication system.
 
-    <p id="error"></p>
-  </div>
+        </div>
 
-  <script>
-    const username = document.getElementById("username");
-    const password = document.getElementById("password");
-    const loginBtn = document.getElementById("loginBtn");
-    const error = document.getElementById("error");
+    </noscript>
 
-    function login() {
-      const user = username.value.trim();
-      const pass = password.value.trim();
 
-      if (user === "mnmlegal" && pass === "@mnmlegal108") {
-        localStorage.setItem("loggedIn", "yes");
-        window.location.href = "dashboard.html";
-      } else {
-        error.textContent = "Invalid username or password";
-      }
-    }
+    <main class="login-layout">
 
-    loginBtn.addEventListener("click", login);
 
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        login();
-      }
-    });
-  </script>
+        <!-- =========================================
+             BRAND PANEL
+             ========================================= -->
+
+        <section class="brand-panel"
+                 aria-label="MNM Legal Associates">
+
+            <a href="/" class="brand-header">
+
+                <img src="/images/logo.png"
+                     alt="MNM Legal Associates Logo"
+                     class="brand-logo">
+
+                <div>
+
+                    <div class="brand-name">
+                        MNM Legal Associates
+                    </div>
+
+                    <div class="brand-subtitle">
+                        Advocates &amp; Legal Consultants
+                    </div>
+
+                </div>
+
+            </a>
+
+
+            <div class="brand-content">
+
+                <div class="brand-eyebrow">
+                    Internal Office Portal
+                </div>
+
+                <h1>
+
+                    Professional Practice.<br>
+                    Organised Management.
+
+                </h1>
+
+                <div class="gold-line"></div>
+
+                <p class="brand-description">
+
+                    A dedicated workspace for authorised
+                    members of MNM Legal Associates to
+                    manage internal office operations,
+                    professional billing and administrative
+                    records.
+
+                </p>
+
+                <div class="brand-features">
+
+                    <div class="brand-feature">
+
+                        <i class="fa-solid fa-shield-halved"
+                           aria-hidden="true"></i>
+
+                        <span>Staff Authentication</span>
+
+                    </div>
+
+                    <div class="brand-feature">
+
+                        <i class="fa-solid fa-file-invoice"
+                           aria-hidden="true"></i>
+
+                        <span>Professional Billing</span>
+
+                    </div>
+
+                    <div class="brand-feature">
+
+                        <i class="fa-solid fa-briefcase"
+                           aria-hidden="true"></i>
+
+                        <span>Office Administration</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="brand-footer">
+
+                <p>Justice, Integrity &amp; Excellence</p>
+
+                <small>
+
+                    Chandkheda, Ahmedabad, Gujarat, India
+
+                </small>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             LOGIN PANEL
+             ========================================= -->
+
+        <section class="login-panel"
+                 aria-label="Staff authentication">
+
+            <a href="/" class="back-home">
+
+                <i class="fa-solid fa-arrow-left"
+                   aria-hidden="true"></i>
+
+                Back to Website
+
+            </a>
+
+
+            <div class="login-wrapper">
+
+                <div class="login-card">
+
+
+                    <!-- LOGIN HEADER -->
+
+                    <header class="login-header">
+
+                        <div class="security-icon">
+
+                            <i class="fa-solid fa-shield-halved"
+                               aria-hidden="true"></i>
+
+                        </div>
+
+                        <h2 id="formTitle">Staff Login</h2>
+
+                        <p id="formDescription">
+
+                            Sign in to access the internal
+                            office management portal.
+
+                        </p>
+
+                        <div class="restricted-label">
+
+                            <i class="fa-solid fa-lock"
+                               aria-hidden="true"></i>
+
+                            Authorised Personnel Only
+
+                        </div>
+
+                    </header>
+
+
+                    <!-- STATUS MESSAGE -->
+
+                    <div id="statusMessage"
+                         class="message"
+                         role="status"
+                         aria-live="polite"
+                         hidden>
+
+                    </div>
+
+
+                    <!-- INITIAL SESSION CHECK -->
+
+                    <div id="authLoading"
+                         class="message info"
+                         role="status">
+
+                        Initialising authentication.
+                        Please wait...
+
+                    </div>
+
+
+                    <!-- LOGIN FORM -->
+
+                    <form id="loginForm" hidden>
+
+                        <div class="form-group">
+
+                            <label for="email">
+
+                                Email Address
+
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-regular fa-envelope input-icon"
+                                   aria-hidden="true"></i>
+
+                                <input type="email"
+                                       id="email"
+                                       name="email"
+                                       class="form-input"
+                                       placeholder="Enter registered email"
+                                       autocomplete="username"
+                                       autocapitalize="none"
+                                       spellcheck="false"
+                                       required>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="password">
+
+                                Password
+
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-solid fa-lock input-icon"
+                                   aria-hidden="true"></i>
+
+                                <input type="password"
+                                       id="password"
+                                       name="password"
+                                       class="form-input"
+                                       placeholder="Enter your password"
+                                       autocomplete="current-password"
+                                       required>
+
+                                <button type="button"
+                                        id="togglePassword"
+                                        class="password-toggle"
+                                        aria-label="Show password"
+                                        aria-pressed="false">
+
+                                    <i class="fa-regular fa-eye"
+                                       id="passwordIcon"
+                                       aria-hidden="true"></i>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-options">
+
+                            <label class="remember-option">
+
+                                <input type="checkbox"
+                                       id="rememberMe">
+
+                                Remember me
+
+                            </label>
+
+                            <button type="button"
+                                    id="forgotPassword"
+                                    class="forgot-password">
+
+                                Forgot Password?
+
+                            </button>
+
+                        </div>
+
+
+                        <button type="submit"
+                                id="loginButton"
+                                class="login-button">
+
+                            <i class="fa-solid fa-right-to-bracket"
+                               aria-hidden="true"></i>
+
+                            <span>Sign In</span>
+
+                        </button>
+
+                    </form>
+
+
+                    <!-- PASSWORD RESET FORM -->
+
+                    <form id="resetForm" hidden>
+
+                        <div class="form-group">
+
+                            <label for="resetEmail">
+
+                                Registered Email Address
+
+                            </label>
+
+                            <div class="input-wrapper">
+
+                                <i class="fa-regular fa-envelope input-icon"
+                                   aria-hidden="true"></i>
+
+                                <input type="email"
+                                       id="resetEmail"
+                                       name="resetEmail"
+                                       class="form-input"
+                                       placeholder="Enter registered email"
+                                       autocomplete="email"
+                                       autocapitalize="none"
+                                       spellcheck="false"
+                                       required>
+
+                            </div>
+
+                        </div>
+
+
+                        <button type="submit"
+                                id="resetButton"
+                                class="login-button">
+
+                            <i class="fa-solid fa-paper-plane"
+                               aria-hidden="true"></i>
+
+                            <span>Send Reset Link</span>
+
+                        </button>
+
+
+                        <button type="button"
+                                id="backToLogin"
+                                class="secondary-button">
+
+                            Back to Login
+
+                        </button>
+
+                    </form>
+
+
+                    <!-- CARD FOOTER -->
+
+                    <footer class="card-footer">
+
+                        <p>
+
+                            <i class="fa-solid fa-lock"
+                               aria-hidden="true"></i>
+
+                            This portal is intended for
+                            authorised staff members only.
+
+                        </p>
+
+                        <a href="mailto:mnmlegal.in@gmail.com"
+                           class="support-link">
+
+                            Contact Administrator
+
+                        </a>
+
+                    </footer>
+
+                </div>
+
+
+                <!-- PAGE FOOTER -->
+
+                <footer class="page-footer">
+
+                    <p>
+
+                        &copy; <span id="currentYear">2026</span>
+                        MNM Legal Associates.
+                        All Rights Reserved.
+
+                    </p>
+
+                    <div class="footer-links">
+
+                        <a href="/privacy.html">
+                            Privacy Policy
+                        </a>
+
+                        <a href="/terms.html">
+                            Terms of Use
+                        </a>
+
+                    </div>
+
+                </footer>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =============================================
+         FIREBASE AUTHENTICATION INTEGRATION
+         ============================================= -->
+
+    <script type="module">
+
+        const loginForm =
+            document.getElementById("loginForm");
+
+        const resetForm =
+            document.getElementById("resetForm");
+
+        const emailInput =
+            document.getElementById("email");
+
+        const passwordInput =
+            document.getElementById("password");
+
+        const rememberMe =
+            document.getElementById("rememberMe");
+
+        const loginButton =
+            document.getElementById("loginButton");
+
+        const resetButton =
+            document.getElementById("resetButton");
+
+        const resetEmail =
+            document.getElementById("resetEmail");
+
+        const statusMessage =
+            document.getElementById("statusMessage");
+
+        const authLoading =
+            document.getElementById("authLoading");
+
+        const formTitle =
+            document.getElementById("formTitle");
+
+        const formDescription =
+            document.getElementById("formDescription");
+
+        const togglePassword =
+            document.getElementById("togglePassword");
+
+        const passwordIcon =
+            document.getElementById("passwordIcon");
+
+        const forgotPassword =
+            document.getElementById("forgotPassword");
+
+        const backToLogin =
+            document.getElementById("backToLogin");
+
+
+        let busy = false;
+
+
+        /* =========================================
+           CURRENT YEAR
+           ========================================= */
+
+        document.getElementById("currentYear")
+            .textContent = new Date().getFullYear();
+
+
+        /* =========================================
+           STATUS MESSAGES
+           ========================================= */
+
+        function showMessage(message, type = "info") {
+
+            statusMessage.textContent = message;
+
+            statusMessage.className =
+                "message " + type;
+
+            statusMessage.hidden = false;
+
+        }
+
+        function clearMessage() {
+
+            statusMessage.textContent = "";
+
+            statusMessage.hidden = true;
+
+        }
+
+
+        /* =========================================
+           BUTTON LOADING STATE
+           ========================================= */
+
+        function setButtonLoading(
+            button,
+            loading,
+            normalText,
+            normalIcon
+        ) {
+
+            button.disabled = loading;
+
+            button.setAttribute(
+                "aria-busy",
+                String(loading)
+            );
+
+            button.replaceChildren();
+
+            const icon = document.createElement(
+                loading ? "span" : "i"
+            );
+
+            icon.className = loading
+                ? "spinner"
+                : normalIcon;
+
+            icon.setAttribute("aria-hidden", "true");
+
+            const text = document.createElement("span");
+
+            text.textContent = loading
+                ? "Please wait..."
+                : normalText;
+
+            button.append(icon, text);
+
+        }
+
+
+        /* =========================================
+           SHOW / HIDE PASSWORD
+           ========================================= */
+
+        togglePassword.addEventListener("click", () => {
+
+            const isHidden =
+                passwordInput.type === "password";
+
+            passwordInput.type = isHidden
+                ? "text"
+                : "password";
+
+            passwordIcon.className = isHidden
+                ? "fa-regular fa-eye-slash"
+                : "fa-regular fa-eye";
+
+            togglePassword.setAttribute(
+                "aria-label",
+                isHidden
+                    ? "Hide password"
+                    : "Show password"
+            );
+
+            togglePassword.setAttribute(
+                "aria-pressed",
+                String(isHidden)
+            );
+
+        });
+
+
+        /* =========================================
+           SWITCH TO PASSWORD RESET
+           ========================================= */
+
+        forgotPassword.addEventListener("click", () => {
+
+            if (busy) return;
+
+            clearMessage();
+
+            resetEmail.value = emailInput.value.trim();
+
+            passwordInput.value = "";
+
+            passwordInput.type = "password";
+
+            passwordIcon.className =
+                "fa-regular fa-eye";
+
+            togglePassword.setAttribute(
+                "aria-label",
+                "Show password"
+            );
+
+            togglePassword.setAttribute(
+                "aria-pressed",
+                "false"
+            );
+
+            loginForm.hidden = true;
+
+            resetForm.hidden = false;
+
+            formTitle.textContent = "Reset Password";
+
+            formDescription.textContent =
+                "Enter your registered email address " +
+                "to request a password reset link.";
+
+            resetEmail.focus();
+
+        });
+
+
+        /* =========================================
+           RETURN TO LOGIN
+           ========================================= */
+
+        backToLogin.addEventListener("click", () => {
+
+            if (busy) return;
+
+            clearMessage();
+
+            resetForm.hidden = true;
+
+            loginForm.hidden = false;
+
+            formTitle.textContent = "Staff Login";
+
+            formDescription.textContent =
+                "Sign in to access the internal " +
+                "office management portal.";
+
+            emailInput.focus();
+
+        });
+
+
+        /* =========================================
+           LOAD FIREBASE AUTHENTICATION MODULE
+           ========================================= */
+
+        async function initialiseAuthentication() {
+
+            try {
+
+                const {
+
+                    loginUser,
+                    resetPassword,
+                    watchAuthState,
+                    AUTH_CONFIG
+
+                } = await import("./auth.js");
+
+
+                /* =================================
+                   EXISTING SESSION VERIFICATION
+                   ================================= */
+
+                watchAuthState(
+
+                    (user) => {
+
+                        if (user) {
+
+                            loginForm.hidden = true;
+
+                            resetForm.hidden = true;
+
+                            authLoading.hidden = false;
+
+                            authLoading.textContent =
+                                "Redirecting to dashboard...";
+
+                            window.location.replace(
+                                AUTH_CONFIG.dashboardPage
+                            );
+
+                            return;
+
+                        }
+
+                        authLoading.hidden = true;
+
+                        if (resetForm.hidden) {
+
+                            loginForm.hidden = false;
+
+                        }
+
+                    },
+
+                    () => {
+
+                        authLoading.hidden = true;
+
+                        loginForm.hidden = true;
+
+                        resetForm.hidden = true;
+
+                        showMessage(
+                            "Authentication could not be " +
+                            "initialised. Please refresh " +
+                            "the page.",
+                            "error"
+                        );
+
+                    }
+
+                );
+
+
+                /* =================================
+                   LOGIN FORM SUBMISSION
+                   ================================= */
+
+                loginForm.addEventListener(
+                    "submit",
+                    async (event) => {
+
+                        event.preventDefault();
+
+                        if (busy) return;
+
+                        clearMessage();
+
+                        busy = true;
+
+                        setButtonLoading(
+                            loginButton,
+                            true
+                        );
+
+                        try {
+
+                            const result = await loginUser(
+
+                                emailInput.value.trim(),
+
+                                passwordInput.value,
+
+                                rememberMe.checked
+
+                            );
+
+                            if (result.success) {
+
+                                passwordInput.value = "";
+
+                                showMessage(
+
+                                    "Login successful. " +
+                                    "Redirecting to dashboard...",
+
+                                    "success"
+
+                                );
+
+                                window.location.replace(
+                                    AUTH_CONFIG.dashboardPage
+                                );
+
+                                return;
+
+                            }
+
+                            showMessage(
+                                result.message,
+                                "error"
+                            );
+
+                            passwordInput.value = "";
+
+                            passwordInput.focus();
+
+                        } catch {
+
+                            showMessage(
+
+                                "Unable to sign in. " +
+                                "Please try again.",
+
+                                "error"
+
+                            );
+
+                        } finally {
+
+                            busy = false;
+
+                            setButtonLoading(
+
+                                loginButton,
+
+                                false,
+
+                                "Sign In",
+
+                                "fa-solid fa-right-to-bracket"
+
+                            );
+
+                        }
+
+                    }
+
+                );
+
+
+                /* =================================
+                   PASSWORD RESET SUBMISSION
+                   ================================= */
+
+                resetForm.addEventListener(
+                    "submit",
+                    async (event) => {
+
+                        event.preventDefault();
+
+                        if (busy) return;
+
+                        clearMessage();
+
+                        busy = true;
+
+                        backToLogin.disabled = true;
+
+                        setButtonLoading(
+                            resetButton,
+                            true
+                        );
+
+                        try {
+
+                            const result =
+                                await resetPassword(
+
+                                    resetEmail.value.trim()
+
+                                );
+
+                            showMessage(
+
+                                result.message,
+
+                                result.success
+                                    ? "success"
+                                    : "error"
+
+                            );
+
+                        } catch {
+
+                            showMessage(
+
+                                "Unable to process your " +
+                                "request. Please try again.",
+
+                                "error"
+
+                            );
+
+                        } finally {
+
+                            busy = false;
+
+                            backToLogin.disabled = false;
+
+                            setButtonLoading(
+
+                                resetButton,
+
+                                false,
+
+                                "Send Reset Link",
+
+                                "fa-solid fa-paper-plane"
+
+                            );
+
+                        }
+
+                    }
+
+                );
+
+            } catch (error) {
+
+                authLoading.hidden = true;
+
+                loginForm.hidden = true;
+
+                resetForm.hidden = true;
+
+                showMessage(
+
+                    "The authentication service is " +
+                    "currently unavailable. Please " +
+                    "refresh the page or contact " +
+                    "the administrator.",
+
+                    "error"
+
+                );
+
+            }
+
+        }
+
+
+        initialiseAuthentication();
+
+    </script>
+
 </body>
+
 </html>
