@@ -4063,3 +4063,31 @@ input[type="date"] {
 /* =========================================================
    END OF TERMS & CONDITIONS FORMATTING
    ========================================================= */
+/* =========================================================
+   REMOVE AUTOMATIC BROWSER PRINT HEADERS AND FOOTERS
+   ========================================================= */
+
+@page {
+
+    size: A4 portrait;
+    margin: 0;
+
+}
+
+@media print {
+
+    html,
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .invoice-paper {
+        width: 100% !important;
+        max-width: 210mm !important;
+        padding: 10mm 12mm !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+}
