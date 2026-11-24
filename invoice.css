@@ -4091,3 +4091,51 @@ input[type="date"] {
     }
 
 }
+/* =========================================================
+   FINAL A4 PRINT WIDTH & MARGIN CORRECTION
+   ========================================================= */
+
+@page {
+    size: A4 portrait;
+    margin: 0;
+}
+
+@media print {
+
+    html,
+    body {
+        width: 210mm !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .invoice-paper {
+        display: block !important;
+        width: 210mm !important;
+        max-width: none !important;
+        min-height: 0 !important;
+        height: auto !important;
+
+        margin: 0 !important;
+        padding: 12mm 10mm !important;
+
+        box-sizing: border-box !important;
+        border: none !important;
+        box-shadow: none !important;
+
+        transform: none !important;
+        overflow: visible !important;
+    }
+
+    .invoice-items-table,
+    .invoice-letterhead,
+    .invoice-information,
+    .invoice-totals-section,
+    .invoice-terms,
+    .invoice-paper-footer {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+}
