@@ -61,7 +61,7 @@ let currentStaffProfile = null;
    ========================================================= */
 
 function getAuthErrorMessage(error) {
-
+console.error("MNM AUTH ERROR:", error?.code, error?.message);
     switch (error?.code) {
 
         case "auth/invalid-email":
