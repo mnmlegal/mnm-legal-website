@@ -1,9 +1,7 @@
-
 /* =========================================================
    MNM LEGAL ASSOCIATES
    CENTRAL FIREBASE CONFIGURATION
-   Version 2.0
-
+   Version 2.1
    Justice, Integrity & Excellence
    ========================================================= */
 
@@ -22,13 +20,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
 
-/* =========================================================
-   FIREBASE PROJECT CONFIGURATION
-   ========================================================= */
+/* FIREBASE PROJECT CONFIGURATION */
 
 const firebaseConfig = {
 
-    apiKey: "PASTE_YOUR_EXISTING_FIREBASE_API_KEY_HERE",
+    apiKey: "COPY_ACTUAL_API_KEY_FROM_FIREBASE",
 
     authDomain: "mnm-legal-associates.firebaseapp.com",
 
@@ -43,34 +39,26 @@ const firebaseConfig = {
 };
 
 
-/* =========================================================
-   INITIALIZE FIREBASE APPLICATION
-   ========================================================= */
+/* INITIALIZE FIREBASE */
 
 const app = getApps().length
     ? getApp()
     : initializeApp(firebaseConfig);
 
 
-/* =========================================================
-   FIREBASE AUTHENTICATION
-   ========================================================= */
+/* FIREBASE AUTHENTICATION */
 
 const auth = getAuth(app);
 
 auth.languageCode = "en";
 
 
-/* =========================================================
-   CLOUD FIRESTORE DATABASE
-   ========================================================= */
+/* CLOUD FIRESTORE DATABASE */
 
 const db = getFirestore(app);
 
 
-/* =========================================================
-   DATABASE COLLECTION REFERENCES
-   ========================================================= */
+/* DATABASE COLLECTIONS */
 
 const COLLECTIONS = Object.freeze({
 
@@ -95,9 +83,7 @@ const COLLECTIONS = Object.freeze({
 });
 
 
-/* =========================================================
-   STAFF ACCESS ROLES
-   ========================================================= */
+/* STAFF ACCESS ROLES */
 
 const ROLES = Object.freeze({
 
@@ -110,9 +96,7 @@ const ROLES = Object.freeze({
 });
 
 
-/* =========================================================
-   EXPORT FIREBASE SERVICES
-   ========================================================= */
+/* EXPORT FIREBASE SERVICES */
 
 export {
 
@@ -127,9 +111,3 @@ export {
     ROLES
 
 };
-
-
-/* =========================================================
-   END OF CONFIGURATION
-   MNM LEGAL ASSOCIATES
-   ========================================================= */
