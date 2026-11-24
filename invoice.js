@@ -1,44 +1,37 @@
 
 /* =========================================================
    MNM LEGAL ASSOCIATES
-   PROFESSIONAL INVOICE MANAGEMENT SYSTEM
-   Version 3.0
+   PROFESSIONAL CLOUD INVOICE MANAGEMENT SYSTEM
+   Version 4.0
    Justice, Integrity & Excellence
    ========================================================= */
+
 import {
     createCloudInvoice,
     updateCloudInvoice,
     fetchCentralInvoices,
     getCentralSequence,
     getCentralPaymentSettings,
-    saveCentralPaymentSettings
+    saveCentralPaymentSettings,
+    cancelCloudInvoice
 } from "./invoice-cloud.js";
+
+/* =========================================================
+   APPLICATION STATE
+   ========================================================= */
 
 let cloudRecords = [];
 let cloudSequence = 1;
 let cloudPaymentSettings = {};
 let pendingCreateId = null;
 let cloudSaving = false;
-
-async function syncCloudData() {
-
-    const [records, sequence, settings] =
-        await Promise.all([
-            fetchCentralInvoices(),
-            getCentralSequence(),
-            getCentralPaymentSettings()
-        ]);
-
-    cloudRecords = records;
-    cloudSequence = sequence;
-    cloudPaymentSettings = settings;
-
-}
-const KEYS = {
-    invoices: "mnmSavedBills",
-    sequence: "mnmNextInvoiceNumber",
-    payment: "mnmFirmPaymentSettings"
-};
+let initialized = false;
+let editingId = null;
+let originalRecord = null;
+let paymentSettings = {};
+let dirty = false;
+let loadedSnapshot = null;
+let syncPromise = null;
 
 const $ = id => document.getElementById(id);
 
@@ -69,16 +62,80 @@ const statusLabels = {
     unpaid: "Unpaid"
 };
 
-let initialized = false;
-let editingId = null;
-let originalRecord = null;
-let paymentSettings = {};
-let dirty = false;
-let loadedSnapshot = null;
+/* =========================================================
+   CLOUD SYNCHRONIZATION
+   ========================================================= */
 
+async function syncCloudData() {
+
+    if (syncPromise) return syncPromise;
+
+    syncPromise = (async () => {
+
+        const [records, sequence, settings] =
+            await Promise.all([
+                fetchCentralInvoices(),
+                getCentralSequence(),
+                getCentralPaymentSettings()
+            ]);
+
+        if (!Array.isArray(records)) {
+            throw new Error("Invalid cloud invoice records.");
+        }
+
+        if (
+            !Number.isSafeInteger(sequence) ||
+            sequence < 1
+        ) {
+            throw new Error("Invalid cloud invoice sequence.");
+        }
+
+        const ids = new Set();
+        const numbers = new Set();
+
+        for (const record of records) {
+
+            if (
+                !record ||
+                !record.id ||
+                typeof record.invoiceNo !== "string" ||
+                !Array.isArray(record.items)
+            ) {
+                throw new Error("Invalid cloud invoice record.");
+            }
+
+            if (
+                ids.has(String(record.id)) ||
+                numbers.has(record.invoiceNo)
+            ) {
+                throw new Error("Duplicate cloud invoice detected.");
+            }
+
+            ids.add(String(record.id));
+            numbers.add(record.invoiceNo);
+
+            calculate(normalize(record));
+
+        }
+
+        if (cloudSaving) return;
+
+        cloudRecords = records;
+        cloudSequence = Math.max(cloudSequence, sequence);
+        cloudPaymentSettings = settings || {};
+
+    })();
+
+    try {
+        await syncPromise;
+    } finally {
+        syncPromise = null;
+    }
+
+}
 
 /* =========================================================
-   STORAGE & EXISTING RECORD COMPATIBILITY
+   NUMERICAL UTILITIES
    ========================================================= */
 
 function numeric(input) {
@@ -107,6 +164,10 @@ function paise(input) {
 
 }
 
+/* =========================================================
+   CLOUD RECORD ACCESS
+   ========================================================= */
+
 function readInvoices() {
 
     return cloudRecords.filter(
@@ -115,58 +176,13 @@ function readInvoices() {
 
 }
 
-    const ids = new Set();
-
-    for (const record of records) {
-
-        if (
-            !record ||
-            typeof record !== "object" ||
-            record.id == null ||
-            typeof record.invoiceNo !== "string" ||
-            !record.invoiceNo.trim() ||
-            !Array.isArray(record.items)
-        ) {
-            throw new Error(
-                "An existing invoice has an unsupported format."
-            );
-        }
-
-        const id = String(record.id);
-
-        if (ids.has(id)) {
-            throw new Error("Duplicate invoice record IDs detected.");
-        }
-
-        ids.add(id);
-
-    }
-
-    return records;
-
-}
-
 function readSequence() {
 
-    const raw = localStorage.getItem(KEYS.sequence);
-
-    if (raw === null) return 1;
-
-    if (!/^\d+$/.test(raw)) {
-        throw new Error("Existing invoice sequence is invalid.");
-    }
-
-    const number = Number(raw);
-
-    if (!Number.isSafeInteger(number) || number < 1) {
-        throw new Error("Existing invoice sequence is invalid.");
-    }
-
-    return number;
+    return cloudSequence;
 
 }
 
-function nextSequence(records = readInvoices()) {
+function nextSequence(records = cloudRecords) {
 
     let sequence = readSequence();
 
@@ -189,7 +205,7 @@ function nextSequence(records = readInvoices()) {
     }
 
     if (!Number.isSafeInteger(sequence)) {
-        throw new Error("Invoice sequence exceeds supported limit.");
+        throw new Error("Invalid invoice sequence.");
     }
 
     return sequence;
@@ -208,45 +224,50 @@ function invoiceNumber(sequence, date) {
 
 function readPaymentSettings() {
 
-    const raw = localStorage.getItem(KEYS.payment);
-
-    if (!raw) return {};
-
-    const data = JSON.parse(raw);
-
-    if (!data || typeof data !== "object" || Array.isArray(data)) {
-        throw new Error("Invalid payment settings.");
-    }
-
-    return data;
+    return cloudPaymentSettings;
 
 }
 
+/* =========================================================
+   DEFAULT TERMS AND CONDITIONS
+   ========================================================= */
+
+const DEFAULT_TERMS = [
+
+    "1. Professional fees are exclusive of court fees, government fees, stamp duty, registration charges, applicable taxes and other statutory levies, which shall be charged separately, wherever applicable.",
+
+    "2. All expenses towards documentation, photocopying, notarisation, certified copies, postal charges, process fees and other incidental or out-of-pocket expenses shall be borne separately by the Client.",
+
+    "3. Fees for court appearances, additional proceedings, appeals, execution proceedings or any other legal services not specifically covered under this invoice shall be charged separately.",
+
+    "4. Professional fees earned for services rendered shall be non-refundable. Voluntary withdrawal of proceedings, change of advocate, discontinuation of legal services by the Client or settlement between the parties shall not, by itself, constitute grounds for a refund.",
+
+    "5. Professional fees are payable as mutually agreed. Engagement of legal services does not constitute any assurance or guarantee of a favourable outcome in any legal proceeding."
+
+].join("\n\n");
 
 /* =========================================================
-   LEGACY RECORD NORMALIZATION
-   Original stored records are not automatically rewritten.
+   RECORD NORMALIZATION
    ========================================================= */
 
 function normalize(record) {
 
     const items = record.items.map(item => ({
+
         description: String(
             item.description ?? item.particular ?? ""
         ),
-        quantity: numeric(item.quantity ?? item.qty ?? 1),
+
+        quantity: numeric(
+            item.quantity ?? item.qty ?? 1
+        ),
+
         rate: numeric(item.rate ?? 0)
+
     }));
 
-    const earlier = numeric(record.receivedEarlier ?? 0);
-
-    const now = numeric(
-        record.receivedNow ??
-        record.amountPaid ??
-        0
-    );
-
     return {
+
         ...record,
 
         id: String(record.id),
@@ -259,7 +280,8 @@ function normalize(record) {
 
         previousBillNo: record.previousBillNo || "",
 
-        issuedBy: record.issuedBy || "MNM Legal Associates",
+        issuedBy:
+            record.issuedBy || "MNM Legal Associates",
 
         matterReference: record.matterReference || "",
 
@@ -278,11 +300,18 @@ function normalize(record) {
 
         items,
 
-        discountAmount: numeric(record.discountAmount ?? 0),
+        discountAmount:
+            numeric(record.discountAmount ?? 0),
 
-        receivedEarlier: earlier,
+        receivedEarlier:
+            numeric(record.receivedEarlier ?? 0),
 
-        receivedNow: now,
+        receivedNow:
+            numeric(
+                record.receivedNow ??
+                record.amountPaid ??
+                0
+            ),
 
         paymentMode: record.paymentMode || "",
 
@@ -292,32 +321,15 @@ function normalize(record) {
 
         terms: record.terms ?? DEFAULT_TERMS,
 
-        showPaymentDetails: Boolean(record.showPaymentDetails),
+        showPaymentDetails:
+            Boolean(record.showPaymentDetails),
 
-        showSignature: record.showSignature !== false
+        showSignature:
+            record.showSignature !== false
 
     };
 
 }
-
-
-/* =========================================================
-   DEFAULT INVOICE TERMS
-   ========================================================= */
-
-const DEFAULT_TERMS = [
-
-    "1. Professional fees are exclusive of court fees, government fees, stamp duty, registration charges, applicable taxes and other statutory levies, which shall be charged separately, wherever applicable.",
-
-    "2. All expenses towards documentation, photocopying, notarisation, certified copies, postal charges, process fees and other incidental or out-of-pocket expenses shall be borne separately by the Client.",
-
-    "3. Fees for court appearances, additional proceedings, appeals, execution proceedings or any other legal services not specifically covered under this invoice shall be charged separately.",
-
-    "4. Professional fees earned for services rendered shall be non-refundable. Voluntary withdrawal of proceedings, change of advocate, discontinuation of legal services by the Client or settlement between the parties shall not, by itself, constitute grounds for a refund.",
-
-    "5. Professional fees are payable as mutually agreed. Engagement of legal services does not constitute any assurance or guarantee of a favourable outcome in any legal proceeding."
-
-].join("\n\n");
 
 /* =========================================================
    DATE UTILITIES
@@ -345,7 +357,6 @@ function formatDate(date) {
 
 }
 
-
 /* =========================================================
    APPLICATION MESSAGES
    ========================================================= */
@@ -354,7 +365,8 @@ function message(text, type = "success") {
 
     const element = $("appMessage");
 
-    element.className = `app-message no-print ${type}`;
+    element.className =
+        `app-message no-print ${type}`;
 
     element.textContent = text;
 
@@ -363,6 +375,8 @@ function message(text, type = "success") {
 }
 
 function handleError(error) {
+
+    console.error("MNM Invoice Error:", error);
 
     message(
         error?.message || "An unexpected error occurred.",
@@ -389,7 +403,6 @@ function safeAction(action) {
 
 }
 
-
 /* =========================================================
    CONFIRMATION DIALOG
    ========================================================= */
@@ -405,6 +418,7 @@ function confirmAction(title, text) {
     return new Promise(resolve => {
 
         display("confirmationTitle", title);
+
         display("confirmationMessage", text);
 
         dialog.returnValue = "cancel";
@@ -419,7 +433,9 @@ function confirmAction(title, text) {
 
         dialog.addEventListener(
             "close",
-            () => resolve(dialog.returnValue === "confirm"),
+            () => resolve(
+                dialog.returnValue === "confirm"
+            ),
             { once: true }
         );
 
@@ -431,6 +447,8 @@ function confirmAction(title, text) {
 
 async function allowDiscard() {
 
+    if (cloudSaving) return false;
+
     if (!dirty) return true;
 
     return confirmAction(
@@ -440,9 +458,8 @@ async function allowDiscard() {
 
 }
 
-
 /* =========================================================
-   ADD LEGACY FIELDS TO THE NEW HTML
+   EXISTING INVOICE HTML COMPATIBILITY
    ========================================================= */
 
 function insertLegacyFields() {
@@ -452,59 +469,75 @@ function insertLegacyFields() {
     paid.previousElementSibling.textContent =
         "Received Now (₹)";
 
-    const earlierGroup = document.createElement("div");
+    if (!$("receivedEarlier")) {
 
-    earlierGroup.className = "form-group";
+        const earlierGroup =
+            document.createElement("div");
 
-    earlierGroup.innerHTML = `
-        <label for="receivedEarlier">
-            Received Earlier (₹)
-        </label>
-        <input type="number"
-               id="receivedEarlier"
-               min="0"
-               step="0.01"
-               value="0">
-    `;
+        earlierGroup.className = "form-group";
 
-    paid.closest(".form-group").before(earlierGroup);
+        earlierGroup.innerHTML = `
+            <label for="receivedEarlier">
+                Received Earlier (₹)
+            </label>
+            <input type="number"
+                   id="receivedEarlier"
+                   min="0"
+                   step="0.01"
+                   value="0">
+        `;
 
-    const referenceGroup = document.createElement("div");
+        paid.closest(".form-group").before(earlierGroup);
 
-    referenceGroup.className = "form-group full-width";
+    }
 
-    referenceGroup.innerHTML = `
-        <label for="previousBillNo">
-            Previous Bill / Reference Number
-        </label>
-        <input type="text"
-               id="previousBillNo"
-               maxlength="200"
-               placeholder="Optional previous invoice reference">
-    `;
+    if (!$("previousBillNo")) {
 
-    $("matterReference")
-        .closest(".form-group")
-        .after(referenceGroup);
+        const referenceGroup =
+            document.createElement("div");
 
-    const earlierLine = document.createElement("div");
+        referenceGroup.className =
+            "form-group full-width";
 
-    earlierLine.className = "total-line";
+        referenceGroup.innerHTML = `
+            <label for="previousBillNo">
+                Previous Bill / Reference Number
+            </label>
+            <input type="text"
+                   id="previousBillNo"
+                   maxlength="200"
+                   placeholder="Optional previous invoice reference">
+        `;
 
-    earlierLine.innerHTML = `
-        <span>Received Earlier</span>
-        <strong id="previewEarlier">₹0.00</strong>
-    `;
+        $("matterReference")
+            .closest(".form-group")
+            .after(referenceGroup);
 
-    const receivedLine = $("previewPaid").parentElement;
+    }
 
-    receivedLine.querySelector("span").textContent =
-        "Received Now";
+    if (!$("previewEarlier")) {
 
-    receivedLine.before(earlierLine);
+        const earlierLine =
+            document.createElement("div");
+
+        earlierLine.className = "total-line";
+
+        earlierLine.innerHTML = `
+            <span>Received Earlier</span>
+            <strong id="previewEarlier">₹0.00</strong>
+        `;
+
+        const receivedLine =
+            $("previewPaid").parentElement;
+
+        receivedLine.querySelector("span").textContent =
+            "Received Now";
+
+        receivedLine.before(earlierLine);
+
+    }
 
 }
-
 
 /* =========================================================
    FEE PARTICULARS
@@ -528,6 +561,8 @@ function addItem(item = {}) {
 
     row.querySelector(".remove-item-button")
         .addEventListener("click", safeAction(() => {
+
+            if (cloudSaving) return;
 
             if ($("itemsBody").rows.length <= 1) {
 
@@ -554,26 +589,28 @@ function addItem(item = {}) {
 
 function collectItems() {
 
-    return Array.from($("itemsBody").rows).map(row => ({
-        description: row.querySelector(
-            ".item-description"
-        ).value.trim(),
+    return Array.from($("itemsBody").rows)
+        .map(row => ({
 
-        quantity: numeric(
-            row.querySelector(".item-quantity").value
-        ),
+            description: row.querySelector(
+                ".item-description"
+            ).value.trim(),
 
-        rate: numeric(
-            row.querySelector(".item-rate").value
-        )
-    }));
+            quantity: numeric(
+                row.querySelector(".item-quantity").value
+            ),
+
+            rate: numeric(
+                row.querySelector(".item-rate").value
+            )
+
+        }));
 
 }
 
-
 /* =========================================================
    FINANCIAL CALCULATIONS
-   All monetary totals calculated in integer paise.
+   All amounts calculated in integer paise.
    ========================================================= */
 
 function calculate(data) {
@@ -640,7 +677,6 @@ function calculate(data) {
     };
 
 }
-
 
 /* =========================================================
    INDIAN AMOUNT IN WORDS
@@ -716,16 +752,15 @@ function amountInWords(amountPaise) {
 
 }
 
-
 /* =========================================================
-   COLLECT CURRENT INVOICE
+   COLLECT INVOICE DATA
    ========================================================= */
 
 function collectInvoice() {
 
     return {
 
-        id: editingId || crypto.randomUUID(),
+        id: editingId || pendingCreateId || crypto.randomUUID(),
 
         invoiceNo: value("invoiceNumber"),
 
@@ -735,45 +770,59 @@ function collectInvoice() {
 
         issuedBy: value("issuedBy"),
 
-        matterReference: value("matterReference").trim(),
+        matterReference:
+            value("matterReference").trim(),
 
-        previousBillNo: value("previousBillNo").trim(),
+        previousBillNo:
+            value("previousBillNo").trim(),
 
-        clientName: value("clientName").trim(),
+        clientName:
+            value("clientName").trim(),
 
-        clientPhone: value("clientPhone").trim(),
+        clientPhone:
+            value("clientPhone").trim(),
 
-        clientEmail: value("clientEmail").trim(),
+        clientEmail:
+            value("clientEmail").trim(),
 
-        clientAddress: value("clientAddress").trim(),
+        clientAddress:
+            value("clientAddress").trim(),
 
-        clientGSTIN: value("clientGSTIN")
-            .trim().toUpperCase(),
+        clientGSTIN:
+            value("clientGSTIN").trim().toUpperCase(),
 
         items: collectItems(),
 
-        discountAmount: numeric(value("discountAmount")),
+        discountAmount:
+            numeric(value("discountAmount")),
 
-        receivedEarlier: numeric(value("receivedEarlier")),
+        receivedEarlier:
+            numeric(value("receivedEarlier")),
 
-        receivedNow: numeric(value("amountPaid")),
+        receivedNow:
+            numeric(value("amountPaid")),
 
-        paymentMode: value("paymentMode"),
+        paymentMode:
+            value("paymentMode"),
 
-        paymentReference: value("paymentReference").trim(),
+        paymentReference:
+            value("paymentReference").trim(),
 
-        notes: value("invoiceNotes").trim(),
+        notes:
+            value("invoiceNotes").trim(),
 
-        terms: value("invoiceTerms").trim(),
+        terms:
+            value("invoiceTerms").trim(),
 
-        showPaymentDetails: $("showPaymentDetails").checked,
+        showPaymentDetails:
+            $("showPaymentDetails").checked,
 
-        showSignature: $("showSignature").checked
+        showSignature:
+            $("showSignature").checked
 
     };
 
 }
-
 
 /* =========================================================
    LIVE INVOICE PREVIEW
@@ -785,12 +834,13 @@ function updatePreview() {
 
     const totals = calculate(data);
 
-    Array.from($("itemsBody").rows).forEach((row, index) => {
+    Array.from($("itemsBody").rows)
+        .forEach((row, index) => {
 
-        row.querySelector(".item-amount").textContent =
-            money(totals.lines[index].amount / 100);
+            row.querySelector(".item-amount").textContent =
+                money(totals.lines[index].amount / 100);
 
-    });
+        });
 
     const outputs = {
 
@@ -824,7 +874,10 @@ function updatePreview() {
 
     }
 
-    set("paymentStatus", statusLabels[totals.status]);
+    set(
+        "paymentStatus",
+        statusLabels[totals.status]
+    );
 
     display(
         "previewPaymentStatus",
@@ -834,7 +887,10 @@ function updatePreview() {
     $("previewPaymentStatus").className =
         `payment-status ${totals.status}`;
 
-    display("previewInvoiceNumber", data.invoiceNo);
+    display(
+        "previewInvoiceNumber",
+        data.invoiceNo
+    );
 
     display(
         "previewInvoiceDate",
@@ -846,9 +902,15 @@ function updatePreview() {
         formatDate(data.dueDate)
     );
 
-    show("previewDueDateRow", Boolean(data.dueDate));
+    show(
+        "previewDueDateRow",
+        Boolean(data.dueDate)
+    );
 
-    display("previewIssuedBy", data.issuedBy);
+    display(
+        "previewIssuedBy",
+        data.issuedBy
+    );
 
     display(
         "previewMatterReference",
@@ -929,41 +991,74 @@ function updatePreview() {
 
     show(
         "previewPaymentRecord",
-        Boolean(data.paymentMode || data.paymentReference)
+        Boolean(
+            data.paymentMode ||
+            data.paymentReference
+        )
     );
 
     display("previewNotes", data.notes);
 
-    show("previewNotesSection", Boolean(data.notes));
+    show(
+        "previewNotesSection",
+        Boolean(data.notes)
+    );
 
     display("previewTerms", data.terms);
 
-    show("previewTermsSection", Boolean(data.terms));
+    show(
+        "previewTermsSection",
+        Boolean(data.terms)
+    );
 
-    show("previewSignatureSection", data.showSignature);
+    show(
+        "previewSignatureSection",
+        data.showSignature
+    );
 
-    renderPaymentDetails(data.showPaymentDetails);
+    renderPaymentDetails(
+        data.showPaymentDetails
+    );
 
     return totals;
 
 }
 
-
 /* =========================================================
-   FIRM PAYMENT DETAILS
+   CENTRALIZED FIRM PAYMENT DETAILS
    ========================================================= */
 
 const paymentFields = {
 
-    firmAccountName: ["accountName", "previewAccountName", "Account Holder"],
+    firmAccountName: [
+        "accountName",
+        "previewAccountName",
+        "Account Holder"
+    ],
 
-    firmBankName: ["bankName", "previewBankName", "Bank"],
+    firmBankName: [
+        "bankName",
+        "previewBankName",
+        "Bank"
+    ],
 
-    firmAccountNumber: ["accountNumber", "previewAccountNumber", "Account No."],
+    firmAccountNumber: [
+        "accountNumber",
+        "previewAccountNumber",
+        "Account No."
+    ],
 
-    firmIFSC: ["ifsc", "previewIFSC", "IFSC"],
+    firmIFSC: [
+        "ifsc",
+        "previewIFSC",
+        "IFSC"
+    ],
 
-    firmUPI: ["upi", "previewUPI", "UPI ID"]
+    firmUPI: [
+        "upi",
+        "previewUPI",
+        "UPI ID"
+    ]
 
 };
 
@@ -994,7 +1089,9 @@ function renderPaymentDetails(visible) {
 
 function loadPaymentSettings() {
 
-    paymentSettings = readPaymentSettings();
+    paymentSettings = {
+        ...readPaymentSettings()
+    };
 
     for (const [id, [key]]
         of Object.entries(paymentFields)) {
@@ -1005,9 +1102,11 @@ function loadPaymentSettings() {
 
 }
 
-function savePaymentSettings(event) {
+async function savePaymentSettings(event) {
 
     event.preventDefault();
+
+    if (cloudSaving) return;
 
     const settings = {};
 
@@ -1027,19 +1126,35 @@ function savePaymentSettings(event) {
         throw new Error("Please enter a valid IFSC code.");
     }
 
-    localStorage.setItem(
-        KEYS.payment,
-        JSON.stringify(settings)
-    );
+    cloudSaving = true;
 
-    paymentSettings = settings;
+    const form = $("paymentSettingsForm");
 
-    updatePreview();
+    form.inert = true;
 
-    message("Firm payment details saved successfully.");
+    try {
+
+        await saveCentralPaymentSettings(settings);
+
+        cloudPaymentSettings = settings;
+
+        paymentSettings = settings;
+
+        updatePreview();
+
+        message(
+            "Firm payment details saved to Firebase Cloud."
+        );
+
+    } finally {
+
+        form.inert = false;
+
+        cloudSaving = false;
+
+    }
 
 }
-
 
 /* =========================================================
    INVOICE VALIDATION
@@ -1071,9 +1186,11 @@ function validateInvoice() {
         data.dueDate &&
         data.dueDate < data.invoiceDate
     ) {
+
         throw new Error(
             "Due date cannot precede invoice date."
         );
+
     }
 
     if (
@@ -1082,28 +1199,35 @@ function validateInvoice() {
             !item.description || item.quantity <= 0
         )
     ) {
+
         throw new Error(
             "Please enter valid fee particulars."
         );
+
     }
 
     if (totals.subtotal <= 0) {
+
         throw new Error(
             "Invoice amount must be greater than zero."
         );
+
     }
 
     if (totals.discount > totals.subtotal) {
+
         throw new Error(
             "Discount cannot exceed the subtotal."
         );
+
     }
 
     if (totals.paid > totals.total) {
+
         throw new Error(
-            "Total payments exceed the invoice amount. " +
-            "Please verify the payment entries."
+            "Total payments exceed the invoice amount."
         );
+
     }
 
     if (
@@ -1111,48 +1235,32 @@ function validateInvoice() {
         !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/
             .test(data.clientGSTIN)
     ) {
-        throw new Error("Please verify the GSTIN format.");
+
+        throw new Error(
+            "Please verify the GSTIN format."
+        );
+
     }
 
     return data;
 
 }
 
-
 /* =========================================================
-   STORAGE WRITE LOCK
-   Prevent simultaneous writes across supported browser tabs.
-   ========================================================= */
-
-async function withStorageLock(action) {
-
-    if (!navigator.locks?.request) {
-
-        throw new Error(
-            "This browser does not support safe invoice " +
-            "write locking. Please use an updated browser."
-        );
-
-    }
-
-    return navigator.locks.request(
-        "mnm-invoice-storage-v3",
-        { mode: "exclusive" },
-        action
-    );
-
-}
-
-
-/* =========================================================
-   SAVE INVOICE
+   CLOUD INVOICE SAVING
    ========================================================= */
 
 async function saveInvoice(event) {
 
     event.preventDefault();
 
+    if (cloudSaving) return;
+
     const button = $("saveInvoiceButton");
+
+    const form = $("invoiceForm");
+
+    cloudSaving = true;
 
     button.disabled = true;
 
@@ -1160,166 +1268,148 @@ async function saveInvoice(event) {
 
         const data = validateInvoice();
 
-        await withStorageLock(() => {
+        const isEditing = editingId !== null;
 
-            const records = readInvoices();
+        const payload = {
 
-            const isEditing = editingId !== null;
+            ...data,
 
-            let index = -1;
+            clientMobile: data.clientPhone,
 
-            if (isEditing) {
+            amountPaid:
+                data.receivedEarlier +
+                data.receivedNow,
 
-                index = records.findIndex(
-                    record => String(record.id) === editingId
-                );
+            items: data.items.map(item => ({
 
-                if (index < 0) {
-                    throw new Error(
-                        "This invoice no longer exists."
-                    );
-                }
+                ...item,
 
-                if (
-                    JSON.stringify(records[index]) !==
-                    loadedSnapshot
-                ) {
-                    throw new Error(
-                        "This invoice was changed elsewhere. " +
-                        "Please reopen it before saving."
-                    );
-                }
+                particular: item.description,
 
-                data.invoiceNo = records[index].invoiceNo;
+                qty: item.quantity
 
-                data.id = records[index].id;
+            }))
 
-            } else {
+        };
 
-                const sequence = nextSequence(records);
+        form.inert = true;
 
-                data.invoiceNo = invoiceNumber(
-                    sequence,
-                    data.invoiceDate
-                );
+        display(
+            "saveInvoiceButton",
+            "Saving to Cloud..."
+        );
 
-            }
+        let saved;
 
-            if (records.some(record =>
-                record.invoiceNo === data.invoiceNo &&
-                String(record.id) !== String(data.id)
-            )) {
+        if (isEditing) {
+
+            if (!originalRecord) {
+
                 throw new Error(
-                    "Duplicate invoice number detected."
+                    "Please reopen the saved invoice."
                 );
-            }
-
-            const saved = {
-
-                ...(isEditing ? records[index] : {}),
-
-                ...data,
-
-                schemaVersion: 3,
-
-                clientMobile: data.clientPhone,
-
-                amountPaid:
-                    data.receivedEarlier + data.receivedNow,
-
-                items: data.items.map(item => ({
-                    ...item,
-                    particular: item.description,
-                    qty: item.quantity
-                })),
-
-                createdAt:
-                    (isEditing && records[index].createdAt) ||
-                    new Date().toISOString(),
-
-                updatedAt: new Date().toISOString()
-
-            };
-
-            if (isEditing) {
-
-                records[index] = saved;
-
-            } else {
-
-                records.push(saved);
 
             }
 
-            /*
-             * Write invoice first.
-             * Sequence can be recovered from saved numbers
-             * if updating the sequence key fails.
-             */
+            saved = await updateCloudInvoice(
 
-            localStorage.setItem(
-                KEYS.invoices,
-                JSON.stringify(records)
+                editingId,
+
+                payload,
+
+                originalRecord.revision
+
             );
 
-            editingId = String(saved.id);
+        } else {
 
-            originalRecord = saved;
+            pendingCreateId =
+                pendingCreateId || crypto.randomUUID();
 
-            loadedSnapshot = JSON.stringify(saved);
+            payload.id = pendingCreateId;
 
-            set("editingInvoiceId", editingId);
+            saved = await createCloudInvoice(payload);
 
-            set("invoiceNumber", saved.invoiceNo);
+        }
 
-            dirty = false;
+        editingId = String(saved.id);
 
-            if (!isEditing) {
+        originalRecord = saved;
 
-                try {
+        loadedSnapshot = JSON.stringify(saved);
 
-                    localStorage.setItem(
-                        KEYS.sequence,
-                        String(nextSequence(records))
-                    );
+        pendingCreateId = null;
 
-                } catch {
+        set("editingInvoiceId", editingId);
 
-                    message(
-                        "Invoice saved. Sequence storage " +
-                        "could not be updated; it will be " +
-                        "recovered from saved invoice numbers.",
-                        "warning"
-                    );
+        set("invoiceNumber", saved.invoiceNo);
 
-                }
+        dirty = false;
 
-            }
+        const index = cloudRecords.findIndex(
+            record => String(record.id) === editingId
+        );
 
-        });
+        if (index >= 0) {
 
-        display("saveInvoiceButton", "Update Invoice");
+            cloudRecords[index] = saved;
+
+        } else {
+
+            cloudRecords.push(saved);
+
+        }
+
+        cloudSequence = Math.max(
+            cloudSequence,
+            Number(saved.sequenceNumber) + 1
+        );
 
         updatePreview();
 
         refreshRecords();
 
         message(
-            "Invoice " + value("invoiceNumber") +
-            " saved successfully."
+            "Invoice " + saved.invoiceNo +
+            " successfully saved to Firebase Cloud."
+        );
+
+    } catch (error) {
+
+        console.error("Cloud invoice save error:", error);
+
+        message(
+            "Cloud save could not be confirmed. " +
+            "Check Saved Invoices before retrying. " +
+            error.message,
+            "error"
+        );
+
+        window.alert(
+            "Cloud save could not be confirmed.\n\n" +
+            "Check Saved Invoices before retrying.\n\n" +
+            error.message
         );
 
     } finally {
 
+        cloudSaving = false;
+
+        form.inert = false;
+
         button.disabled = false;
+
+        display(
+            "saveInvoiceButton",
+            editingId ? "Update Invoice" : "Save Invoice"
+        );
 
     }
 
 }
 
-
 /* =========================================================
-   NEW INVOICE & RESET
+   NEW INVOICE AND RESET
    ========================================================= */
 
 function resetForm() {
@@ -1330,11 +1420,15 @@ function resetForm() {
 
     loadedSnapshot = null;
 
+    pendingCreateId = null;
+
     $("invoiceForm").reset();
 
     set("editingInvoiceId", "");
 
     set("invoiceDate", today());
+
+    $("invoiceDate").readOnly = false;
 
     set(
         "invoiceNumber",
@@ -1355,7 +1449,10 @@ function resetForm() {
 
     addItem();
 
-    display("saveInvoiceButton", "Save Invoice");
+    display(
+        "saveInvoiceButton",
+        "Save Invoice"
+    );
 
     dirty = false;
 
@@ -1365,31 +1462,45 @@ function resetForm() {
 
 async function newInvoice() {
 
+    if (cloudSaving) return;
+
     if (!(await allowDiscard())) return;
+
+    await syncCloudData();
 
     resetForm();
 
     activateTab("create");
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
 
 }
 
-
 /* =========================================================
-   OPEN EXISTING INVOICE
+   OPEN EXISTING CLOUD INVOICE
    ========================================================= */
 
 async function loadInvoice(id) {
 
+    if (cloudSaving) return false;
+
     if (!(await allowDiscard())) return false;
+
+    await syncCloudData();
 
     const record = readInvoices().find(
         item => String(item.id) === String(id)
     );
 
     if (!record) {
-        throw new Error("Invoice could not be found.");
+
+        throw new Error(
+            "Invoice could not be found or has been cancelled."
+        );
+
     }
 
     const data = normalize(record);
@@ -1400,11 +1511,15 @@ async function loadInvoice(id) {
 
     loadedSnapshot = JSON.stringify(record);
 
+    pendingCreateId = null;
+
     set("editingInvoiceId", editingId);
 
     set("invoiceNumber", data.invoiceNo);
 
     set("invoiceDate", data.invoiceDate);
+
+    $("invoiceDate").readOnly = true;
 
     set("dueDate", data.dueDate);
 
@@ -1450,7 +1565,10 @@ async function loadInvoice(id) {
 
     if (!data.items.length) addItem();
 
-    display("saveInvoiceButton", "Update Invoice");
+    display(
+        "saveInvoiceButton",
+        "Update Invoice"
+    );
 
     dirty = false;
 
@@ -1458,66 +1576,125 @@ async function loadInvoice(id) {
 
     updatePreview();
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
 
     return true;
 
 }
 
-
 /* =========================================================
-   DELETE SAVED INVOICE
-   Deleted invoice numbers are not intentionally reused.
+   CANCEL INVOICE
+   Permanent deletion is prohibited.
    ========================================================= */
 
 async function deleteInvoice(id) {
 
+    if (cloudSaving) return;
+
+    if (editingId === String(id) && dirty) {
+
+        throw new Error(
+            "Save or discard your unsaved changes first."
+        );
+
+    }
+
+    await syncCloudData();
+
+    const record = readInvoices().find(
+        item => String(item.id) === String(id)
+    );
+
+    if (!record) {
+
+        throw new Error(
+            "Invoice is unavailable."
+        );
+
+    }
+
     const confirmed = await confirmAction(
-        "Delete saved invoice?",
-        "This permanently removes the selected local invoice. " +
-        "Its invoice number will not be reused."
+
+        "Cancel saved invoice?",
+
+        "The invoice will be marked as cancelled. " +
+        "Its record and invoice number will remain " +
+        "preserved in Firebase Cloud."
+
     );
 
     if (!confirmed) return;
 
-    await withStorageLock(() => {
+    const reason = window.prompt(
+        "Enter the reason for cancellation:"
+    );
 
-        const records = readInvoices();
+    if (!reason || !reason.trim()) return;
 
-        const sequence = nextSequence(records);
+    if (cloudSaving) return;
 
-        const remaining = records.filter(
-            record => String(record.id) !== String(id)
+    cloudSaving = true;
+
+    try {
+
+        await cancelCloudInvoice(
+
+            record.id,
+
+            reason.trim(),
+
+            record.revision
+
         );
 
-        localStorage.setItem(
-            KEYS.sequence,
-            String(sequence)
+        cloudRecords = cloudRecords.map(item =>
+
+            String(item.id) === String(id)
+
+                ? {
+                    ...item,
+                    recordStatus: "cancelled",
+                    cancellationReason: reason.trim()
+                }
+
+                : item
+
         );
 
-        localStorage.setItem(
-            KEYS.invoices,
-            JSON.stringify(remaining)
-        );
+    } finally {
 
-    });
+        cloudSaving = false;
+
+    }
+
+    await syncCloudData();
 
     if (editingId === String(id)) {
+
         resetForm();
+
     }
 
     refreshRecords();
 
-    message("Selected invoice deleted.");
+    message(
+        "Invoice cancelled. Cloud record preserved."
+    );
 
 }
-
 
 /* =========================================================
    SAVED INVOICE TABLE
    ========================================================= */
 
-function actionButton(label, callback, extraClass = "") {
+function actionButton(
+    label,
+    callback,
+    extraClass = ""
+) {
 
     const button = document.createElement("button");
 
@@ -1562,20 +1739,30 @@ function filteredInvoices() {
     const filtered = records.filter(({ data, totals }) => {
 
         const searchText = [
+
             data.invoiceNo,
+
             data.clientName,
+
             data.clientPhone,
+
             data.matterReference,
+
             data.previousBillNo
+
         ].join(" ").toLowerCase();
 
         return (
+
             (!query || searchText.includes(query)) &&
+
             (status === "all" || totals.status === status) &&
+
             (
                 year === "all" ||
                 data.invoiceDate.slice(0, 4) === year
             )
+
         );
 
     });
@@ -1583,17 +1770,23 @@ function filteredInvoices() {
     filtered.sort((a, b) => {
 
         if (sort === "amount-high") {
+
             return b.totals.total - a.totals.total;
+
         }
 
         if (sort === "amount-low") {
+
             return a.totals.total - b.totals.total;
+
         }
 
         if (sort === "oldest") {
+
             return a.data.invoiceDate.localeCompare(
                 b.data.invoiceDate
             );
+
         }
 
         return b.data.invoiceDate.localeCompare(
@@ -1644,22 +1837,27 @@ function renderSavedInvoices() {
 
         }
 
-        const statusCell = document.createElement("td");
+        const statusCell =
+            document.createElement("td");
 
-        const badge = document.createElement("span");
+        const badge =
+            document.createElement("span");
 
         badge.className =
             `status-badge ${totals.status}`;
 
-        badge.textContent = statusLabels[totals.status];
+        badge.textContent =
+            statusLabels[totals.status];
 
         statusCell.appendChild(badge);
 
         row.appendChild(statusCell);
 
-        const actionsCell = document.createElement("td");
+        const actionsCell =
+            document.createElement("td");
 
-        const actions = document.createElement("div");
+        const actions =
+            document.createElement("div");
 
         actions.className = "invoice-actions";
 
@@ -1675,14 +1873,16 @@ function renderSavedInvoices() {
                 async () => {
 
                     if (await loadInvoice(data.id)) {
+
                         await printInvoice();
+
                     }
 
                 }
             ),
 
             actionButton(
-                "Delete",
+                "Cancel",
                 () => deleteInvoice(data.id),
                 "delete"
             )
@@ -1697,7 +1897,10 @@ function renderSavedInvoices() {
 
     }
 
-    show("emptyInvoices", records.length === 0);
+    show(
+        "emptyInvoices",
+        records.length === 0
+    );
 
     display(
         "invoiceResultCount",
@@ -1705,7 +1908,6 @@ function renderSavedInvoices() {
     );
 
 }
-
 
 /* =========================================================
    FINANCIAL SUMMARY
@@ -1736,7 +1938,11 @@ function refreshRecords() {
         outstanding += totals.balance;
 
         if (data.invoiceDate) {
-            years.add(data.invoiceDate.slice(0, 4));
+
+            years.add(
+                data.invoiceDate.slice(0, 4)
+            );
+
         }
 
     }
@@ -1747,16 +1953,19 @@ function refreshRecords() {
 
     display("totalReceived", money(received / 100));
 
-    display("totalOutstanding", money(outstanding / 100));
-
-    display("storageInvoiceCount", records.length);
-
-    set("currentSequence", nextSequence(records));
-
-    set(
-        "numberingFormat",
-        "MNM/NNN/YYYY"
+    display(
+        "totalOutstanding",
+        money(outstanding / 100)
     );
+
+    display(
+        "storageInvoiceCount",
+        records.length
+    );
+
+    set("currentSequence", nextSequence());
+
+    set("numberingFormat", "MNM/NNN/YYYY");
 
     const yearFilter = $("yearFilter");
 
@@ -1768,7 +1977,9 @@ function refreshRecords() {
 
     [...years].sort().reverse().forEach(year => {
 
-        yearFilter.add(new Option(year, year));
+        yearFilter.add(
+            new Option(year, year)
+        );
 
     });
 
@@ -1780,7 +1991,6 @@ function refreshRecords() {
 
 }
 
-
 /* =========================================================
    TAB NAVIGATION
    ========================================================= */
@@ -1791,26 +2001,35 @@ function activateTab(name) {
 
         const active = tab === name;
 
-        $(tab + "Tab").classList.toggle("active", active);
+        $(tab + "Tab").classList.toggle(
+            "active",
+            active
+        );
 
         $(tab + "Tab").setAttribute(
             "aria-selected",
             String(active)
         );
 
-        $(tab + "Tab").tabIndex = active ? 0 : -1;
+        $(tab + "Tab").tabIndex =
+            active ? 0 : -1;
 
         show(tab + "Panel", active);
 
     }
 
     if (name === "saved") {
+
         refreshRecords();
+
     }
 
     if (name === "settings") {
 
-        set("currentSequence", nextSequence());
+        set(
+            "currentSequence",
+            nextSequence()
+        );
 
         display(
             "storageInvoiceCount",
@@ -1821,24 +2040,49 @@ function activateTab(name) {
 
 }
 
+async function openTab(name) {
+
+    if (cloudSaving) return;
+
+    if (name === "saved" || name === "settings") {
+
+        await syncCloudData();
+
+        refreshRecords();
+
+    }
+
+    activateTab(name);
+
+}
 
 /* =========================================================
-   PRINT & SAVE PDF
-   Unsaved invoices must be saved before official printing.
+   PRINT AND SAVE PDF
+   Existing A4 design remains controlled by invoice.css.
    ========================================================= */
 
 async function printInvoice() {
 
+    if (cloudSaving) return;
+
     if (!editingId || dirty) {
 
-        message(
-            "Please save the invoice before printing.",
-            "warning"
+        window.alert(
+            "Please save or update the invoice before printing."
         );
+
+        $("saveInvoiceButton").scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+
+        $("saveInvoiceButton").focus();
 
         return;
 
     }
+
+    await syncCloudData();
 
     const current = readInvoices().find(
         record => String(record.id) === editingId
@@ -1846,11 +2090,13 @@ async function printInvoice() {
 
     if (
         !current ||
-        JSON.stringify(current) !== loadedSnapshot
+        !originalRecord ||
+        current.revision !== originalRecord.revision
     ) {
 
         throw new Error(
-            "Invoice has changed. Reopen it before printing."
+            "Invoice has changed or been cancelled. " +
+            "Please reopen it before printing."
         );
 
     }
@@ -1860,18 +2106,26 @@ async function printInvoice() {
     updatePreview();
 
     if (document.fonts?.ready) {
+
         await document.fonts.ready;
+
     }
 
     const images = $("invoicePreview")
         .querySelectorAll("img");
 
     await Promise.all(
+
         Array.from(images).map(image =>
+
             image.decode
+
                 ? image.decode().catch(() => {})
+
                 : Promise.resolve()
+
         )
+
     );
 
     const oldTitle = document.title;
@@ -1891,14 +2145,16 @@ async function printInvoice() {
 
 }
 
-
 /* =========================================================
    FILE DOWNLOAD UTILITY
    ========================================================= */
 
 function downloadFile(content, filename, type) {
 
-    const blob = new Blob([content], { type });
+    const blob = new Blob(
+        [content],
+        { type }
+    );
 
     const url = URL.createObjectURL(blob);
 
@@ -1921,10 +2177,8 @@ function downloadFile(content, filename, type) {
 
 }
 
-
 /* =========================================================
    CSV EXPORT
-   Protect against spreadsheet formula injection.
    ========================================================= */
 
 function csvCell(input) {
@@ -1932,25 +2186,41 @@ function csvCell(input) {
     let text = String(input ?? "");
 
     if (/^[\s]*[=+\-@]/.test(text)) {
+
         text = "'" + text;
+
     }
 
     return '"' + text.replaceAll('"', '""') + '"';
 
 }
 
-function exportCSV() {
+async function exportCSV() {
+
+    if (cloudSaving) return;
+
+    await syncCloudData();
+
+    refreshRecords();
 
     const rows = [[
 
         "Invoice Number",
+
         "Invoice Date",
+
         "Client Name",
+
         "Total Amount",
+
         "Received Earlier",
+
         "Received Now",
+
         "Total Received",
+
         "Balance Due",
+
         "Payment Status"
 
     ]];
@@ -1982,45 +2252,57 @@ function exportCSV() {
     }
 
     const csv = "\uFEFF" + rows.map(
+
         row => row.map(csvCell).join(",")
+
     ).join("\r\n");
 
     downloadFile(
+
         csv,
+
         `MNM-Invoices-${today()}.csv`,
+
         "text/csv;charset=utf-8"
+
     );
 
-    message("CSV export requested.");
+    message("Cloud invoice CSV export requested.");
 
 }
 
-
 /* =========================================================
-   OPTIONAL BACKUP DOWNLOAD
+   CLOUD BACKUP DOWNLOAD
+   Includes active and cancelled invoices.
    ========================================================= */
 
-function downloadBackup() {
+async function downloadBackup() {
 
-    const data = {};
+    if (cloudSaving) return;
 
-    for (const key of Object.values(KEYS)) {
-
-        data[key] = localStorage.getItem(key);
-
-    }
+    await syncCloudData();
 
     const backup = {
 
         firm: "MNM Legal Associates",
 
-        backupVersion: 3,
+        backupVersion: 4,
 
         backupDate: new Date().toISOString(),
 
         source: location.origin,
 
-        data
+        storage: "Firebase Cloud Firestore",
+
+        data: {
+
+            invoices: cloudRecords,
+
+            nextSequence: nextSequence(),
+
+            paymentSettings: cloudPaymentSettings
+
+        }
 
     };
 
@@ -2028,191 +2310,81 @@ function downloadBackup() {
 
         JSON.stringify(backup, null, 2),
 
-        `MNM-Invoice-Backup-${today()}.json`,
+        `MNM-Cloud-Backup-${today()}.json`,
 
         "application/json"
 
     );
 
     message(
-        "Backup download requested. " +
-        "Keep the file confidential."
+
+        "Cloud backup download requested. " +
+
+        "Keep this confidential file in a secure location."
+
     );
 
 }
 
-
 /* =========================================================
-   BACKUP IMPORT
-   Merge only. Existing records are never replaced.
+   BACKUP RESTORATION PROTECTION
    ========================================================= */
 
 async function importBackup(event) {
 
-    const file = event.target.files[0];
+    if (event?.target) {
 
-    event.target.value = "";
-
-    if (!file) return;
-
-    if (file.size > 10 * 1024 * 1024) {
-
-        throw new Error("Backup file is too large.");
+        event.target.value = "";
 
     }
 
-    const backup = JSON.parse(await file.text());
+    window.alert(
 
-    if (
-        backup.firm !== "MNM Legal Associates" ||
-        !backup.data ||
-        ![1, 3].includes(backup.backupVersion)
-    ) {
+        "Automatic backup restoration is disabled " +
 
-        throw new Error("Unsupported backup file.");
+        "to protect centralized invoice records " +
 
-    }
-
-    const raw = backup.data[KEYS.invoices];
-
-    const imported = raw == null ? [] : JSON.parse(raw);
-
-    if (!Array.isArray(imported)) {
-
-        throw new Error("Invalid invoice backup.");
-
-    }
-
-    for (const record of imported) {
-
-        if (
-            !record ||
-            record.id == null ||
-            typeof record.invoiceNo !== "string" ||
-            !record.invoiceNo.trim() ||
-            !Array.isArray(record.items)
-        ) {
-
-            throw new Error(
-                "Backup contains invalid invoice records."
-            );
-
-        }
-
-        calculate(normalize(record));
-
-    }
-
-    const confirmed = await confirmAction(
-
-        "Import invoice backup?",
-
-        `Merge ${imported.length} invoice record(s)? ` +
-        "Existing records will not be overwritten. " +
-        "Conflicting records will be skipped."
+        "and invoice numbering."
 
     );
 
-    if (!confirmed) return;
+}
 
-    let added = 0;
+/* =========================================================
+   CLOUD REFRESH
+   ========================================================= */
 
-    let skipped = 0;
+async function refreshCloudView() {
 
-    await withStorageLock(() => {
+    if (cloudSaving) return;
 
-        const records = readInvoices();
+    await syncCloudData();
 
-        const ids = new Set(
-            records.map(record => String(record.id))
-        );
-
-        const numbers = new Set(
-            records.map(record => record.invoiceNo)
-        );
-
-        for (const record of imported) {
-
-            if (
-                ids.has(String(record.id)) ||
-                numbers.has(record.invoiceNo)
-            ) {
-
-                skipped++;
-
-                continue;
-
-            }
-
-            records.push(record);
-
-            ids.add(String(record.id));
-
-            numbers.add(record.invoiceNo);
-
-            added++;
-
-        }
-
-        let sequence = nextSequence(records);
-
-        const backupSequence =
-            backup.data[KEYS.sequence];
-
-        if (backupSequence != null) {
-
-            const number = Number(backupSequence);
-
-            if (
-                !Number.isSafeInteger(number) ||
-                number < 1
-            ) {
-
-                throw new Error(
-                    "Backup sequence is invalid."
-                );
-
-            }
-
-            sequence = Math.max(sequence, number);
-
-        }
-
-        localStorage.setItem(
-            KEYS.sequence,
-            String(sequence)
-        );
-
-        localStorage.setItem(
-            KEYS.invoices,
-            JSON.stringify(records)
-        );
-
-    });
+    if (cloudSaving) return;
 
     refreshRecords();
 
     if (!editingId) {
 
         set(
+
             "invoiceNumber",
+
             invoiceNumber(
+
                 nextSequence(),
+
                 value("invoiceDate")
+
             )
+
         );
 
         updatePreview();
 
     }
 
-    message(
-        `Import complete. Added: ${added}. ` +
-        `Skipped: ${skipped}.`
-    );
-
 }
-
 
 /* =========================================================
    EVENT HANDLERS
@@ -2221,27 +2393,43 @@ async function importBackup(event) {
 function bindEvents() {
 
     $("invoiceForm").addEventListener(
+
         "submit",
+
         safeAction(saveInvoice)
+
     );
 
     $("invoiceForm").addEventListener(
+
         "input",
+
         safeAction(event => {
+
+            if (cloudSaving) return;
 
             dirty = true;
 
             if (
+
                 event.target.id === "invoiceDate" &&
+
                 !editingId
+
             ) {
 
                 set(
+
                     "invoiceNumber",
+
                     invoiceNumber(
+
                         nextSequence(),
+
                         value("invoiceDate")
+
                     )
+
                 );
 
             }
@@ -2249,11 +2437,16 @@ function bindEvents() {
             updatePreview();
 
         })
+
     );
 
     $("addItemButton").addEventListener(
+
         "click",
+
         safeAction(() => {
+
+            if (cloudSaving) return;
 
             addItem();
 
@@ -2262,120 +2455,192 @@ function bindEvents() {
             updatePreview();
 
         })
+
     );
 
     $("newInvoiceButton").addEventListener(
+
         "click",
+
         safeAction(newInvoice)
+
     );
 
     $("resetInvoiceButton").addEventListener(
+
         "click",
+
         safeAction(newInvoice)
+
     );
 
     for (const id of [
+
         "printInvoiceButton",
+
         "previewPrintButton"
+
     ]) {
 
         $(id).addEventListener(
+
             "click",
+
             safeAction(printInvoice)
+
         );
 
     }
 
-    for (const name of ["create", "saved", "settings"]) {
+    for (const name of [
+
+        "create",
+
+        "saved",
+
+        "settings"
+
+    ]) {
 
         $(name + "Tab").addEventListener(
+
             "click",
-            safeAction(() => activateTab(name))
+
+            safeAction(() => openTab(name))
+
         );
 
     }
 
-    const tabNames = ["create", "saved", "settings"];
+    const tabNames = [
+
+        "create",
+
+        "saved",
+
+        "settings"
+
+    ];
 
     tabNames.forEach((name, index) => {
 
         $(name + "Tab").addEventListener(
+
             "keydown",
-            safeAction(event => {
+
+            safeAction(async event => {
 
                 let next;
 
                 if (event.key === "ArrowRight") {
+
                     next = (index + 1) % tabNames.length;
+
                 } else if (event.key === "ArrowLeft") {
+
                     next = (index + 2) % tabNames.length;
+
                 } else if (event.key === "Home") {
+
                     next = 0;
+
                 } else if (event.key === "End") {
+
                     next = tabNames.length - 1;
+
                 } else {
+
                     return;
+
                 }
 
                 event.preventDefault();
 
-                activateTab(tabNames[next]);
+                await openTab(tabNames[next]);
 
                 $(tabNames[next] + "Tab").focus();
 
             })
+
         );
 
     });
 
     $("invoiceSearch").addEventListener(
+
         "input",
+
         safeAction(renderSavedInvoices)
+
     );
 
     for (const id of [
+
         "statusFilter",
+
         "yearFilter",
+
         "sortInvoices"
+
     ]) {
 
         $(id).addEventListener(
+
             "change",
+
             safeAction(renderSavedInvoices)
+
         );
 
     }
 
     $("paymentSettingsForm").addEventListener(
+
         "submit",
+
         safeAction(savePaymentSettings)
+
     );
 
     $("exportCSVButton").addEventListener(
+
         "click",
+
         safeAction(exportCSV)
+
     );
 
     $("downloadBackupButton").addEventListener(
+
         "click",
+
         safeAction(downloadBackup)
+
     );
 
     $("restoreBackupButton").addEventListener(
+
         "click",
-        () => $("backupFileInput").click()
+
+        safeAction(() => importBackup())
+
     );
 
     $("backupFileInput").addEventListener(
+
         "change",
+
         safeAction(importBackup)
+
     );
 
     window.addEventListener(
+
         "beforeunload",
+
         event => {
 
-            if (dirty) {
+            if (dirty || cloudSaving) {
 
                 event.preventDefault();
 
@@ -2384,52 +2649,30 @@ function bindEvents() {
             }
 
         }
+
     );
 
     window.addEventListener(
-        "storage",
-        safeAction(event => {
 
-            if (
-                event.key === KEYS.invoices ||
-                event.key === KEYS.sequence
-            ) {
+        "focus",
 
-                refreshRecords();
+        safeAction(refreshCloudView)
 
-                if (!editingId) {
+    );
 
-                    set(
-                        "invoiceNumber",
-                        invoiceNumber(
-                            nextSequence(),
-                            value("invoiceDate")
-                        )
-                    );
+    window.addEventListener(
 
-                    updatePreview();
+        "online",
 
-                }
+        safeAction(refreshCloudView)
 
-            }
-
-            if (event.key === KEYS.payment) {
-
-                loadPaymentSettings();
-
-                updatePreview();
-
-            }
-
-        })
     );
 
 }
 
-
 /* =========================================================
    FIREBASE AUTHENTICATED INITIALIZATION
-   Called from invoice.html after authentication.
+   Called from invoice.html after staff authorization.
    ========================================================= */
 
 export async function initialiseInvoiceSystem(user) {
@@ -2444,20 +2687,7 @@ export async function initialiseInvoiceSystem(user) {
 
     if (initialized) return;
 
-    /*
-     * Verify existing data before enabling the application.
-     * Initialization does not overwrite invoice storage.
-     */
-
-    const records = readInvoices();
-
-    readSequence();
-
-    records.forEach(record => {
-
-        calculate(normalize(record));
-
-    });
+    await syncCloudData();
 
     insertLegacyFields();
 
@@ -2473,11 +2703,15 @@ export async function initialiseInvoiceSystem(user) {
 
     initialized = true;
 
+    message(
+        "Invoice system connected to Firebase Cloud."
+    );
+
 }
 
-
 /* =========================================================
-   END OF INVOICE MANAGEMENT SYSTEM
+   END OF PROFESSIONAL CLOUD INVOICE MANAGEMENT SYSTEM
+
    MNM LEGAL ASSOCIATES
    Justice, Integrity & Excellence
    ========================================================= */
