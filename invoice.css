@@ -4802,6 +4802,44 @@ input[type="date"] {
 
 }
 
+/* =========================================================
+   CENTERED PROFESSIONAL INVOICE HEADING
+   ========================================================= */
+
+.invoice-title-section {
+    position: relative !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
+}
+
+.invoice-title-section h2 {
+    width: 100% !important;
+    text-align: center !important;
+    margin: 0 !important;
+    padding: 0 100px !important;
+    box-sizing: border-box !important;
+}
+
+.invoice-title-section .payment-status {
+    position: absolute !important;
+    right: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+}
+
+@media print {
+
+    .invoice-title-section h2 {
+        text-align: center !important;
+        font-size: 12pt !important;
+        padding: 0 28mm !important;
+    }
+
+}
+
 
 /* =========================================================
    END OF FINAL A4 & QR OPTIMIZATION
