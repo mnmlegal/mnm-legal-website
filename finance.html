@@ -1,0 +1,1204 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <meta name="referrer" content="no-referrer">
+    <meta name="theme-color" content="#101d30">
+
+    <title>Financial Management | MNM Legal Associates</title>
+
+    <link rel="icon" href="/images/logo.png">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="/finance.css">
+
+    <style>
+        [hidden] { display: none !important; }
+    </style>
+</head>
+
+<body>
+
+<div id="authLoading" class="auth-screen">
+    <div class="auth-card">
+        <img src="/images/logo.png" alt="MNM Legal Associates">
+        <h1>MNM Legal Associates</h1>
+        <p>Secure Financial Management System</p>
+        <div id="loadingSpinner" class="spinner"></div>
+        <p id="loadingMessage" role="status">
+            Verifying administrator authorization...
+        </p>
+        <a href="/login.html">Return to Staff Login</a>
+    </div>
+</div>
+
+<div id="protectedContent" hidden>
+
+    <header class="app-header">
+        <a href="/dashboard.html" class="brand">
+            <img src="/images/logo.png" alt="MNM Legal Associates">
+            <div>
+                <strong>MNM LEGAL ASSOCIATES</strong>
+                <small>Justice, Integrity &amp; Excellence</small>
+            </div>
+        </a>
+
+        <nav class="header-navigation">
+            <a href="/dashboard.html">
+                <i class="fa-solid fa-house"></i> Dashboard
+            </a>
+            <a href="/invoice.html">Invoices</a>
+            <a href="/clients.html">Clients</a>
+            <a href="/cases.html">Cases</a>
+            <button id="logoutButton" type="button">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Logout
+            </button>
+        </nav>
+    </header>
+
+    <main class="app-container">
+
+        <section class="welcome-panel">
+            <div>
+                <span class="eyebrow">PRACTICE MANAGEMENT</span>
+                <h1>Financial Management</h1>
+                <p>Manage professional fees, collections, expenses and financial records.</p>
+                <small>Administrator: <span id="staffName">—</span></small>
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="button button-primary"
+                        data-open-tab="transaction">
+                    <i class="fa-solid fa-plus"></i>
+                    New Transaction
+                </button>
+
+                <button type="button" class="button button-secondary"
+                        id="refreshButton">
+                    <i class="fa-solid fa-rotate"></i>
+                    Refresh
+                </button>
+            </div>
+        </section>
+
+        <div id="appMessage" class="message" role="status" hidden></div>
+
+        <section class="connection-panel">
+            <div>
+                <span>Firestore</span>
+                <strong id="connectionStatus">Connecting...</strong>
+            </div>
+            <div>
+                <span>Current Financial Year</span>
+                <strong id="currentFinancialYear">—</strong>
+            </div>
+            <div>
+                <span>Last Synchronization</span>
+                <strong id="lastSync">—</strong>
+            </div>
+            <div>
+                <span>Accounting Method</span>
+                <strong>Cash Basis</strong>
+            </div>
+        </section>
+
+        <nav class="tabs" aria-label="Financial management sections">
+
+            <button type="button" data-tab="overview" class="active">
+                <i class="fa-solid fa-chart-pie"></i> Overview
+            </button>
+
+            <button type="button" data-tab="transactions">
+                <i class="fa-solid fa-list"></i> Transactions
+            </button>
+
+            <button type="button" data-tab="transaction">
+                <i class="fa-solid fa-plus"></i> New Transaction
+            </button>
+
+            <button type="button" data-tab="agreements">
+                <i class="fa-solid fa-file-contract"></i> Fee Agreements
+            </button>
+
+            <button type="button" data-tab="ledger">
+                <i class="fa-solid fa-book"></i> Client Ledger
+            </button>
+
+            <button type="button" data-tab="outstanding">
+                <i class="fa-solid fa-wallet"></i> Outstanding
+            </button>
+
+            <button type="button" data-tab="invoices">
+                <i class="fa-solid fa-file-invoice"></i> Invoice Register
+            </button>
+
+            <button type="button" data-tab="reports">
+                <i class="fa-solid fa-chart-column"></i> Reports
+            </button>
+
+            <button type="button" data-tab="settings">
+                <i class="fa-solid fa-gear"></i> Settings
+            </button>
+
+        </nav>
+
+        <!-- OVERVIEW -->
+
+        <section id="overviewPanel" class="tab-panel">
+
+            <div class="section-heading">
+                <div>
+                    <h2>Financial Overview</h2>
+                    <p>Actual receipts and expenditure for the selected period.</p>
+                </div>
+
+                <select id="overviewPeriod" aria-label="Financial period">
+                    <option value="month">Current Month</option>
+                    <option value="financial_year">Current Financial Year</option>
+                    <option value="all">All Time</option>
+                </select>
+            </div>
+
+            <div class="statistics-grid">
+
+                <article class="stat-card">
+                    <i class="fa-solid fa-arrow-trend-up"></i>
+                    <span>Professional Income</span>
+                    <strong id="totalIncome">—</strong>
+                </article>
+
+                <article class="stat-card">
+                    <i class="fa-solid fa-arrow-trend-down"></i>
+                    <span>Operating Expenses</span>
+                    <strong id="totalExpenses">—</strong>
+                </article>
+
+                <article class="stat-card">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Net Operating Surplus</span>
+                    <strong id="netSurplus">—</strong>
+                </article>
+
+                <article class="stat-card">
+                    <i class="fa-solid fa-clock"></i>
+                    <span>Outstanding Professional Fees</span>
+                    <strong id="totalOutstanding">—</strong>
+                </article>
+
+                <article class="stat-card">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                    <span>Client Advance Balance</span>
+                    <strong id="totalAdvances">—</strong>
+                </article>
+
+                <article class="stat-card">
+                    <i class="fa-solid fa-money-bill-transfer"></i>
+                    <span>Net Capital Movement</span>
+                    <strong id="capitalMovement">—</strong>
+                </article>
+
+            </div>
+
+            <div class="content-card">
+                <h2>Quick Actions</h2>
+
+                <div class="quick-actions">
+                    <button type="button" data-new-type="income">
+                        <i class="fa-solid fa-plus"></i> Record Income
+                    </button>
+
+                    <button type="button" data-new-type="expense">
+                        <i class="fa-solid fa-minus"></i> Record Expense
+                    </button>
+
+                    <button type="button" data-new-type="advance">
+                        Record Client Advance
+                    </button>
+
+                    <button type="button" data-open-tab="agreements">
+                        Create Fee Agreement
+                    </button>
+
+                    <button type="button" data-open-tab="ledger">
+                        View Client Ledger
+                    </button>
+
+                    <button type="button" data-open-tab="reports">
+                        Financial Reports
+                    </button>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <h2>Monthly Financial Performance</h2>
+                <div id="monthlyPerformance"></div>
+            </div>
+
+            <div class="content-card">
+                <h2>Recent Transactions</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Transaction</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentTransactionsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- TRANSACTION DIRECTORY -->
+
+        <section id="transactionsPanel" class="tab-panel" hidden>
+
+            <div class="section-heading">
+                <div>
+                    <h2>Transaction Register</h2>
+                    <p>Complete financial transaction history.</p>
+                </div>
+
+                <button type="button" class="button button-primary"
+                        data-open-tab="transaction">
+                    New Transaction
+                </button>
+            </div>
+
+            <div class="content-card">
+
+                <div class="filter-grid">
+
+                    <label>
+                        Search
+                        <input id="transactionSearch" type="search"
+                               placeholder="Code, description or reference">
+                    </label>
+
+                    <label>
+                        Transaction Type
+                        <select id="filterTransactionType">
+                            <option value="">All Types</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Client
+                        <select id="filterClient">
+                            <option value="">All Clients</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Status
+                        <select id="filterStatus">
+                            <option value="">All Statuses</option>
+                            <option value="posted">Posted</option>
+                            <option value="reversed">Reversed</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        From Date
+                        <input id="filterFromDate" type="date">
+                    </label>
+
+                    <label>
+                        To Date
+                        <input id="filterToDate" type="date">
+                    </label>
+
+                </div>
+
+                <div class="button-group">
+                    <button id="clearFiltersButton" type="button">
+                        Clear Filters
+                    </button>
+                    <button id="exportTransactionsButton" type="button">
+                        Export CSV
+                    </button>
+                </div>
+
+                <p id="transactionCount" class="muted"></p>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Transaction Code</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Client</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Payment Mode</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsBody"></tbody>
+                    </table>
+                </div>
+
+                <div id="transactionPagination" class="pagination"></div>
+
+            </div>
+
+        </section>
+
+        <!-- NEW TRANSACTION -->
+
+        <section id="transactionPanel" class="tab-panel" hidden>
+
+            <div class="section-heading">
+                <div>
+                    <h2>Record Financial Transaction</h2>
+                    <p>Enter the actual payment or expenditure details.</p>
+                </div>
+            </div>
+
+            <form id="transactionForm" class="content-card">
+
+                <div id="transactionFormError" class="message error"
+                     role="alert" hidden></div>
+
+                <div class="information-box">
+                    Transaction Number:
+                    <strong id="nextTransactionCode">—</strong>
+                    <small>Final number is assigned when saved.</small>
+                </div>
+
+                <div class="form-grid">
+
+                    <label>
+                        Transaction Type *
+                        <select id="transactionType" name="transactionType" required>
+                            <option value="income">Professional Income</option>
+                            <option value="expense">Operating Expense</option>
+                            <option value="advance">Client Advance</option>
+                            <option value="advance_utilization">Advance Utilization</option>
+                            <option value="advance_refund">Advance Refund</option>
+                            <option value="refund">Professional Fee Refund</option>
+                            <option value="capital_in">Capital Introduced</option>
+                            <option value="capital_out">Capital Withdrawal</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Transaction Date *
+                        <input id="transactionDate" name="transactionDate"
+                               type="date" required>
+                    </label>
+
+                    <label>
+                        Category *
+                        <select id="transactionCategory" name="category" required>
+                            <option value="">Select Category</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Amount in INR *
+                        <input id="transactionAmount" type="number"
+                               min="0.01" step="0.01" required
+                               placeholder="0.00">
+                    </label>
+
+                    <label>
+                        Client
+                        <select id="transactionClient" name="clientId">
+                            <option value="">Not Associated</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Case / Matter
+                        <select id="transactionCase" name="caseId">
+                            <option value="">Not Associated</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Fee Agreement
+                        <select id="transactionAgreement" name="feeAgreementId">
+                            <option value="">Not Associated</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Linked Invoice
+                        <select id="transactionInvoice" name="invoiceId">
+                            <option value="">Not Associated</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Payment Mode *
+                        <select id="paymentMode" name="paymentMode" required>
+                            <option value="cash">Cash</option>
+                            <option value="upi">UPI</option>
+                            <option value="neft">NEFT</option>
+                            <option value="rtgs">RTGS</option>
+                            <option value="imps">IMPS</option>
+                            <option value="cheque">Cheque</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="card">Card</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Payment Reference
+                        <input id="paymentReference" name="paymentReference"
+                               maxlength="200"
+                               placeholder="UTR / Cheque / Reference No.">
+                    </label>
+
+                    <label class="full-width">
+                        Description
+                        <textarea id="transactionDescription"
+                                  name="description"
+                                  rows="4" maxlength="5000"></textarea>
+                    </label>
+
+                </div>
+
+                <div id="transactionContext" class="information-box" hidden></div>
+
+                <p class="muted">
+                    Posted transactions cannot be permanently deleted.
+                    Corrections must be made through a reversal entry.
+                </p>
+
+                <div class="button-group">
+                    <button type="submit" class="button button-primary"
+                            id="saveTransactionButton">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Save Transaction
+                    </button>
+
+                    <button type="reset" class="button button-secondary">
+                        Reset Form
+                    </button>
+                </div>
+
+            </form>
+
+        </section>
+
+        <!-- FEE AGREEMENTS -->
+
+        <section id="agreementsPanel" class="tab-panel" hidden>
+
+            <div class="section-heading">
+                <div>
+                    <h2>Professional Fee Agreements</h2>
+                    <p>Manage agreed fees, collections and outstanding balances.</p>
+                </div>
+
+                <button id="newAgreementButton" type="button"
+                        class="button button-primary">
+                    New Fee Agreement
+                </button>
+            </div>
+
+            <div class="content-card">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Agreement</th>
+                                <th>Agreed Fees</th>
+                                <th>Received</th>
+                                <th>Outstanding</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="agreementsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- CLIENT LEDGER -->
+
+        <section id="ledgerPanel" class="tab-panel" hidden>
+
+            <div class="section-heading">
+                <div>
+                    <h2>Client &amp; Case Ledger</h2>
+                    <p>View financial records associated with individual clients.</p>
+                </div>
+            </div>
+
+            <div class="content-card">
+
+                <div class="form-grid">
+                    <label>
+                        Select Client
+                        <select id="ledgerClient">
+                            <option value="">Select Client</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Select Case
+                        <select id="ledgerCase">
+                            <option value="">All Matters</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="button-group">
+                    <button id="loadLedgerButton" type="button"
+                            class="button button-primary">
+                        View Ledger
+                    </button>
+                    <button id="exportLedgerButton" type="button">
+                        Export Ledger
+                    </button>
+                    <button id="printLedgerButton" type="button">
+                        Print Ledger
+                    </button>
+                </div>
+
+            </div>
+
+            <div id="ledgerResult" hidden>
+
+                <div class="statistics-grid">
+                    <article class="stat-card">
+                        <span>Agreed Fees</span>
+                        <strong id="ledgerAgreed">—</strong>
+                    </article>
+                    <article class="stat-card">
+                        <span>Net Professional Receipts</span>
+                        <strong id="ledgerReceived">—</strong>
+                    </article>
+                    <article class="stat-card">
+                        <span>Outstanding Fees</span>
+                        <strong id="ledgerOutstanding">—</strong>
+                    </article>
+                    <article class="stat-card">
+                        <span>Client Advance Balance</span>
+                        <strong id="ledgerAdvance">—</strong>
+                    </article>
+                </div>
+
+                <div class="content-card">
+                    <h3 id="ledgerTitle">Client Ledger</h3>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Code</th>
+                                    <th>Particulars</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledgerBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- OUTSTANDING FEES -->
+
+        <section id="outstandingPanel" class="tab-panel" hidden>
+
+            <div class="section-heading">
+                <div>
+                    <h2>Outstanding Professional Fees</h2>
+                    <p>Pending collections calculated from fee agreements and recorded payments.</p>
+                </div>
+            </div>
+
+            <div class="statistics-grid">
+                <article class="stat-card">
+                    <span>Total Outstanding</span>
+                    <strong id="outstandingAmount">—</strong>
+                </article>
+                <article class="stat-card">
+                    <span>Overdue Fees</span>
+                    <strong id="overdueAmount">—</strong>
+                </article>
+                <article class="stat-card">
+                    <span>Pending Agreements</span>
+                    <strong id="pendingAgreementCount">—</strong>
+                </article>
+            </div>
+
+            <div class="content-card">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Agreement</th>
+                                <th>Agreed Amount</th>
+                                <th>Received</th>
+                                <th>Outstanding</th>
+                                <th>Due Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="outstandingBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- INVOICE INTEGRATION -->
+
+        <section id="invoicesPanel" class="tab-panel" hidden>
+
+            <div class="section-heading">
+                <div>
+                    <h2>Invoice Register &amp; Reconciliation</h2>
+                    <p>Associate existing invoices with financial records.</p>
+                </div>
+
+                <a href="/invoice.html" class="button button-primary">
+                    Open Invoice Generator
+                </a>
+            </div>
+
+            <div class="information-box">
+                Existing invoice amounts are not automatically treated as income.
+                Verify actual receipts before posting financial transactions.
+            </div>
+
+            <div class="content-card">
+
+                <label>
+                    Search Invoices
+                    <input id="invoiceSearch" type="search"
+                           placeholder="Invoice number or client">
+                </label>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Invoice Number</th>
+                                <th>Date</th>
+                                <th>Client</th>
+                                <th>Recorded Receipts</th>
+                                <th>Linked Client / Case</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoicesBody"></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- FINANCIAL REPORTS -->
+
+        <section id="reportsPanel" class="tab-panel" hidden>
+
+            <div class="section-heading">
+                <div>
+                    <h2>Financial Reports</h2>
+                    <p>Internal cash-basis financial statements.</p>
+                </div>
+            </div>
+
+            <div class="content-card">
+
+                <div class="form-grid">
+
+                    <label>
+                        Reporting Period
+                        <select id="reportPeriod">
+                            <option value="month">Current Month</option>
+                            <option value="quarter">Current Quarter</option>
+                            <option value="financial_year">Financial Year</option>
+                            <option value="custom">Custom Date Range</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        From Date
+                        <input id="reportFromDate" type="date">
+                    </label>
+
+                    <label>
+                        To Date
+                        <input id="reportToDate" type="date">
+                    </label>
+
+                </div>
+
+                <div class="button-group">
+                    <button id="generateReportButton" type="button"
+                            class="button button-primary">
+                        Generate Report
+                    </button>
+                    <button id="exportReportButton" type="button">
+                        Export CSV
+                    </button>
+                    <button id="printReportButton" type="button">
+                        Print Report
+                    </button>
+                </div>
+
+            </div>
+
+            <div id="reportResult" class="content-card" hidden>
+
+                <div class="report-heading">
+                    <h2>MNM Legal Associates</h2>
+                    <h3>Financial Performance Statement</h3>
+                    <p id="reportDateRange"></p>
+                </div>
+
+                <div class="statistics-grid">
+                    <article class="stat-card">
+                        <span>Net Professional Income</span>
+                        <strong id="reportIncome">—</strong>
+                    </article>
+                    <article class="stat-card">
+                        <span>Operating Expenses</span>
+                        <strong id="reportExpenses">—</strong>
+                    </article>
+                    <article class="stat-card">
+                        <span>Net Operating Surplus</span>
+                        <strong id="reportSurplus">—</strong>
+                    </article>
+                    <article class="stat-card">
+                        <span>Client Advance Movement</span>
+                        <strong id="reportAdvanceMovement">—</strong>
+                    </article>
+                </div>
+
+                <h3>Transaction Summary</h3>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Transaction</th>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportBody"></tbody>
+                    </table>
+                </div>
+
+                <p class="muted">
+                    Internal management statement. Not an audited financial
+                    statement or statutory tax return.
+                </p>
+
+            </div>
+
+        </section>
+
+        <!-- SETTINGS -->
+
+        <section id="settingsPanel" class="tab-panel" hidden>
+
+            <div class="section-heading">
+                <div>
+                    <h2>Financial Settings</h2>
+                    <p>Manage categories, financial exports and cloud connectivity.</p>
+                </div>
+            </div>
+
+            <form id="financeSettingsForm" class="content-card">
+
+                <h3>Transaction Categories</h3>
+
+                <div class="form-grid">
+                    <label>
+                        Income Categories
+                        <textarea id="incomeCategories" rows="10"
+                                  placeholder="One category per line"></textarea>
+                    </label>
+
+                    <label>
+                        Expense Categories
+                        <textarea id="expenseCategories" rows="10"
+                                  placeholder="One category per line"></textarea>
+                    </label>
+                </div>
+
+                <button type="submit" class="button button-primary">
+                    Save Settings
+                </button>
+
+            </form>
+
+            <div class="content-card">
+                <h3>Data Export &amp; Backup</h3>
+
+                <p>Financial exports contain confidential professional records.
+                   Store downloaded files securely.</p>
+
+                <div class="button-group">
+                    <button id="fullBackupButton" type="button">
+                        <i class="fa-solid fa-download"></i>
+                        Download JSON Backup
+                    </button>
+
+                    <button id="fullCSVButton" type="button">
+                        Export All Transactions
+                    </button>
+
+                    <button id="verifyConnectionButton" type="button">
+                        Verify Cloud Connection
+                    </button>
+                </div>
+
+                <p id="backupStatus" role="status"></p>
+            </div>
+
+            <div class="content-card">
+                <h3>Accounting Policy</h3>
+                <p>Financial Year: 1 April to 31 March.</p>
+                <p>Currency: Indian Rupee (INR).</p>
+                <p>Accounting Method: Cash-basis internal tracking.</p>
+                <p>Transaction Corrections: Reversal entries.</p>
+                <p>Access Control: Authorized administrators only.</p>
+                <p>Version: Financial Management V1.0.</p>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FEE AGREEMENT DIALOG -->
+
+    <dialog id="agreementDialog" class="app-dialog">
+
+        <form id="agreementForm">
+
+            <div class="dialog-heading">
+                <h2 id="agreementDialogTitle">New Fee Agreement</h2>
+                <button type="button" data-close-dialog="agreementDialog"
+                        aria-label="Close">&times;</button>
+            </div>
+
+            <div id="agreementFormError" class="message error"
+                 role="alert" hidden></div>
+
+            <div class="form-grid">
+
+                <label>
+                    Client *
+                    <select id="agreementClient" required>
+                        <option value="">Select Client</option>
+                    </select>
+                </label>
+
+                <label>
+                    Case / Matter
+                    <select id="agreementCase">
+                        <option value="">Not Associated</option>
+                    </select>
+                </label>
+
+                <label class="full-width">
+                    Agreement Title *
+                    <input id="agreementTitle" maxlength="500" required>
+                </label>
+
+                <label>
+                    Agreed Fees (INR) *
+                    <input id="agreementAmount" type="number"
+                           min="0.01" step="0.01" required>
+                </label>
+
+                <label>
+                    Agreement Date *
+                    <input id="agreementDate" type="date" required>
+                </label>
+
+                <label>
+                    Payment Due Date
+                    <input id="agreementDueDate" type="date">
+                </label>
+
+                <label>
+                    Status
+                    <select id="agreementStatus">
+                        <option value="active">Active</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                </label>
+
+                <label class="full-width">
+                    Notes / Installment Terms
+                    <textarea id="agreementNotes"
+                              maxlength="10000" rows="4"></textarea>
+                </label>
+
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="button button-primary">
+                    Save Agreement
+                </button>
+
+                <button type="button" data-close-dialog="agreementDialog">
+                    Cancel
+                </button>
+            </div>
+
+        </form>
+
+    </dialog>
+
+    <!-- INVOICE LINK DIALOG -->
+
+    <dialog id="invoiceLinkDialog" class="app-dialog">
+
+        <form id="invoiceLinkForm">
+
+            <div class="dialog-heading">
+                <h2>Link Existing Invoice</h2>
+                <button type="button" data-close-dialog="invoiceLinkDialog"
+                        aria-label="Close">&times;</button>
+            </div>
+
+            <p id="invoiceLinkTitle"></p>
+
+            <div id="invoiceLinkError" class="message error"
+                 role="alert" hidden></div>
+
+            <div class="form-grid">
+
+                <label>
+                    Client *
+                    <select id="invoiceLinkClient" required>
+                        <option value="">Select Client</option>
+                    </select>
+                </label>
+
+                <label>
+                    Case / Matter
+                    <select id="invoiceLinkCase">
+                        <option value="">Not Associated</option>
+                    </select>
+                </label>
+
+            </div>
+
+            <p class="muted">
+                The invoice association is permanent.
+                Verify the selected client and case before saving.
+            </p>
+
+            <div class="button-group">
+                <button type="submit" class="button button-primary">
+                    Confirm Link
+                </button>
+                <button type="button" data-close-dialog="invoiceLinkDialog">
+                    Cancel
+                </button>
+            </div>
+
+        </form>
+
+    </dialog>
+
+    <!-- TRANSACTION DETAILS -->
+
+    <dialog id="transactionDetailDialog" class="app-dialog">
+
+        <div class="dialog-heading">
+            <h2>Transaction Details</h2>
+            <button type="button" data-close-dialog="transactionDetailDialog"
+                    aria-label="Close">&times;</button>
+        </div>
+
+        <div id="transactionDetailContent"></div>
+
+        <div class="button-group">
+            <button id="printReceiptButton" type="button">
+                Print Payment Record
+            </button>
+            <button type="button" data-close-dialog="transactionDetailDialog">
+                Close
+            </button>
+        </div>
+
+    </dialog>
+
+    <!-- REVERSAL CONFIRMATION -->
+
+    <dialog id="reversalDialog" class="app-dialog">
+
+        <form id="reversalForm">
+
+            <div class="dialog-heading">
+                <h2>Reverse Transaction</h2>
+                <button type="button" data-close-dialog="reversalDialog"
+                        aria-label="Close">&times;</button>
+            </div>
+
+            <p id="reversalTransactionDetails"></p>
+
+            <div id="reversalError" class="message error"
+                 role="alert" hidden></div>
+
+            <div class="information-box">
+                This action creates a compensating accounting entry.
+                The original transaction remains in the audit history.
+                A reversal does not transfer money or issue a bank refund.
+            </div>
+
+            <label>
+                Reason for Reversal *
+                <textarea id="reversalReason" rows="4"
+                          maxlength="4900" required></textarea>
+            </label>
+
+            <label class="checkbox-label">
+                <input id="reversalConfirmation" type="checkbox" required>
+                I confirm that this transaction should be reversed.
+            </label>
+
+            <div class="button-group">
+                <button type="submit" class="button button-danger">
+                    Confirm Reversal
+                </button>
+
+                <button type="button" data-close-dialog="reversalDialog">
+                    Cancel
+                </button>
+            </div>
+
+        </form>
+
+    </dialog>
+
+    <footer class="app-footer">
+        &copy; <span id="currentYear"></span>
+        MNM Legal Associates. All rights reserved.
+        <br>
+        <strong>Justice, Integrity &amp; Excellence</strong>
+        <br>
+        Confidential Financial Management Workspace
+    </footer>
+
+</div>
+
+<script type="module">
+
+    import {
+        protectPage,
+        logoutUser,
+        verifyStaffAccess
+    } from "./auth.js";
+
+    import { auth } from "./firebase-config.js";
+
+    const $ = id => document.getElementById(id);
+
+    $("currentYear").textContent =
+        new Intl.DateTimeFormat("en-IN", {
+            year: "numeric",
+            timeZone: "Asia/Kolkata"
+        }).format(new Date());
+
+    $("logoutButton").addEventListener("click", async () => {
+        $("logoutButton").disabled = true;
+
+        try {
+            await logoutUser();
+        } catch (error) {
+            $("logoutButton").disabled = false;
+            $("appMessage").textContent =
+                "Unable to sign out. Please try again.";
+            $("appMessage").hidden = false;
+        }
+    });
+
+    protectPage({
+        allowedRoles: ["admin"],
+        loadingId: "authLoading",
+        contentId: "protectedContent",
+
+        onAuthenticated: async (user, profile) => {
+
+            const verified = await verifyStaffAccess(user);
+
+            if (
+                !verified ||
+                verified.active !== true ||
+                verified.role !== "admin" ||
+                auth.currentUser?.uid !== user.uid
+            ) {
+                throw new Error("Administrator access required.");
+            }
+
+            $("staffName").textContent =
+                verified.name || "Administrator";
+
+            try {
+                const finance = await import("./finance.js");
+
+                await finance.initialiseFinanceSystem(user);
+
+            } catch (error) {
+
+                console.error("Financial module initialization:", error);
+
+                $("connectionStatus").textContent = "Unavailable";
+
+                $("appMessage").textContent =
+                    "Financial module could not initialize. " +
+                    "Ensure all required application files are installed.";
+
+                $("appMessage").hidden = false;
+
+                document.querySelectorAll(
+                    "#protectedContent button"
+                ).forEach(button => {
+                    if (button.id !== "logoutButton") {
+                        button.disabled = true;
+                    }
+                });
+            }
+
+            await verifyStaffAccess(user);
+
+            if (auth.currentUser?.uid !== user.uid) {
+                throw new Error("Authentication session changed.");
+            }
+        }
+    });
+
+</script>
+
+</body>
+</html>
