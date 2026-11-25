@@ -1,4 +1,8 @@
 
+
+
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    LEGAL PRACTICE MANAGEMENT SYSTEM
@@ -33,6 +37,8 @@ import {
     updateClient,
     archiveClient,
     reactivateClient,
+    deleteClient,
+    restoreDeletedClient,
     addClientActivity,
     fetchClientActivities,
     createClientBackup
@@ -1205,7 +1211,7 @@ function renderRecentClients() {
 
     clearElement(body);
 
-    const recent = state.clients.slice(
+    const recent = state.clients.filter(c => c.status !== "archived").slice(
         0,
         CONFIG.recentClientLimit
     );
@@ -1347,6 +1353,8 @@ function getFilteredClients() {
     const sort = $("clientSort").value;
 
     const records = state.clients.filter(client => {
+
+        if (status === "all" && client.status === "archived") return false;
 
         if (
             status !== "all" &&
@@ -1631,6 +1639,14 @@ function renderDirectory() {
             );
 
         }
+
+        const deletionAction = createActionButton(
+            client.status === "archived" ? "Restore" : "Delete",
+            client.status === "archived" ? "restore" : "delete",
+            client.id
+        );
+        if (client.status !== "archived") deletionAction.classList.add("button-danger");
+        actions.appendChild(deletionAction);
 
         appendCell(row, actions);
 
@@ -2640,6 +2656,8 @@ function renderClientProfile() {
 
         client.status === "archived";
 
+    setHidden("deleteClientButton", archived);
+
     setHidden(
 
         "archivedClientNotice",
@@ -3534,6 +3552,35 @@ async function handleRefresh(
    31. TABLE ACTION HANDLING
    ========================================================= */
 
+async function changeClientDeletionStatus(clientId, restore = false) {
+    if (state.busy || !confirmDiscardChanges()) return;
+    await runAction(null, async () => {
+        const client = await getClient(clientId);
+        if (restore !== (client.status === "archived")) throw new Error("Client status changed. Refresh and try again.");
+        const confirmed = await confirmAction(
+            restore ? "Restore Client" : "Delete Client",
+            restore ? `Restore ${client.fullName} to the directory?` : `Remove ${client.fullName} from the active directory? This is recoverable deletion. All linked cases, invoices, documents and financial records remain preserved.`,
+            restore ? "Restore" : "Delete"
+        );
+        if (!confirmed) return;
+        if (restore) {
+            await restoreDeletedClient(client.id, client.revision);
+        } else {
+            const reason = window.prompt("Enter the reason for deleting this client:");
+            if (reason === null) return;
+            if (!reason.trim()) throw new Error("A deletion reason is required.");
+            await deleteClient(client.id, reason.trim(), client.revision);
+        }
+        state.formDirty = false;
+        const refreshed = await refreshAfterSave();
+        setValue("clientStatusFilter", "all");
+        state.currentPage = 1;
+        activateTab("directory");
+        renderDirectory();
+        if (refreshed) showMessage(restore ? "Client restored successfully." : "Client removed from the directory. Restore from Archived / Deleted.", "success");
+    });
+}
+
 function handleTableAction(event) {
 
     const button = event.target.closest(
@@ -3550,6 +3597,10 @@ function handleTableAction(event) {
 
         void openClientProfile(clientId);
 
+    }
+
+    if (button.dataset.action === "delete" || button.dataset.action === "restore") {
+        void changeClientDeletionStatus(clientId, button.dataset.action === "restore");
     }
 
     if (button.dataset.action === "edit") {
@@ -3640,6 +3691,25 @@ function handleTabKeyboard(event) {
    ========================================================= */
 
 function bindApplicationEvents() {
+    const statusFilter = $("clientStatusFilter");
+    if (statusFilter) {
+        for (const option of statusFilter.options) {
+            if (option.value === "all") option.textContent = "All Current Clients";
+            if (option.value === "archived") option.textContent = "Archived / Deleted";
+        }
+    }
+    const archiveButton = $("archiveClientButton");
+    if (archiveButton && !$("deleteClientButton")) {
+        const button = createElement("button", "button button-danger", "Delete Client");
+        button.type = "button";
+        button.id = "deleteClientButton";
+        button.hidden = true;
+        archiveButton.after(button);
+        button.addEventListener("click", () => {
+            if (state.currentClient) void changeClientDeletionStatus(state.currentClient.id);
+        });
+    }
+
 
     /* MODULE NAVIGATION */
 
@@ -4620,3 +4690,7 @@ export async function initialiseClientSystem(user) {
    Version 1.0
    Justice, Integrity & Excellence
    ========================================================= */
+
+
+
+
