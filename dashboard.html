@@ -1,43 +1,26 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <meta name="robots"
-          content="noindex, nofollow, noarchive">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="referrer" content="no-referrer">
-
     <meta name="theme-color" content="#101d30">
 
     <title>Staff Dashboard | MNM Legal Associates</title>
 
     <link rel="icon" href="/images/logo.png">
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <link rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
 
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap"
-          rel="stylesheet">
-
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
     <style>
-
-        /* =========================================
-           MNM LEGAL ASSOCIATES
-           STAFF DASHBOARD VERSION 3.0
-           ========================================= */
+        /* MNM LEGAL ASSOCIATES
+           STAFF DASHBOARD VERSION 3.1 */
 
         :root {
             --navy: #101d30;
@@ -54,7 +37,7 @@
             --red: #b91c1c;
             --sidebar-width: 270px;
             --radius: 12px;
-            --shadow: 0 4px 20px rgba(16, 29, 48, .045);
+            --shadow: 0 4px 20px rgba(16,29,48,.045);
         }
 
         * {
@@ -78,14 +61,11 @@
             line-height: 1.6;
         }
 
-        button,
-        input,
-        select {
+        button, input, select {
             font: inherit;
         }
 
-        button,
-        a {
+        button, a {
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -109,14 +89,11 @@
             outline-offset: 4px;
         }
 
-        h1,
-        h2,
-        h3,
-        p {
+        h1, h2, h3, p {
             margin-top: 0;
         }
 
-        /* AUTHENTICATION SCREEN */
+        /* AUTHORIZATION SCREEN */
 
         .auth-screen {
             min-height: 100dvh;
@@ -131,7 +108,7 @@
             width: 100%;
             max-width: 440px;
             padding: 42px 28px;
-            border: 1px solid rgba(195, 161, 107, .3);
+            border: 1px solid rgba(195,161,107,.3);
             border-radius: 16px;
             text-align: center;
             color: white;
@@ -167,9 +144,7 @@
         }
 
         @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+            to { transform: rotate(360deg); }
         }
 
         .auth-return {
@@ -453,7 +428,7 @@
             position: relative;
             z-index: 1;
             font-family: "Libre Baskerville", serif;
-            font-size: clamp(21px, 3vw, 30px);
+            font-size: clamp(21px,3vw,30px);
             line-height: 1.5;
             margin-bottom: 10px;
         }
@@ -477,7 +452,7 @@
 
         .status-grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(4,minmax(0,1fr));
             gap: 16px;
             margin-bottom: 35px;
         }
@@ -548,7 +523,7 @@
 
         .module-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(3,minmax(0,1fr));
             gap: 19px;
             margin-bottom: 35px;
         }
@@ -669,7 +644,7 @@
             opacity: 1;
         }
 
-        /* ACCOUNT DETAILS */
+        /* ACCOUNT INFORMATION */
 
         .account-card {
             padding: 25px;
@@ -682,7 +657,7 @@
 
         .account-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(3,minmax(0,1fr));
             gap: 23px;
         }
 
@@ -756,23 +731,15 @@
 
         /* RESPONSIVE DESIGN */
 
-        @media (max-width: 1200px) {
-
-            .module-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .status-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
+        @media (max-width:1200px) {
+            .module-grid,
+            .status-grid,
             .account-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-columns: repeat(2,minmax(0,1fr));
             }
         }
 
-        @media (max-width: 900px) {
-
+        @media (max-width:900px) {
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform .25s ease;
@@ -805,8 +772,7 @@
             }
         }
 
-        @media (max-width: 580px) {
-
+        @media (max-width:580px) {
             .topbar {
                 min-height: 70px;
                 padding: 12px 15px;
@@ -888,15 +854,12 @@
             }
         }
 
-        @media (prefers-reduced-motion: reduce) {
-
+        @media (prefers-reduced-motion:reduce) {
             html {
                 scroll-behavior: auto;
             }
 
-            *,
-            *::before,
-            *::after {
+            *, *::before, *::after {
                 transition: none !important;
             }
 
@@ -904,9 +867,7 @@
                 animation: none;
             }
         }
-
     </style>
-
 </head>
 
 <body>
@@ -914,7 +875,6 @@
     <!-- AUTHORIZATION SCREEN -->
 
     <div id="authLoading" class="auth-screen">
-
         <div class="auth-card">
 
             <img src="/images/logo.png"
@@ -937,9 +897,7 @@
             </a>
 
         </div>
-
     </div>
-
 
     <!-- PROTECTED DASHBOARD -->
 
@@ -948,7 +906,6 @@
         <div id="sidebarOverlay"
              class="sidebar-overlay"
              hidden></div>
-
 
         <!-- SIDEBAR -->
 
@@ -962,7 +919,6 @@
                      alt="MNM Legal Associates">
 
                 <div>
-
                     <div class="brand-name">
                         MNM LEGAL<br>ASSOCIATES
                     </div>
@@ -970,7 +926,6 @@
                     <div class="brand-caption">
                         Justice, Integrity &amp; Excellence
                     </div>
-
                 </div>
 
             </a>
@@ -986,7 +941,6 @@
                    aria-current="page">
 
                     <i class="fa-solid fa-house"></i>
-
                     <span>Dashboard</span>
 
                 </a>
@@ -1001,7 +955,6 @@
                    tabindex="-1">
 
                     <i class="fa-solid fa-file-invoice"></i>
-
                     <span>Invoice Generator</span>
 
                 </a>
@@ -1012,7 +965,6 @@
                    tabindex="-1">
 
                     <i class="fa-solid fa-users"></i>
-
                     <span>Client Management</span>
 
                 </a>
@@ -1023,7 +975,6 @@
                    tabindex="-1">
 
                     <i class="fa-solid fa-scale-balanced"></i>
-
                     <span>Case Management</span>
 
                 </a>
@@ -1031,9 +982,7 @@
                 <button class="nav-link" disabled>
 
                     <i class="fa-solid fa-calendar-days"></i>
-
                     <span>Hearing Calendar</span>
-
                     <i class="fa-solid fa-lock nav-lock"></i>
 
                 </button>
@@ -1041,9 +990,7 @@
                 <button class="nav-link" disabled>
 
                     <i class="fa-solid fa-folder-open"></i>
-
                     <span>Document Management</span>
-
                     <i class="fa-solid fa-lock nav-lock"></i>
 
                 </button>
@@ -1051,9 +998,7 @@
                 <button class="nav-link" disabled>
 
                     <i class="fa-solid fa-chart-line"></i>
-
                     <span>Financial Management</span>
-
                     <i class="fa-solid fa-lock nav-lock"></i>
 
                 </button>
@@ -1067,7 +1012,6 @@
                    data-account-link>
 
                     <i class="fa-solid fa-user-shield"></i>
-
                     <span>Account Information</span>
 
                 </a>
@@ -1075,7 +1019,6 @@
                 <a href="/" class="nav-link">
 
                     <i class="fa-solid fa-globe"></i>
-
                     <span>Visit Website</span>
 
                 </a>
@@ -1089,7 +1032,6 @@
                         type="button">
 
                     <i class="fa-solid fa-right-from-bracket"></i>
-
                     Sign Out
 
                 </button>
@@ -1099,7 +1041,6 @@
             </div>
 
         </aside>
-
 
         <!-- MAIN AREA -->
 
@@ -1156,7 +1097,6 @@
                             aria-label="Sign out">
 
                         <i class="fa-solid fa-right-from-bracket"></i>
-
                         <span>Sign Out</span>
 
                     </button>
@@ -1165,7 +1105,6 @@
 
             </header>
 
-
             <div class="dashboard-content">
 
                 <div id="dashboardMessage"
@@ -1173,8 +1112,7 @@
                      role="alert"
                      hidden></div>
 
-
-                <!-- WELCOME -->
+                <!-- WELCOME PANEL -->
 
                 <section class="welcome-panel">
 
@@ -1191,13 +1129,11 @@
                     <div class="welcome-date">
 
                         <i class="fa-regular fa-calendar"></i>
-
                         <span id="currentDate">—</span>
 
                     </div>
 
                 </section>
-
 
                 <!-- SYSTEM STATUS -->
 
@@ -1207,9 +1143,7 @@
                     <article class="status-card">
 
                         <i class="fa-solid fa-shield-halved"></i>
-
                         <p>Staff Authorization</p>
-
                         <strong id="authorizationStatus">
                             Verifying
                         </strong>
@@ -1219,9 +1153,7 @@
                     <article class="status-card">
 
                         <i class="fa-solid fa-user-tie"></i>
-
                         <p>Access Role</p>
-
                         <strong id="statusRole">—</strong>
 
                     </article>
@@ -1229,25 +1161,20 @@
                     <article class="status-card">
 
                         <i class="fa-solid fa-cubes"></i>
-
                         <p>Accessible Modules</p>
-
-                        <strong id="accessibleModules">—</strong>
+                        <strong id="accessibleModules">0 of 6</strong>
 
                     </article>
 
                     <article class="status-card">
 
                         <i class="fa-solid fa-cloud"></i>
-
                         <p>Data Storage</p>
-
                         <strong>Firebase Cloud</strong>
 
                     </article>
 
                 </section>
-
 
                 <!-- MANAGEMENT MODULES -->
 
@@ -1256,7 +1183,6 @@
                     <div class="section-heading">
 
                         <div>
-
                             <h2 id="modulesHeading">
                                 Practice Management
                             </h2>
@@ -1264,7 +1190,6 @@
                             <p>
                                 Select a module to manage your legal operations.
                             </p>
-
                         </div>
 
                         <span id="moduleCount" class="module-count">
@@ -1275,7 +1200,6 @@
 
                     <div class="module-grid">
 
-
                         <!-- INVOICE GENERATOR -->
 
                         <article class="module-card"
@@ -1284,9 +1208,7 @@
                             <div class="module-top">
 
                                 <div class="module-icon">
-
                                     <i class="fa-solid fa-file-invoice-dollar"></i>
-
                                 </div>
 
                                 <span id="invoiceModuleStatus"
@@ -1342,7 +1264,6 @@
 
                         </article>
 
-
                         <!-- CLIENT MANAGEMENT -->
 
                         <article class="module-card"
@@ -1351,9 +1272,7 @@
                             <div class="module-top">
 
                                 <div class="module-icon">
-
                                     <i class="fa-solid fa-users"></i>
-
                                 </div>
 
                                 <span id="clientModuleStatus"
@@ -1409,7 +1328,6 @@
 
                         </article>
 
-
                         <!-- CASE MANAGEMENT -->
 
                         <article class="module-card"
@@ -1418,9 +1336,7 @@
                             <div class="module-top">
 
                                 <div class="module-icon">
-
                                     <i class="fa-solid fa-scale-balanced"></i>
-
                                 </div>
 
                                 <span id="caseModuleStatus"
@@ -1476,7 +1392,6 @@
 
                         </article>
 
-
                         <!-- HEARING CALENDAR -->
 
                         <article class="module-card">
@@ -1484,9 +1399,7 @@
                             <div class="module-top">
 
                                 <div class="module-icon">
-
                                     <i class="fa-solid fa-calendar-days"></i>
-
                                 </div>
 
                                 <span class="module-status">
@@ -1529,13 +1442,11 @@
                             <button class="module-action" disabled>
 
                                 <span>Coming Soon</span>
-
                                 <i class="fa-solid fa-lock"></i>
 
                             </button>
 
                         </article>
-
 
                         <!-- DOCUMENT MANAGEMENT -->
 
@@ -1544,9 +1455,7 @@
                             <div class="module-top">
 
                                 <div class="module-icon">
-
                                     <i class="fa-solid fa-folder-open"></i>
-
                                 </div>
 
                                 <span class="module-status">
@@ -1589,13 +1498,11 @@
                             <button class="module-action" disabled>
 
                                 <span>Coming Soon</span>
-
                                 <i class="fa-solid fa-lock"></i>
 
                             </button>
 
                         </article>
-
 
                         <!-- FINANCIAL MANAGEMENT -->
 
@@ -1604,9 +1511,7 @@
                             <div class="module-top">
 
                                 <div class="module-icon">
-
                                     <i class="fa-solid fa-chart-line"></i>
-
                                 </div>
 
                                 <span class="module-status">
@@ -1649,7 +1554,6 @@
                             <button class="module-action" disabled>
 
                                 <span>Coming Soon</span>
-
                                 <i class="fa-solid fa-lock"></i>
 
                             </button>
@@ -1659,7 +1563,6 @@
                     </div>
 
                 </section>
-
 
                 <!-- ACCOUNT INFORMATION -->
 
@@ -1684,75 +1587,48 @@
                         <div class="account-grid">
 
                             <div class="account-field">
-
                                 <span>Full Name</span>
-
                                 <strong id="accountName">—</strong>
-
                             </div>
 
                             <div class="account-field">
-
                                 <span>Registered Email</span>
-
                                 <strong id="accountEmail">—</strong>
-
                             </div>
 
                             <div class="account-field">
-
                                 <span>Account Role</span>
-
                                 <strong id="accountRole">—</strong>
-
                             </div>
 
                             <div class="account-field">
-
                                 <span>Account Status</span>
-
                                 <strong id="accountStatus">—</strong>
-
                             </div>
 
                             <div class="account-field">
-
                                 <span>Email Verification</span>
-
                                 <strong id="emailVerification">—</strong>
-
                             </div>
 
                             <div class="account-field">
-
                                 <span>Last Sign In</span>
-
                                 <strong id="lastSignIn">—</strong>
-
                             </div>
 
                             <div class="account-field">
-
                                 <span>Invoice Generator Access</span>
-
                                 <strong id="invoiceAccessStatus">—</strong>
-
                             </div>
 
                             <div class="account-field">
-
                                 <span>Client Management Access</span>
-
                                 <strong id="clientAccessStatus">—</strong>
-
                             </div>
 
                             <div class="account-field">
-
                                 <span>Case Management Access</span>
-
                                 <strong id="caseAccessStatus">—</strong>
-
                             </div>
 
                         </div>
@@ -1785,7 +1661,6 @@
 
             </div>
 
-
             <footer class="main-footer">
 
                 &copy; <span id="currentYear"></span>
@@ -1807,19 +1682,17 @@
 
     </div>
 
-
     <!-- DASHBOARD APPLICATION -->
 
     <script type="module">
 
         /* =========================================
-           01. CONFIGURATION
+           01. FIREBASE AUTHENTICATION
            ========================================= */
 
         import {
             protectPage,
             logoutUser,
-            getStaffProfile,
             verifyStaffAccess
         } from "./auth.js";
 
@@ -1838,7 +1711,6 @@
         const MODULE_CONFIG = Object.freeze({
 
             invoice: Object.freeze({
-
                 enabled: true,
                 url: "/invoice.html",
                 roles: ["admin"],
@@ -1848,11 +1720,9 @@
                 cardId: "invoiceModuleCard",
                 accessId: "invoiceAccessStatus",
                 actionText: "Open Invoice Generator"
-
             }),
 
             clients: Object.freeze({
-
                 enabled: true,
                 url: "/clients.html",
                 roles: ["admin"],
@@ -1862,11 +1732,9 @@
                 cardId: "clientModuleCard",
                 accessId: "clientAccessStatus",
                 actionText: "Open Client Management"
-
             }),
 
             cases: Object.freeze({
-
                 enabled: true,
                 url: "/cases.html",
                 roles: ["admin"],
@@ -1876,55 +1744,45 @@
                 cardId: "caseModuleCard",
                 accessId: "caseAccessStatus",
                 actionText: "Open Case Management"
-
             })
 
         });
 
         let logoutInProgress = false;
-        let verificationPromise = null;
-        let authorizedUserId = null;
-        let sessionGeneration = 0;
         let navigationInProgress = false;
-
+        let authorizedUserId = null;
+        let verifiedProfile = null;
+        let verificationPromise = null;
+        let sessionGeneration = 0;
+        let lastVerificationTime = 0;
 
         /* =========================================
-           02. UTILITIES
+           02. GENERAL UTILITIES
            ========================================= */
 
         function setText(id, value) {
-
             const node = $(id);
 
             if (node) {
-
                 node.textContent = value ?? "—";
-
             }
-
         }
 
         function showMessage(message) {
-
             setText(
                 "dashboardMessage",
                 message || "An unexpected error occurred."
             );
 
             $("dashboardMessage").hidden = false;
-
         }
 
         function clearMessage() {
-
             $("dashboardMessage").hidden = true;
-
             setText("dashboardMessage", "");
-
         }
 
         function updateDate() {
-
             const now = new Date();
 
             setText(
@@ -1945,11 +1803,9 @@
                     timeZone: TIME_ZONE
                 }).format(now)
             );
-
         }
 
         function getGreeting() {
-
             const hour = Number(
                 new Intl.DateTimeFormat("en-GB", {
                     hour: "2-digit",
@@ -1959,27 +1815,22 @@
             );
 
             if (hour < 12) return "Good morning";
-
             if (hour < 17) return "Good afternoon";
 
             return "Good evening";
-
         }
 
-
         /* =========================================
-           03. MOBILE SIDEBAR
+           03. MOBILE NAVIGATION
            ========================================= */
 
         function setSidebar(open) {
-
             const mobile =
-                window.matchMedia("(max-width: 900px)").matches;
+                window.matchMedia("(max-width:900px)").matches;
 
             const visible = Boolean(open && mobile);
 
             $("sidebar").classList.toggle("open", visible);
-
             $("sidebarOverlay").hidden = !visible;
 
             document.body.classList.toggle(
@@ -1994,9 +1845,7 @@
 
             $("menuButton").setAttribute(
                 "aria-label",
-                visible
-                    ? "Close navigation"
-                    : "Open navigation"
+                visible ? "Close navigation" : "Open navigation"
             );
 
             $("menuButton").querySelector("i").className =
@@ -2005,70 +1854,48 @@
                     : "fa-solid fa-bars";
 
             $("sidebar").inert = mobile && !visible;
-
         }
 
         $("menuButton").addEventListener("click", () => {
-
             setSidebar(
                 !$("sidebar").classList.contains("open")
             );
-
         });
 
         $("sidebarOverlay").addEventListener("click", () => {
-
             setSidebar(false);
-
             $("menuButton").focus();
-
         });
 
         document.addEventListener("keydown", event => {
-
             if (
                 event.key === "Escape" &&
                 $("sidebar").classList.contains("open")
             ) {
-
                 setSidebar(false);
-
                 $("menuButton").focus();
-
             }
-
         });
 
         window.addEventListener("resize", () => {
-
             if (
-                !window.matchMedia("(max-width: 900px)").matches
+                !window.matchMedia("(max-width:900px)").matches
             ) {
-
                 setSidebar(false);
-
             } else {
-
                 $("sidebar").inert =
                     !$("sidebar").classList.contains("open");
-
             }
-
         });
 
         document.querySelectorAll("[data-account-link]")
             .forEach(link => {
-
                 link.addEventListener("click", () => {
-
                     setSidebar(false);
-
                 });
-
             });
 
         setSidebar(false);
-
 
         /* =========================================
            04. ROLE-BASED MODULE ACCESS
@@ -2077,21 +1904,13 @@
         function hasModuleAccess(config, profile) {
 
             return Boolean(
-
                 config.enabled &&
-
                 profile &&
-
                 profile.active === true &&
-
                 profile.uid === auth.currentUser?.uid &&
-
                 config.roles.includes(profile.role) &&
-
                 !logoutInProgress
-
             );
-
         }
 
         function configureModuleAccess(config, profile) {
@@ -2099,14 +1918,10 @@
             const permitted =
                 hasModuleAccess(config, profile);
 
-            const status = permitted
-                ? "Available"
-                : config.enabled
-                    ? "Restricted"
-                    : "Coming Soon";
+            const status =
+                permitted ? "Available" : "Restricted";
 
             setText(config.statusId, status);
-
             setText(config.accessId, status);
 
             setText(
@@ -2116,12 +1931,12 @@
                     : "Administrator Access Required"
             );
 
-            $(config.statusId)?.classList.toggle(
+            $(config.statusId).classList.toggle(
                 "enabled",
                 permitted
             );
 
-            $(config.cardId)?.classList.toggle(
+            $(config.cardId).classList.toggle(
                 "available",
                 permitted
             );
@@ -2130,45 +1945,32 @@
                 .forEach(link => {
 
                     if (permitted) {
-
                         link.href = config.url;
-
                         link.removeAttribute("aria-disabled");
-
                         link.removeAttribute("tabindex");
-
                     } else {
-
                         link.removeAttribute("href");
-
-                        link.setAttribute(
-                            "aria-disabled",
-                            "true"
-                        );
-
+                        link.setAttribute("aria-disabled", "true");
                         link.setAttribute("tabindex", "-1");
-
                     }
 
                 });
 
             return permitted;
-
         }
 
         function configureAllModules(profile) {
 
             let accessible = 0;
 
-            Object.values(MODULE_CONFIG).forEach(config => {
+            Object.values(MODULE_CONFIG)
+                .forEach(config => {
 
-                if (configureModuleAccess(config, profile)) {
+                    if (configureModuleAccess(config, profile)) {
+                        accessible++;
+                    }
 
-                    accessible++;
-
-                }
-
-            });
+                });
 
             setText(
                 "accessibleModules",
@@ -2180,55 +1982,63 @@
                 accessible > 0
             );
 
-            const released = Object.values(MODULE_CONFIG)
-                .filter(config => config.enabled).length;
+            const released =
+                Object.values(MODULE_CONFIG)
+                    .filter(config => config.enabled).length;
 
             setText(
                 "moduleCount",
                 `${released} of 6 modules released`
             );
-
         }
 
         function disableAllModules() {
-
             configureAllModules(null);
-
         }
 
-
         /* =========================================
-           05. STAFF PROFILE
+           05. VERIFIED STAFF PROFILE
            ========================================= */
 
-        function populateProfile(user, profile) {
+        function validateProfile(user, profile) {
 
             if (
-
-                !user ||
-
+                !user?.uid ||
                 !profile ||
-
-                profile.uid !== user.uid ||
-
-                auth.currentUser?.uid !== user.uid ||
-
                 profile.active !== true ||
-
+                auth.currentUser?.uid !== user.uid ||
+                logoutInProgress ||
                 !Object.prototype.hasOwnProperty.call(
                     ROLE_LABELS,
                     profile.role
                 )
-
             ) {
-
-                disableAllModules();
-
                 throw new Error("Staff authorization failed.");
-
             }
 
+            if (
+                profile.uid != null &&
+                profile.uid !== user.uid
+            ) {
+                throw new Error("Staff identity mismatch.");
+            }
+
+            // The profile has already been verified by
+            // verifyStaffAccess for this Firebase user.
+            return Object.freeze({
+                ...profile,
+                uid: user.uid
+            });
+        }
+
+        function populateProfile(user, rawProfile) {
+
+            const profile =
+                validateProfile(user, rawProfile);
+
             authorizedUserId = user.uid;
+            verifiedProfile = profile;
+            lastVerificationTime = Date.now();
 
             const name =
                 String(profile.name || "Staff Member");
@@ -2244,29 +2054,18 @@
                 .toUpperCase();
 
             setText("profileAvatar", initials || "ML");
-
             setText("profileName", name);
-
             setText("profileRole", role);
-
             setText("statusRole", role);
 
             setText("accountName", name);
-
-            setText(
-                "accountEmail",
-                user.email || "Not available"
-            );
-
+            setText("accountEmail", user.email || "Not available");
             setText("accountRole", role);
-
             setText("accountStatus", "Active");
 
             setText(
                 "emailVerification",
-                user.emailVerified
-                    ? "Verified"
-                    : "Not verified"
+                user.emailVerified ? "Verified" : "Not verified"
             );
 
             const lastSignIn =
@@ -2287,192 +2086,29 @@
                 `${getGreeting()}, ${name}`
             );
 
-            setText(
-                "authorizationStatus",
-                "Authorized"
-            );
+            setText("authorizationStatus", "Authorized");
 
-            $("authorizationStatus").classList.add("online");
+            $("authorizationStatus")
+                .classList.add("online");
 
             configureAllModules(profile);
-
             updateDate();
+            clearMessage();
 
+            return profile;
         }
 
-
         /* =========================================
-           06. SERVER AUTHORIZATION REFRESH
+           06. CLEAR AUTHORIZATION STATE
            ========================================= */
 
-        async function refreshAuthorization() {
-
-            if (logoutInProgress) {
-
-                throw new Error("Sign out in progress.");
-
-            }
-
-            if (verificationPromise) {
-
-                return verificationPromise;
-
-            }
-
-            const generation = sessionGeneration;
-
-            verificationPromise = (async () => {
-
-                await auth.authStateReady();
-
-                const user = auth.currentUser;
-
-                if (!user?.uid) {
-
-                    throw new Error("Authentication required.");
-
-                }
-
-                const profile =
-                    await verifyStaffAccess(user);
-
-                if (
-
-                    generation !== sessionGeneration ||
-
-                    logoutInProgress ||
-
-                    auth.currentUser?.uid !== user.uid ||
-
-                    profile?.uid !== user.uid ||
-
-                    profile.active !== true ||
-
-                    !Object.prototype.hasOwnProperty.call(
-                        ROLE_LABELS,
-                        profile.role
-                    )
-
-                ) {
-
-                    throw new Error(
-                        "Staff authorization is no longer valid."
-                    );
-
-                }
-
-                populateProfile(user, profile);
-
-                return profile;
-
-            })();
-
-            try {
-
-                return await verificationPromise;
-
-            } finally {
-
-                verificationPromise = null;
-
-            }
-
-        }
-
-
-        /* =========================================
-           07. SECURE MODULE NAVIGATION
-           ========================================= */
-
-        Object.values(MODULE_CONFIG).forEach(config => {
-
-            document.querySelectorAll(config.selector)
-                .forEach(link => {
-
-                    link.addEventListener("click", async event => {
-
-                        event.preventDefault();
-
-                        if (
-                            navigationInProgress ||
-                            logoutInProgress ||
-                            $("protectedContent").hidden
-                        ) {
-
-                            return;
-
-                        }
-
-                        if (
-                            link.getAttribute("aria-disabled") === "true"
-                        ) {
-
-                            showMessage(
-                                "Administrator access is required."
-                            );
-
-                            return;
-
-                        }
-
-                        navigationInProgress = true;
-
-                        clearMessage();
-
-                        try {
-
-                            const profile =
-                                await refreshAuthorization();
-
-                            if (
-
-                                !hasModuleAccess(config, profile) ||
-
-                                $("protectedContent").hidden
-
-                            ) {
-
-                                throw new Error(
-                                    "Module access is restricted."
-                                );
-
-                            }
-
-                            setSidebar(false);
-
-                            window.location.assign(config.url);
-
-                        } catch (error) {
-
-                            disableAllModules();
-
-                            showMessage(
-                                "Access could not be verified. " +
-                                "Refresh the dashboard and try again."
-                            );
-
-                        } finally {
-
-                            navigationInProgress = false;
-
-                        }
-
-                    });
-
-                });
-
-        });
-
-
-        /* =========================================
-           08. CLEAR CONFIDENTIAL PROFILE
-           ========================================= */
-
-        function clearProfile() {
-
-            authorizedUserId = null;
+        function clearProfile(status = "Not verified") {
 
             sessionGeneration++;
+
+            authorizedUserId = null;
+            verifiedProfile = null;
+            lastVerificationTime = 0;
 
             disableAllModules();
 
@@ -2495,20 +2131,148 @@
                 "Welcome to your workspace"
             );
 
-            setText(
-                "authorizationStatus",
-                "Not verified"
-            );
+            setText("authorizationStatus", status);
 
             $("authorizationStatus")
                 .classList.remove("online");
 
-            clearMessage();
-
             setSidebar(false);
-
         }
 
+        function markVerificationRequired(error) {
+
+            clearProfile("Verification required");
+
+            console.error(
+                "Dashboard authorization error:",
+                error?.code || error?.message || "Unknown error"
+            );
+
+            showMessage(
+                "Staff authorization could not be verified. " +
+                "Please check your connection and refresh the dashboard."
+            );
+        }
+
+        /* =========================================
+           07. SERVER AUTHORIZATION REFRESH
+           ========================================= */
+
+        async function refreshAuthorization() {
+
+            if (logoutInProgress) {
+                throw new Error("Sign out in progress.");
+            }
+
+            if (verificationPromise) {
+                return verificationPromise;
+            }
+
+            const generation = sessionGeneration;
+
+            const request = (async () => {
+
+                await auth.authStateReady();
+
+                const user = auth.currentUser;
+
+                if (!user?.uid) {
+                    throw new Error("Authentication required.");
+                }
+
+                const rawProfile =
+                    await verifyStaffAccess(user);
+
+                if (
+                    generation !== sessionGeneration ||
+                    logoutInProgress ||
+                    auth.currentUser?.uid !== user.uid
+                ) {
+                    throw new Error(
+                        "Authorization changed during verification."
+                    );
+                }
+
+                return populateProfile(user, rawProfile);
+
+            })();
+
+            verificationPromise = request;
+
+            try {
+                return await request;
+            } finally {
+                if (verificationPromise === request) {
+                    verificationPromise = null;
+                }
+            }
+        }
+
+        /* =========================================
+           08. SECURE MODULE NAVIGATION
+           ========================================= */
+
+        Object.values(MODULE_CONFIG)
+            .forEach(config => {
+
+                document.querySelectorAll(config.selector)
+                    .forEach(link => {
+
+                        link.addEventListener("click", async event => {
+
+                            event.preventDefault();
+
+                            if (
+                                navigationInProgress ||
+                                logoutInProgress ||
+                                $("protectedContent").hidden
+                            ) {
+                                return;
+                            }
+
+                            navigationInProgress = true;
+                            clearMessage();
+
+                            try {
+
+                                // Always verify against Firebase before
+                                // opening a management module.
+
+                                const profile =
+                                    await refreshAuthorization();
+
+                                if (
+                                    !hasModuleAccess(config, profile) ||
+                                    $("protectedContent").hidden
+                                ) {
+                                    showMessage(
+                                        "Administrator access is required."
+                                    );
+
+                                    return;
+                                }
+
+                                setSidebar(false);
+
+                                window.location.assign(config.url);
+
+                            } catch (error) {
+
+                                if (!logoutInProgress) {
+                                    markVerificationRequired(error);
+                                }
+
+                            } finally {
+
+                                navigationInProgress = false;
+
+                            }
+
+                        });
+
+                    });
+
+            });
 
         /* =========================================
            09. SIGN OUT
@@ -2520,15 +2284,10 @@
 
             logoutInProgress = true;
 
-            sessionGeneration++;
+            clearProfile("Signing out");
 
             $("logoutButton").disabled = true;
-
             $("sidebarLogout").disabled = true;
-
-            disableAllModules();
-
-            setSidebar(false);
 
             clearMessage();
 
@@ -2537,12 +2296,8 @@
                 const result = await logoutUser();
 
                 if (result?.success === false) {
-
                     throw new Error("Sign out failed.");
-
                 }
-
-                clearProfile();
 
                 $("protectedContent").hidden = true;
 
@@ -2553,25 +2308,22 @@
                 logoutInProgress = false;
 
                 $("logoutButton").disabled = false;
-
                 $("sidebarLogout").disabled = false;
 
                 try {
 
                     await refreshAuthorization();
 
-                } catch {
+                } catch (verificationError) {
 
-                    disableAllModules();
+                    markVerificationRequired(verificationError);
 
                 }
 
                 showMessage(
                     "Unable to sign out. Please try again."
                 );
-
             }
-
         }
 
         $("logoutButton").addEventListener(
@@ -2584,9 +2336,8 @@
             handleLogout
         );
 
-
         /* =========================================
-           10. AUTHORIZATION ERROR
+           10. AUTHORIZATION ERROR SCREEN
            ========================================= */
 
         function showAuthenticationError() {
@@ -2594,9 +2345,7 @@
             clearProfile();
 
             $("protectedContent").hidden = true;
-
             $("authLoading").hidden = false;
-
             $("loadingSpinner").hidden = true;
 
             setText(
@@ -2604,9 +2353,7 @@
                 "Authorization service unavailable. " +
                 "Please refresh or return to Staff Login."
             );
-
         }
-
 
         /* =========================================
            11. SESSION MONITORING
@@ -2614,16 +2361,7 @@
 
         auth.onAuthStateChanged(user => {
 
-            if (
-
-                authorizedUserId &&
-
-                (
-                    !user ||
-                    user.uid !== authorizedUserId
-                )
-
-            ) {
+            if (!user) {
 
                 clearProfile();
 
@@ -2631,17 +2369,121 @@
 
                 window.location.replace("/login.html");
 
+                return;
+            }
+
+            if (
+                authorizedUserId &&
+                user.uid !== authorizedUserId
+            ) {
+
+                clearProfile();
+
+                $("protectedContent").hidden = true;
+
+                window.location.replace("/login.html");
             }
 
         });
 
+        /*
+         * IMPORTANT FIX:
+         *
+         * A temporary visibility change by protectPage
+         * is not treated as a permanent session failure.
+         *
+         * When the protected page becomes visible again,
+         * authorization is recovered from Firebase.
+         */
+
+        let previousHiddenState =
+            $("protectedContent").hidden;
+
+        let visibilityRecovery = 0;
+
         const visibilityObserver = new MutationObserver(() => {
 
-            if ($("protectedContent").hidden) {
+            const currentlyHidden =
+                $("protectedContent").hidden;
 
-                clearProfile();
-
+            if (currentlyHidden === previousHiddenState) {
+                return;
             }
+
+            previousHiddenState = currentlyHidden;
+
+            const recoveryId = ++visibilityRecovery;
+
+            if (currentlyHidden) {
+
+                clearProfile("Verifying");
+
+                return;
+            }
+
+            if (logoutInProgress) return;
+
+            /*
+             * protectPage may already have populated
+             * the verified profile before revealing
+             * the dashboard.
+             */
+
+            if (
+                verifiedProfile &&
+                authorizedUserId === auth.currentUser?.uid &&
+                verifiedProfile.active === true
+            ) {
+
+                configureAllModules(verifiedProfile);
+
+                return;
+            }
+
+            /*
+             * Wait for any previous verification request
+             * to settle before starting a new recovery.
+             */
+
+            void (async () => {
+
+                const pending = verificationPromise;
+
+                if (pending) {
+
+                    try {
+                        await pending;
+                    } catch {
+                        // A fresh verification follows.
+                    }
+
+                }
+
+                if (
+                    recoveryId !== visibilityRecovery ||
+                    logoutInProgress ||
+                    $("protectedContent").hidden
+                ) {
+                    return;
+                }
+
+                try {
+
+                    await refreshAuthorization();
+
+                } catch (error) {
+
+                    if (
+                        recoveryId === visibilityRecovery &&
+                        !logoutInProgress &&
+                        !$("protectedContent").hidden
+                    ) {
+                        markVerificationRequired(error);
+                    }
+
+                }
+
+            })();
 
         });
 
@@ -2653,99 +2495,109 @@
             }
         );
 
-        async function refreshVisibleDashboard() {
+        /* =========================================
+           12. SESSION RECOVERY AND CONNECTIVITY
+           ========================================= */
+
+        async function refreshVisibleDashboard(force = false) {
 
             if (
-
                 logoutInProgress ||
-
                 document.visibilityState !== "visible" ||
-
-                $("protectedContent").hidden ||
-
-                !authorizedUserId
-
+                $("protectedContent").hidden
             ) {
-
                 return;
-
             }
+
+            updateDate();
+
+            if (
+                !force &&
+                verifiedProfile &&
+                authorizedUserId === auth.currentUser?.uid &&
+                Date.now() - lastVerificationTime < 15000
+            ) {
+                return;
+            }
+
+            const generation = sessionGeneration;
 
             try {
 
                 await refreshAuthorization();
 
-            } catch {
+            } catch (error) {
 
-                disableAllModules();
-
-                setText(
-                    "authorizationStatus",
-                    "Verification required"
-                );
-
-                $("authorizationStatus")
-                    .classList.remove("online");
-
-                showMessage(
-                    "Staff authorization could not be refreshed. " +
-                    "Check your connection and refresh the dashboard."
-                );
+                if (
+                    generation === sessionGeneration &&
+                    !logoutInProgress &&
+                    !$("protectedContent").hidden
+                ) {
+                    markVerificationRequired(error);
+                }
 
             }
-
         }
 
-        window.addEventListener(
-            "focus",
-            refreshVisibleDashboard
-        );
+        window.addEventListener("focus", () => {
+            void refreshVisibleDashboard();
+        });
 
-        window.addEventListener(
-            "online",
-            refreshVisibleDashboard
-        );
+        window.addEventListener("online", () => {
+            void refreshVisibleDashboard(true);
+        });
 
-        window.addEventListener(
-            "pageshow",
-            refreshVisibleDashboard
-        );
+        window.addEventListener("pageshow", event => {
 
-        document.addEventListener(
-            "visibilitychange",
-            refreshVisibleDashboard
-        );
+            if (event.persisted) {
+                window.location.reload();
+                return;
+            }
 
-        window.addEventListener("offline", () => {
+            void refreshVisibleDashboard();
+        });
 
-            sessionGeneration++;
+        document.addEventListener("visibilitychange", () => {
 
-            disableAllModules();
-
-            setText(
-                "authorizationStatus",
-                "Connection unavailable"
-            );
-
-            $("authorizationStatus")
-                .classList.remove("online");
+            if (document.visibilityState === "visible") {
+                void refreshVisibleDashboard();
+            }
 
         });
 
+        window.addEventListener("offline", () => {
+
+            clearProfile("Connection unavailable");
+
+            showMessage(
+                "Internet connection unavailable. " +
+                "Management modules will be available " +
+                "after authorization is restored."
+            );
+
+        });
 
         /* =========================================
-           12. INITIALIZE DASHBOARD
+           13. INITIALIZE DASHBOARD
            ========================================= */
 
         async function initialiseDashboard() {
 
             disableAllModules();
-
             updateDate();
 
             try {
 
-                await protectPage({
+                await auth.authStateReady();
+
+                if (!auth.currentUser) {
+
+                    window.location.replace("/login.html");
+
+                    return;
+                }
+
+                protectPage({
 
                     contentSelector: "#protectedContent",
 
@@ -2767,12 +2619,29 @@
 
                         }
 
-                        const profile =
+                        if (logoutInProgress) {
+
+                            throw new Error(
+                                "Sign out in progress."
+                            );
+
+                        }
+
+                        const rawProfile =
                             await verifyStaffAccess(user);
 
-                        populateProfile(user, profile);
+                        if (
+                            auth.currentUser?.uid !== user.uid ||
+                            logoutInProgress
+                        ) {
 
-                        clearMessage();
+                            throw new Error(
+                                "Authentication session changed."
+                            );
+
+                        }
+
+                        populateProfile(user, rawProfile);
 
                     }
 
@@ -2782,19 +2651,18 @@
 
                 console.error(
                     "Dashboard initialization failed:",
-                    error?.code || error?.name || "Error"
+                    error?.code || error?.message || "Error"
                 );
 
                 showAuthenticationError();
 
             }
-
         }
 
         initialiseDashboard();
 
         /* =========================================
-           END OF STAFF DASHBOARD VERSION 3.0
+           END OF STAFF DASHBOARD VERSION 3.1
 
            MNM LEGAL ASSOCIATES
            Justice, Integrity & Excellence
@@ -2803,5 +2671,4 @@
     </script>
 
 </body>
-
 </html>
