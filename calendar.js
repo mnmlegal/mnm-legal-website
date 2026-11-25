@@ -1,0 +1,3194 @@
+
+/* =========================================================
+   MNM LEGAL ASSOCIATES
+   HEARING CALENDAR — APPLICATION ENGINE
+   Version 1.0
+
+   Justice, Integrity & Excellence
+   ========================================================= */
+
+import { auth } from "./firebase-config.js";
+
+import { verifyStaffAccess } from "./auth.js";
+
+import {
+    getIndianDate,
+    isValidCalendarDate,
+    addCalendarDays,
+    getDaysDifference,
+    formatCalendarDate,
+    formatCalendarMonth,
+    getWeekRange,
+    shiftCalendarMonth,
+    generateMonthGrid,
+    generateWeekGrid,
+    getEventTiming,
+    fetchCalendarData,
+    filterCalendarEvents,
+    groupEventsByDate,
+    getEventsForDate,
+    getUpcomingHearings,
+    getOverdueHearings,
+    getUpcomingDeadlines,
+    calculateCalendarStatistics,
+    generateDailyCauseList,
+    getHearingCase,
+    rescheduleHearing,
+    generateCalendarCSV
+} from "./calendar-cloud.js";
+
+
+/* =========================================================
+   01. APPLICATION CONFIGURATION
+   ========================================================= */
+
+const CONFIG = Object.freeze({
+    firmName: "MNM Legal Associates",
+    slogan: "Justice, Integrity & Excellence",
+    timeZone: "Asia/Kolkata",
+    refreshInterval: 120000,
+    messageDuration: 6500,
+    maximumMonthEvents: 3,
+    maximumAlerts: 8,
+    version: "1.0"
+});
+
+const VIEWS = [
+    "month",
+    "week",
+    "day",
+    "upcoming",
+    "overdue",
+    "deadlines"
+];
+
+const FILTER_FIELDS = {
+    search: "calendarSearch",
+    court: "courtFilter",
+    city: "cityFilter",
+    advocate: "advocateFilter",
+    practiceArea: "practiceAreaFilter",
+    type: "eventTypeFilter",
+    priority: "priorityFilter"
+};
+
+const state = {
+    initialized: false,
+    userId: null,
+    invalidated: false,
+    connected: false,
+    refreshing: false,
+    saving: false,
+    events: [],
+    filteredEvents: [],
+    filters: {},
+    view: "month",
+    selectedDate: getIndianDate(),
+    anchorDate: getIndianDate(),
+    today: getIndianDate(),
+    activeEventId: null,
+    printDate: null,
+    lastSync: 0,
+    refreshPromise: null,
+    refreshTimer: null,
+    messageTimer: null,
+    confirmationResolver: null,
+    rescheduleRequest: 0,
+    rescheduleRecord: null
+};
+
+
+/* =========================================================
+   02. DOM UTILITIES
+   ========================================================= */
+
+const $ = id => document.getElementById(id);
+
+function text(id, value) {
+    const element = $(id);
+
+    if (element) {
+        element.textContent = String(value ?? "—");
+    }
+}
+
+function visible(id, show = true) {
+    const element = $(id);
+
+    if (element) {
+        element.hidden = !show;
+    }
+}
+
+function value(id, fallback = "") {
+    return $(id)?.value ?? fallback;
+}
+
+function checked(id) {
+    return Boolean($(id)?.checked);
+}
+
+function escapeHTML(input) {
+    return String(input ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+const esc = escapeHTML;
+
+function displayValue(input) {
+    return esc(input || "—");
+}
+
+function label(input) {
+    return String(input || "")
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, character =>
+            character.toUpperCase()
+        );
+}
+
+function priorityClass(priority) {
+    return ["normal", "high", "urgent"]
+        .includes(priority)
+        ? priority
+        : "normal";
+}
+
+function eventClasses(event) {
+    return [
+        event.type === "deadline"
+            ? "deadline"
+            : "hearing",
+        priorityClass(event.priority),
+        event.isOverdue ? "overdue" : "",
+        event.isToday ? "today" : ""
+    ].filter(Boolean).join(" ");
+}
+
+function eventLabel(event) {
+    return event.type === "deadline"
+        ? "Limitation Deadline"
+        : "Court Hearing";
+}
+
+function formatDate(date, options = {}) {
+    if (!isValidCalendarDate(date)) {
+        return "Not specified";
+    }
+
+    return formatCalendarDate(date, options);
+}
+
+function formatTime(timestamp) {
+    return new Intl.DateTimeFormat("en-IN", {
+        timeZone: CONFIG.timeZone,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
+    }).format(new Date(timestamp));
+}
+
+function fullDate(date) {
+    return formatDate(date, {
+        weekday: "long"
+    });
+}
+
+function dayName(date) {
+    return new Intl.DateTimeFormat("en-IN", {
+        weekday: "short",
+        timeZone: "UTC"
+    }).format(new Date(`${date}T00:00:00Z`));
+}
+
+function timingText(event) {
+    const days = getDaysDifference(
+        state.today,
+        event.date
+    );
+
+    if (days === 0) {
+        return "Today";
+    }
+
+    if (days === 1) {
+        return "Tomorrow";
+    }
+
+    if (days < 0) {
+        const elapsed = Math.abs(days);
+
+        return `${elapsed} day${elapsed === 1 ? "" : "s"} ago`;
+    }
+
+    return `In ${days} days`;
+}
+
+function priorityBadge(event) {
+    return `
+        <span class="priority-badge ${priorityClass(event.priority)}">
+            ${esc(label(event.priority || "normal"))}
+        </span>
+    `;
+}
+
+function eventButton(event, caption = "View") {
+    return `
+        <button
+            type="button"
+            class="button button-secondary button-small"
+            data-event-id="${esc(event.id)}">
+            <i class="fa-solid fa-eye"></i>
+            ${esc(caption)}
+        </button>
+    `;
+}
+
+function hearingActions(event) {
+    return `
+        <div class="table-actions">
+            ${eventButton(event)}
+            ${
+                event.type === "hearing"
+                ? `
+                    <button
+                        type="button"
+                        class="button button-secondary button-small"
+                        data-reschedule-id="${esc(event.id)}">
+                        <i class="fa-solid fa-calendar-plus"></i>
+                        Update
+                    </button>
+                `
+                : ""
+            }
+        </div>
+    `;
+}
+
+function caseCell(event) {
+    return `
+        <span class="case-code">
+            ${displayValue(event.caseCode)}
+        </span>
+        <strong>
+            ${displayValue(event.caseTitle)}
+        </strong>
+        <small>
+            ${displayValue(event.clientName)}
+        </small>
+    `;
+}
+
+function courtCell(event) {
+    return `
+        <strong>
+            ${displayValue(event.courtName)}
+        </strong>
+        <small>
+            ${esc([
+                event.courtCity,
+                event.courtNumber
+                    ? `Court No. ${event.courtNumber}`
+                    : ""
+            ].filter(Boolean).join(" · "))}
+        </small>
+    `;
+}
+
+function findEvent(id) {
+    return state.events.find(event =>
+        event.id === id
+    );
+}
+
+
+/* =========================================================
+   03. AUTHENTICATION AND SESSION SECURITY
+   ========================================================= */
+
+function assertSession() {
+    if (
+        state.invalidated ||
+        !state.userId ||
+        auth.currentUser?.uid !== state.userId
+    ) {
+        throw new Error(
+            "Your authorized session is no longer available."
+        );
+    }
+}
+
+async function requireSession() {
+    assertSession();
+
+    const user = auth.currentUser;
+
+    const profile = await verifyStaffAccess(user);
+
+    assertSession();
+
+    if (
+        profile.uid !== state.userId ||
+        profile.active !== true ||
+        profile.role !== "admin"
+    ) {
+        invalidateSession();
+
+        throw new Error(
+            "Administrator authorization required."
+        );
+    }
+
+    return profile;
+}
+
+function requireVisibleApplication() {
+    assertSession();
+
+    if ($("protectedContent").hidden) {
+        throw new Error(
+            "Please wait for authorization verification."
+        );
+    }
+}
+
+function closeDialogs() {
+    document
+        .querySelectorAll("#protectedContent dialog[open]")
+        .forEach(dialog => dialog.close());
+}
+
+function invalidateSession() {
+    state.invalidated = true;
+    state.connected = false;
+
+    state.events = [];
+    state.filteredEvents = [];
+    state.activeEventId = null;
+    state.rescheduleRecord = null;
+    state.rescheduleRequest++;
+
+    clearInterval(state.refreshTimer);
+    clearTimeout(state.messageTimer);
+
+    closeDialogs();
+
+    [
+        "monthCalendarGrid",
+        "weekCalendarGrid",
+        "selectedDateEvents",
+        "dailyCauseList",
+        "dailyDeadlinesBody",
+        "upcomingHearingsBody",
+        "overdueHearingsBody",
+        "deadlinesTableBody",
+        "calendarAlertsList",
+        "causeListPreview",
+        "printContainer"
+    ].forEach(id => {
+        if ($(id)) {
+            $(id).replaceChildren();
+        }
+    });
+
+    [
+        "rescheduleForm",
+        "calendarSearch"
+    ].forEach(id => {
+        const element = $(id);
+
+        if (element instanceof HTMLFormElement) {
+            element.reset();
+        } else if (element) {
+            element.value = "";
+        }
+    });
+
+    visible("printContainer", false);
+    visible("protectedContent", false);
+    visible("authLoading", true);
+
+    text(
+        "loadingMessage",
+        "Your session has ended. Please sign in again."
+    );
+}
+
+
+/* =========================================================
+   04. APPLICATION MESSAGES
+   ========================================================= */
+
+function showMessage(message, type = "info") {
+    if (state.invalidated) return;
+
+    const element = $("appMessage");
+
+    clearTimeout(state.messageTimer);
+
+    element.className = `app-message ${type}`;
+    element.textContent = message;
+    element.hidden = false;
+
+    state.messageTimer = setTimeout(() => {
+        element.hidden = true;
+    }, CONFIG.messageDuration);
+}
+
+function errorMessage(error, fallback) {
+    const code = String(error?.code || "");
+
+    if (code.includes("permission-denied")) {
+        return "You do not have permission to perform this action.";
+    }
+
+    if (
+        code.includes("unavailable") ||
+        code.includes("network-request-failed")
+    ) {
+        return "The secure database is currently unavailable. Check your connection and retry.";
+    }
+
+    return error?.message || fallback;
+}
+
+function reportError(error, fallback) {
+    console.error("Hearing Calendar:", error);
+
+    showMessage(
+        errorMessage(error, fallback),
+        "error"
+    );
+}
+
+
+/* =========================================================
+   05. CLOUD CONNECTION STATUS
+   ========================================================= */
+
+function setConnection(status) {
+    const indicator = $("cloudStatusIndicator");
+
+    indicator.className =
+        `connection-indicator ${status}`;
+
+    const messages = {
+        syncing: "Synchronizing with secure database...",
+        connected: "Connected to secure database",
+        offline: "Offline — displayed records may be outdated",
+        error: "Synchronization failed — refresh required"
+    };
+
+    text(
+        "cloudStatus",
+        messages[status] || "Connection not verified"
+    );
+
+    state.connected = status === "connected";
+
+    $("refreshCalendarButton").disabled =
+        status === "syncing";
+
+    $("saveRescheduleButton").disabled =
+        !state.connected || state.saving;
+}
+
+function updateLastSync() {
+    if (!state.lastSync) {
+        text("lastSynced", "Awaiting synchronization");
+        return;
+    }
+
+    text(
+        "lastSynced",
+        `Last synced: ${formatTime(state.lastSync)} IST`
+    );
+}
+
+
+/* =========================================================
+   06. FIREBASE SYNCHRONIZATION
+   ========================================================= */
+
+async function synchronize({
+    notify = false
+} = {}) {
+    assertSession();
+
+    if (state.refreshPromise) {
+        return state.refreshPromise;
+    }
+
+    state.refreshing = true;
+
+    setConnection("syncing");
+
+    state.refreshPromise = (async () => {
+        try {
+            await requireSession();
+
+            const result = await fetchCalendarData();
+
+            assertSession();
+
+            if (!Array.isArray(result.events)) {
+                throw new Error(
+                    "Invalid calendar data received."
+                );
+            }
+
+            state.events = result.events;
+            state.today = result.today || getIndianDate();
+
+            state.lastSync =
+                Date.parse(result.synchronizedAt) ||
+                Date.now();
+
+            populateFilterOptions(result.filters || {});
+
+            refreshEventTiming();
+
+            renderAll();
+
+            setConnection("connected");
+            updateLastSync();
+
+            if (notify) {
+                showMessage(
+                    "Hearing Calendar synchronized successfully.",
+                    "success"
+                );
+            }
+
+            return result;
+
+        } catch (error) {
+            if (!state.invalidated) {
+                setConnection(
+                    navigator.onLine ? "error" : "offline"
+                );
+            }
+
+            throw error;
+
+        } finally {
+            state.refreshing = false;
+            state.refreshPromise = null;
+        }
+    })();
+
+    return state.refreshPromise;
+}
+
+function refreshEventTiming() {
+    state.today = getIndianDate();
+
+    state.events = state.events.map(event => ({
+        ...event,
+        ...getEventTiming(event.date, state.today)
+    }));
+}
+
+async function automaticRefresh() {
+    if (
+        !state.initialized ||
+        state.invalidated ||
+        state.refreshing ||
+        state.saving ||
+        document.hidden ||
+        $("protectedContent").hidden ||
+        document.querySelector("dialog[open]") ||
+        !navigator.onLine
+    ) {
+        return;
+    }
+
+    if (
+        Date.now() - state.lastSync <
+        CONFIG.refreshInterval
+    ) {
+        return;
+    }
+
+    try {
+        await synchronize();
+
+    } catch (error) {
+        console.error(
+            "Automatic calendar synchronization failed:",
+            error
+        );
+    }
+}
+
+
+/* =========================================================
+   07. FILTER MANAGEMENT
+   ========================================================= */
+
+function populateSelect(id, options, allLabel) {
+    const select = $(id);
+    const previousValue = select.value;
+
+    select.replaceChildren(
+        new Option(allLabel, "all")
+    );
+
+    for (const option of options || []) {
+        select.add(
+            new Option(option, option)
+        );
+    }
+
+    if (
+        Array.from(select.options).some(
+            option => option.value === previousValue
+        )
+    ) {
+        select.value = previousValue;
+    }
+}
+
+function populateFilterOptions(options) {
+    populateSelect(
+        "courtFilter",
+        options.courts,
+        "All Courts"
+    );
+
+    populateSelect(
+        "cityFilter",
+        options.cities,
+        "All Cities"
+    );
+
+    populateSelect(
+        "advocateFilter",
+        options.advocates,
+        "All Advocates"
+    );
+
+    populateSelect(
+        "practiceAreaFilter",
+        options.practiceAreas,
+        "All Practice Areas"
+    );
+}
+
+function readFilters() {
+    const filters = {};
+
+    for (const [key, id] of Object.entries(FILTER_FIELDS)) {
+        filters[key] = value(
+            id,
+            key === "search" ? "" : "all"
+        );
+    }
+
+    return filters;
+}
+
+function applyFilters() {
+    state.filters = readFilters();
+
+    state.filteredEvents = filterCalendarEvents(
+        state.events,
+        state.filters
+    );
+
+    text(
+        "filterResultCount",
+        `${state.filteredEvents.length} matching events out of ${state.events.length} recorded events`
+    );
+}
+
+function clearFilters(render = true) {
+    for (const [key, id] of Object.entries(FILTER_FIELDS)) {
+        $(id).value =
+            key === "search" ? "" : "all";
+    }
+
+    if (render) {
+        renderAll();
+    }
+}
+
+
+/* =========================================================
+   08. STATISTICS
+   ========================================================= */
+
+function renderStatistics() {
+    const statistics = calculateCalendarStatistics(
+        state.events,
+        state.today
+    );
+
+    [
+        "hearingsToday",
+        "hearingsNextSevenDays",
+        "hearingsThisMonth",
+        "upcomingDeadlines",
+        "overdueHearings",
+        "overdueDeadlines"
+    ].forEach(key => {
+        text(key, statistics[key] || 0);
+    });
+}
+
+function renderAlerts() {
+    const alerts = state.events
+        .filter(event =>
+            event.isOverdue ||
+            (
+                event.priority === "urgent" &&
+                event.daysRemaining <= 7
+            ) ||
+            (
+                event.type === "deadline" &&
+                event.daysRemaining <= 3
+            )
+        )
+        .sort((a, b) => {
+            const rank = event =>
+                event.type === "deadline" &&
+                event.isOverdue ? 0 :
+                event.priority === "urgent" ? 1 :
+                event.type === "deadline" ? 2 : 3;
+
+            return rank(a) - rank(b) ||
+                a.date.localeCompare(b.date);
+        });
+
+    visible("calendarAlertsCard", alerts.length > 0);
+
+    $("calendarAlertsList").innerHTML = alerts
+        .slice(0, CONFIG.maximumAlerts)
+        .map(event => `
+            <article class="alert-item ${
+                event.type === "deadline" && event.isOverdue
+                    ? "danger"
+                    : "warning"
+            }">
+
+                <div class="alert-icon">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+
+                <div class="alert-content">
+                    <strong>
+                        ${displayValue(event.caseTitle)}
+                    </strong>
+
+                    <p>
+                        ${esc(eventLabel(event))}
+                        · ${esc(formatDate(event.date))}
+                        · ${esc(timingText(event))}
+                    </p>
+                </div>
+
+                ${eventButton(event, "Review")}
+
+            </article>
+        `).join("");
+
+    if (alerts.length > CONFIG.maximumAlerts) {
+        const note = document.createElement("p");
+
+        note.className = "text-muted";
+
+        note.textContent =
+            `${alerts.length - CONFIG.maximumAlerts} additional alerts. Review Past Dates and Deadlines.`;
+
+        $("calendarAlertsList").append(note);
+    }
+}
+
+
+/* =========================================================
+   09. VIEW NAVIGATION
+   ========================================================= */
+
+function activateView(view) {
+    if (!VIEWS.includes(view)) {
+        view = "month";
+    }
+
+    state.view = view;
+
+    document.querySelectorAll("[data-view]")
+        .forEach(button => {
+            const active =
+                button.dataset.view === view;
+
+            button.classList.toggle(
+                "active",
+                active
+            );
+
+            button.setAttribute(
+                "aria-selected",
+                String(active)
+            );
+
+            button.tabIndex = active ? 0 : -1;
+        });
+
+    VIEWS.forEach(item => {
+        visible(
+            `${item}Panel`,
+            item === view
+        );
+    });
+
+    renderAll();
+}
+
+function selectDate(date, view = null) {
+    if (!isValidCalendarDate(date)) {
+        showMessage(
+            "Please select a valid date.",
+            "warning"
+        );
+
+        return;
+    }
+
+    state.selectedDate = date;
+    state.anchorDate = date;
+
+    if (view) {
+        activateView(view);
+    } else {
+        renderAll();
+    }
+}
+
+function navigatePeriod(direction) {
+    let date = state.anchorDate;
+
+    if (state.view === "month") {
+        date = shiftCalendarMonth(
+            date,
+            direction
+        );
+
+    } else if (state.view === "week") {
+        date = addCalendarDays(
+            date,
+            direction * 7
+        );
+
+    } else if (state.view === "day") {
+        date = addCalendarDays(
+            date,
+            direction
+        );
+
+    } else {
+        return;
+    }
+
+    selectDate(date);
+}
+
+function renderNavigation() {
+    const calendarView = [
+        "month",
+        "week",
+        "day"
+    ].includes(state.view);
+
+    visible("calendarNavigation", calendarView);
+
+    $("jumpToDate").value = state.selectedDate;
+
+    if (state.view === "month") {
+        text(
+            "calendarPeriodTitle",
+            formatCalendarMonth(state.anchorDate)
+        );
+
+    } else if (state.view === "week") {
+        const range = getWeekRange(
+            state.anchorDate
+        );
+
+        text(
+            "calendarPeriodTitle",
+            `${formatDate(range.startDate)} — ${formatDate(range.endDate)}`
+        );
+
+    } else if (state.view === "day") {
+        text(
+            "calendarPeriodTitle",
+            fullDate(state.selectedDate)
+        );
+    }
+}
+
+
+/* =========================================================
+   10. MONTHLY CALENDAR
+   ========================================================= */
+
+function renderMonthCalendar() {
+    const cells = generateMonthGrid(
+        state.anchorDate
+    );
+
+    const grouped = groupEventsByDate(
+        state.filteredEvents
+    );
+
+    $("monthCalendarGrid").innerHTML =
+        cells.map(cell => {
+            const events =
+                grouped.get(cell.date) || [];
+
+            const classes = [
+                "calendar-day",
+                cell.currentMonth
+                    ? ""
+                    : "outside-month",
+                cell.isToday ? "today" : "",
+                cell.isWeekend ? "weekend" : "",
+                cell.date === state.selectedDate
+                    ? "selected"
+                    : ""
+            ].filter(Boolean).join(" ");
+
+            const chips = events
+                .slice(0, CONFIG.maximumMonthEvents)
+                .map(event => `
+                    <button
+                        type="button"
+                        class="event-chip ${eventClasses(event)}"
+                        data-event-id="${esc(event.id)}"
+                        title="${esc(event.caseTitle)}">
+
+                        <i class="fa-solid ${
+                            event.type === "deadline"
+                                ? "fa-hourglass-half"
+                                : "fa-scale-balanced"
+                        }"></i>
+
+                        ${displayValue(event.caseTitle)}
+
+                    </button>
+                `).join("");
+
+            const remaining =
+                events.length - CONFIG.maximumMonthEvents;
+
+            return `
+                <div
+                    class="${classes}"
+                    data-calendar-date="${esc(cell.date)}">
+
+                    <div class="day-header">
+
+                        <button
+                            type="button"
+                            class="day-number text-button"
+                            data-select-date="${esc(cell.date)}"
+                            aria-label="${esc(fullDate(cell.date))}"
+                            aria-pressed="${cell.date === state.selectedDate}">
+
+                            ${cell.day}
+
+                        </button>
+
+                        ${
+                            events.length
+                                ? `
+                                    <span class="day-event-count">
+                                        ${events.length}
+                                    </span>
+                                `
+                                : ""
+                        }
+
+                    </div>
+
+                    <div class="day-events">
+
+                        ${chips}
+
+                        ${
+                            remaining > 0
+                                ? `
+                                    <button
+                                        type="button"
+                                        class="more-events"
+                                        data-select-date="${esc(cell.date)}">
+
+                                        +${remaining} more
+
+                                    </button>
+                                `
+                                : ""
+                        }
+
+                    </div>
+
+                </div>
+            `;
+        }).join("");
+}
+
+
+/* =========================================================
+   11. SELECTED DATE SIDEBAR
+   ========================================================= */
+
+function renderSelectedDate() {
+    const events = getEventsForDate(
+        state.filteredEvents,
+        state.selectedDate
+    );
+
+    text(
+        "selectedDateHeading",
+        fullDate(state.selectedDate)
+    );
+
+    const hearings = events.filter(event =>
+        event.type === "hearing"
+    ).length;
+
+    const deadlines = events.filter(event =>
+        event.type === "deadline"
+    ).length;
+
+    text(
+        "selectedDateSummary",
+        `${hearings} hearing${hearings === 1 ? "" : "s"} · ${deadlines} deadline${deadlines === 1 ? "" : "s"}`
+    );
+
+    $("selectedDateEvents").innerHTML =
+        events.map(event => `
+            <article class="event-card ${eventClasses(event)}">
+
+                <div class="event-card-header">
+
+                    <span class="event-type-label">
+                        ${esc(eventLabel(event))}
+                    </span>
+
+                    ${priorityBadge(event)}
+
+                </div>
+
+                <span class="case-code">
+                    ${displayValue(event.caseCode)}
+                </span>
+
+                <h3>
+                    ${displayValue(event.caseTitle)}
+                </h3>
+
+                <p>
+                    <i class="fa-solid fa-landmark"></i>
+                    ${displayValue(event.courtName)}
+                </p>
+
+                <p>
+                    <i class="fa-solid fa-user-tie"></i>
+                    ${displayValue(event.assignedAdvocate)}
+                </p>
+
+                <p>
+                    ${displayValue(event.purpose)}
+                </p>
+
+                <div class="event-card-actions">
+                    ${hearingActions(event)}
+                </div>
+
+            </article>
+        `).join("");
+
+    visible(
+        "emptySelectedDate",
+        events.length === 0
+    );
+}
+
+
+/* =========================================================
+   12. WEEKLY CALENDAR
+   ========================================================= */
+
+function getWeekEvents() {
+    const range = getWeekRange(
+        state.anchorDate
+    );
+
+    return filterCalendarEvents(
+        state.filteredEvents,
+        {
+            startDate: range.startDate,
+            endDate: range.endDate
+        }
+    );
+}
+
+function renderWeekCalendar() {
+    const days = generateWeekGrid(
+        state.anchorDate
+    );
+
+    const events = getWeekEvents();
+
+    const grouped = groupEventsByDate(events);
+
+    text(
+        "weekScheduleSummary",
+        `${events.length} recorded events during the selected week.`
+    );
+
+    $("weekCalendarGrid").innerHTML =
+        days.map(day => {
+            const dayEvents =
+                grouped.get(day.date) || [];
+
+            return `
+                <div class="week-day ${day.isToday ? "today" : ""}">
+
+                    <div class="week-day-header">
+
+                        <span>
+                            ${esc(dayName(day.date))}
+                        </span>
+
+                        <strong>
+                            ${day.day}
+                        </strong>
+
+                        <span>
+                            ${dayEvents.length} events
+                        </span>
+
+                    </div>
+
+                    <div class="week-day-events">
+
+                        ${
+                            dayEvents.length
+                                ? dayEvents.map(event => `
+                                    <article class="week-event ${eventClasses(event)}">
+
+                                        <span class="event-type-label">
+                                            ${esc(eventLabel(event))}
+                                        </span>
+
+                                        <h3>
+                                            ${displayValue(event.caseTitle)}
+                                        </h3>
+
+                                        <p>
+                                            ${displayValue(event.courtName)}
+                                        </p>
+
+                                        <p>
+                                            ${displayValue(event.purpose)}
+                                        </p>
+
+                                        <p>
+                                            ${displayValue(event.assignedAdvocate)}
+                                        </p>
+
+                                        <div class="event-card-actions">
+                                            ${eventButton(event)}
+                                        </div>
+
+                                    </article>
+                                `).join("")
+                                : `
+                                    <div class="week-empty">
+                                        No scheduled events
+                                    </div>
+                                `
+                        }
+
+                        <button
+                            type="button"
+                            class="text-button"
+                            data-open-day="${esc(day.date)}">
+
+                            Daily Schedule
+
+                        </button>
+
+                    </div>
+
+                </div>
+            `;
+        }).join("");
+}
+
+
+/* =========================================================
+   13. DAILY CAUSE LIST
+   ========================================================= */
+
+function getDailyEvents() {
+    return getEventsForDate(
+        state.filteredEvents,
+        state.selectedDate
+    );
+}
+
+function renderDailySchedule() {
+    const events = getDailyEvents();
+
+    const causeList = generateDailyCauseList(
+        events,
+        state.selectedDate
+    );
+
+    const deadlines = events.filter(event =>
+        event.type === "deadline"
+    );
+
+    text(
+        "dailyHearingCount",
+        causeList.totalHearings
+    );
+
+    text(
+        "dailyCourtCount",
+        causeList.totalCourts
+    );
+
+    text(
+        "dailyDeadlineCount",
+        deadlines.length
+    );
+
+    text(
+        "dailyUrgentCount",
+        events.filter(event =>
+            event.priority === "urgent"
+        ).length
+    );
+
+    text(
+        "dailyScheduleDate",
+        fullDate(state.selectedDate)
+    );
+
+    $("dailyCauseList").innerHTML =
+        causeList.courts.map(court => `
+            <section class="court-group">
+
+                <div class="court-group-heading">
+
+                    <div>
+
+                        <h3>
+                            <i class="fa-solid fa-landmark"></i>
+                            ${displayValue(court.courtName)}
+                        </h3>
+
+                        <p>
+                            ${esc([
+                                court.courtCity,
+                                court.courtNumber
+                                    ? `Court No. ${court.courtNumber}`
+                                    : ""
+                            ].filter(Boolean).join(" · "))}
+                        </p>
+
+                    </div>
+
+                    <span class="court-hearing-count">
+                        ${court.hearings.length} hearings
+                    </span>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table class="data-table">
+
+                        <thead>
+                            <tr>
+                                <th>Sr.</th>
+                                <th>Case / Client</th>
+                                <th>Case Number</th>
+                                <th>Purpose</th>
+                                <th>Advocate</th>
+                                <th>Priority</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            ${court.hearings.map((event, index) => `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${caseCell(event)}</td>
+                                    <td>${displayValue(event.caseNumber)}</td>
+                                    <td>${displayValue(event.purpose)}</td>
+                                    <td>${displayValue(event.assignedAdvocate)}</td>
+                                    <td>${priorityBadge(event)}</td>
+                                    <td>${hearingActions(event)}</td>
+                                </tr>
+                            `).join("")}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+        `).join("");
+
+    visible(
+        "emptyDailyHearings",
+        causeList.totalHearings === 0
+    );
+
+    $("dailyDeadlinesBody").innerHTML =
+        deadlines.map(event => `
+            <tr>
+
+                <td class="case-code">
+                    ${displayValue(event.caseCode)}
+                </td>
+
+                <td>
+                    ${displayValue(event.caseTitle)}
+                </td>
+
+                <td>
+                    ${displayValue(event.clientName)}
+                </td>
+
+                <td>
+                    ${displayValue(event.assignedAdvocate)}
+                </td>
+
+                <td>
+                    ${priorityBadge(event)}
+                </td>
+
+                <td>
+                    ${eventButton(event)}
+                </td>
+
+            </tr>
+        `).join("");
+
+    visible(
+        "emptyDailyDeadlines",
+        deadlines.length === 0
+    );
+}
+
+
+/* =========================================================
+   14. UPCOMING HEARINGS
+   ========================================================= */
+
+function upcomingEvents() {
+    return getUpcomingHearings(
+        state.filteredEvents,
+        Number(value("upcomingPeriod", "30")),
+        state.today
+    );
+}
+
+function renderUpcomingHearings() {
+    const events = upcomingEvents();
+
+    const days = Number(
+        value("upcomingPeriod", "30")
+    );
+
+    text(
+        "upcomingScheduleSummary",
+        `Recorded court hearings for the next ${days} days, including today.`
+    );
+
+    text(
+        "upcomingResultCount",
+        `${events.length} matching hearings`
+    );
+
+    $("upcomingHearingsBody").innerHTML =
+        events.map(event => `
+            <tr>
+
+                <td>
+                    <strong class="date-text">
+                        ${esc(formatDate(event.date))}
+                    </strong>
+
+                    <small>
+                        ${esc(timingText(event))}
+                    </small>
+                </td>
+
+                <td>${caseCell(event)}</td>
+
+                <td>
+                    ${displayValue(event.caseNumber)}
+                    <small>
+                        ${displayValue(event.cnrNumber)}
+                    </small>
+                </td>
+
+                <td>${courtCell(event)}</td>
+
+                <td>${displayValue(event.purpose)}</td>
+
+                <td>${displayValue(event.assignedAdvocate)}</td>
+
+                <td>${priorityBadge(event)}</td>
+
+                <td>${hearingActions(event)}</td>
+
+            </tr>
+        `).join("");
+
+    visible(
+        "emptyUpcomingHearings",
+        events.length === 0
+    );
+}
+
+
+/* =========================================================
+   15. PAST HEARING DATES
+   ========================================================= */
+
+function overdueEvents() {
+    return getOverdueHearings(
+        state.filteredEvents,
+        state.today
+    );
+}
+
+function renderOverdueHearings() {
+    const events = overdueEvents();
+
+    text(
+        "overdueResultCount",
+        `${events.length} past hearing dates requiring review`
+    );
+
+    $("overdueHearingsBody").innerHTML =
+        events.map(event => `
+            <tr>
+
+                <td class="date-overdue date-text">
+                    ${esc(formatDate(event.date))}
+                </td>
+
+                <td>
+                    ${Math.abs(event.daysRemaining)} days
+                </td>
+
+                <td>${caseCell(event)}</td>
+
+                <td>${courtCell(event)}</td>
+
+                <td>${displayValue(event.purpose)}</td>
+
+                <td>${displayValue(event.assignedAdvocate)}</td>
+
+                <td>${hearingActions(event)}</td>
+
+            </tr>
+        `).join("");
+
+    visible(
+        "emptyOverdueHearings",
+        events.length === 0
+    );
+}
+
+
+/* =========================================================
+   16. LIMITATION DEADLINES
+   ========================================================= */
+
+function deadlineEvents() {
+    const period = value(
+        "deadlinePeriod",
+        "30"
+    );
+
+    const includeOverdue = checked(
+        "includeOverdueDeadlines"
+    );
+
+    const deadlines = state.filteredEvents.filter(
+        event => event.type === "deadline"
+    );
+
+    if (period === "overdue") {
+        return deadlines.filter(event =>
+            event.date < state.today
+        );
+    }
+
+    if (period === "all") {
+        return deadlines.filter(event =>
+            includeOverdue ||
+            event.date >= state.today
+        );
+    }
+
+    return getUpcomingDeadlines(
+        deadlines,
+        Number(period),
+        includeOverdue,
+        state.today
+    );
+}
+
+function renderDeadlines() {
+    const events = deadlineEvents();
+
+    $("includeOverdueDeadlines").disabled =
+        value("deadlinePeriod") === "overdue";
+
+    text(
+        "deadlineResultCount",
+        `${events.length} matching deadlines`
+    );
+
+    $("deadlinesTableBody").innerHTML =
+        events.map(event => `
+            <tr>
+
+                <td class="${
+                    event.isOverdue
+                        ? "date-overdue"
+                        : "date-text"
+                }">
+
+                    ${esc(formatDate(event.date))}
+
+                </td>
+
+                <td>
+                    ${esc(timingText(event))}
+                </td>
+
+                <td>
+                    <span class="case-code">
+                        ${displayValue(event.caseCode)}
+                    </span>
+
+                    <strong>
+                        ${displayValue(event.caseTitle)}
+                    </strong>
+                </td>
+
+                <td>
+                    ${displayValue(event.clientName)}
+                </td>
+
+                <td>
+                    ${displayValue(event.assignedAdvocate)}
+                </td>
+
+                <td>
+                    ${priorityBadge(event)}
+                </td>
+
+                <td>
+                    <span class="timing-badge ${
+                        event.isOverdue
+                            ? "overdue"
+                            : event.isToday
+                                ? "today"
+                                : "upcoming"
+                    }">
+
+                        ${
+                            event.isOverdue
+                                ? "Past Recorded Date"
+                                : event.isToday
+                                    ? "Due Today"
+                                    : "Upcoming"
+                        }
+
+                    </span>
+                </td>
+
+                <td>
+                    ${eventButton(event, "Review")}
+                </td>
+
+            </tr>
+        `).join("");
+
+    visible(
+        "emptyDeadlines",
+        events.length === 0
+    );
+}
+
+
+/* =========================================================
+   17. CENTRAL RENDERING ENGINE
+   ========================================================= */
+
+function renderAll() {
+    if (state.invalidated) return;
+
+    refreshEventTiming();
+
+    applyFilters();
+
+    renderStatistics();
+    renderAlerts();
+    renderNavigation();
+
+    switch (state.view) {
+        case "month":
+            renderMonthCalendar();
+            renderSelectedDate();
+            break;
+
+        case "week":
+            renderWeekCalendar();
+            break;
+
+        case "day":
+            renderDailySchedule();
+            break;
+
+        case "upcoming":
+            renderUpcomingHearings();
+            break;
+
+        case "overdue":
+            renderOverdueHearings();
+            break;
+
+        case "deadlines":
+            renderDeadlines();
+            break;
+    }
+}
+
+
+/* =========================================================
+   18. DIALOG UTILITIES
+   ========================================================= */
+
+function openDialog(id) {
+    requireVisibleApplication();
+
+    const dialog = $(id);
+
+    if (dialog && !dialog.open) {
+        dialog.showModal();
+    }
+}
+
+function closeDialog(id) {
+    const dialog = $(id);
+
+    if (dialog?.open) {
+        dialog.close();
+    }
+}
+
+function confirmAction(title, message) {
+    requireVisibleApplication();
+
+    if (state.confirmationResolver) {
+        return Promise.resolve(false);
+    }
+
+    text("confirmationTitle", title);
+    text("confirmationMessage", message);
+
+    return new Promise(resolve => {
+        state.confirmationResolver = resolve;
+
+        openDialog("confirmationDialog");
+    });
+}
+
+function finishConfirmation(accepted) {
+    const resolver = state.confirmationResolver;
+
+    state.confirmationResolver = null;
+
+    closeDialog("confirmationDialog");
+
+    if (resolver) {
+        resolver(Boolean(accepted));
+    }
+}
+
+
+/* =========================================================
+   19. EVENT DETAILS
+   ========================================================= */
+
+async function openEventDetails(id) {
+    requireVisibleApplication();
+
+    await requireSession();
+
+    requireVisibleApplication();
+
+    const event = findEvent(id);
+
+    if (!event) {
+        throw new Error(
+            "This event is no longer available. Refresh the calendar."
+        );
+    }
+
+    state.activeEventId = event.id;
+
+    const fields = {
+        eventDetailsType: eventLabel(event),
+        eventDetailsCaseCode: event.caseCode,
+        eventDetailsCaseTitle: event.caseTitle,
+        eventDetailsDate: fullDate(event.date),
+        eventDetailsTiming: timingText(event),
+        eventDetailsClient: event.clientName,
+        eventDetailsPracticeArea: event.practiceArea,
+        eventDetailsCourt: event.courtName,
+        eventDetailsCourtNumber: event.courtNumber,
+        eventDetailsCity: event.courtCity,
+        eventDetailsCaseNumber: event.caseNumber,
+        eventDetailsCnr: event.cnrNumber,
+        eventDetailsJudge: event.presidingJudge,
+        eventDetailsAdvocate: event.assignedAdvocate,
+        eventDetailsStage: event.currentStage,
+        eventDetailsPurpose: event.purpose
+    };
+
+    for (const [id, content] of Object.entries(fields)) {
+        text(id, content || "Not specified");
+    }
+
+    const priority = $("eventDetailsPriority");
+
+    priority.className =
+        `priority-badge ${priorityClass(event.priority)}`;
+
+    priority.textContent =
+        label(event.priority || "normal");
+
+    const status = $("eventDetailsStatus");
+
+    status.className = "status-badge";
+
+    status.textContent =
+        label(event.status || "Not specified");
+
+    $("eventDetailsIcon").className =
+        event.type === "deadline"
+            ? "fa-solid fa-hourglass-end"
+            : "fa-solid fa-scale-balanced";
+
+    visible(
+        "rescheduleEventButton",
+        event.type === "hearing"
+    );
+
+    openDialog("eventDetailsDialog");
+}
+
+
+/* =========================================================
+   20. OPEN CASE MANAGEMENT
+   ========================================================= */
+
+async function openCaseProfile() {
+    requireVisibleApplication();
+
+    const event = findEvent(
+        state.activeEventId
+    );
+
+    if (!event) {
+        throw new Error(
+            "Case reference not available."
+        );
+    }
+
+    await requireSession();
+
+    requireVisibleApplication();
+
+    const url = new URL(
+        "/cases.html",
+        window.location.origin
+    );
+
+    url.searchParams.set(
+        "caseId",
+        event.caseId
+    );
+
+    window.location.assign(url.href);
+}
+
+
+/* =========================================================
+   21. RESCHEDULE HEARING
+   ========================================================= */
+
+async function openReschedule(id) {
+    requireVisibleApplication();
+
+    if (state.saving) return;
+
+    const event = findEvent(id);
+
+    if (!event || event.type !== "hearing") {
+        throw new Error(
+            "A valid court hearing must be selected."
+        );
+    }
+
+    if (!state.connected) {
+        throw new Error(
+            "Refresh the secure connection before updating a hearing."
+        );
+    }
+
+    const request = ++state.rescheduleRequest;
+
+    state.rescheduleRecord = null;
+
+    closeDialog("eventDetailsDialog");
+
+    $("rescheduleForm").reset();
+
+    visible("rescheduleError", false);
+    visible("rescheduleForm", false);
+    visible("rescheduleLoading", true);
+
+    openDialog("rescheduleDialog");
+
+    try {
+        await requireSession();
+
+        const record = await getHearingCase(
+            event.caseId
+        );
+
+        assertSession();
+
+        if (
+            request !== state.rescheduleRequest ||
+            !$("rescheduleDialog").open ||
+            $("protectedContent").hidden
+        ) {
+            return;
+        }
+
+        state.rescheduleRecord = record;
+
+        $("rescheduleCaseId").value =
+            record.id;
+
+        $("rescheduleRevision").value =
+            String(record.revision);
+
+        text(
+            "rescheduleCaseCode",
+            record.caseCode
+        );
+
+        text(
+            "rescheduleCaseTitle",
+            record.caseTitle
+        );
+
+        text(
+            "rescheduleCourtName",
+            record.courtName || "Court not specified"
+        );
+
+        text(
+            "rescheduleCurrentDate",
+            formatDate(record.nextHearingDate)
+        );
+
+        $("rescheduleNextDate").min =
+            getIndianDate();
+
+        $("rescheduleNextDate").value =
+            record.nextHearingDate >= getIndianDate()
+                ? record.nextHearingDate
+                : "";
+
+        $("rescheduleNextPurpose").value =
+            record.nextHearingPurpose || "";
+
+        $("rescheduleCurrentStage").value =
+            record.currentStage || "";
+
+        $("hearingDateVerified").checked = false;
+
+        visible("rescheduleForm", true);
+
+    } catch (error) {
+        if (request === state.rescheduleRequest) {
+            closeDialog("rescheduleDialog");
+
+            throw error;
+        }
+
+    } finally {
+        if (request === state.rescheduleRequest) {
+            visible("rescheduleLoading", false);
+        }
+    }
+}
+
+function showRescheduleError(message) {
+    text("rescheduleError", message);
+
+    visible("rescheduleError", true);
+}
+
+function setSaving(saving) {
+    state.saving = saving;
+
+    $("saveRescheduleButton").disabled =
+        saving || !state.connected;
+
+    text(
+        "saveRescheduleButtonText",
+        saving
+            ? "Saving securely..."
+            : "Save Hearing Date"
+    );
+
+    $("rescheduleForm")
+        .querySelectorAll("input, textarea")
+        .forEach(element => {
+            element.disabled = saving;
+        });
+
+    $("rescheduleDialog")
+        .querySelectorAll("[data-close-dialog]")
+        .forEach(element => {
+            element.disabled = saving;
+        });
+}
+
+async function saveRescheduledHearing(event) {
+    event.preventDefault();
+
+    if (state.saving) return;
+
+    visible("rescheduleError", false);
+
+    let committed = false;
+
+    try {
+        requireVisibleApplication();
+
+        if (!state.connected) {
+            throw new Error(
+                "Secure database connection is required."
+            );
+        }
+
+        const record = state.rescheduleRecord;
+
+        if (!record) {
+            throw new Error(
+                "Reload the case before saving."
+            );
+        }
+
+        const nextDate = value(
+            "rescheduleNextDate"
+        );
+
+        const purpose = value(
+            "rescheduleNextPurpose"
+        ).trim();
+
+        const currentStage = value(
+            "rescheduleCurrentStage"
+        ).trim();
+
+        if (
+            !isValidCalendarDate(nextDate) ||
+            nextDate < getIndianDate()
+        ) {
+            throw new Error(
+                "Select today or a future hearing date."
+            );
+        }
+
+        if (!checked("hearingDateVerified")) {
+            throw new Error(
+                "Confirm that the hearing date has been verified."
+            );
+        }
+
+        if (
+            purpose.length > 500 ||
+            currentStage.length > 500
+        ) {
+            throw new Error(
+                "Purpose and current stage cannot exceed 500 characters."
+            );
+        }
+
+        setSaving(true);
+
+        const accepted = await confirmAction(
+            "Confirm Hearing Update",
+            `Update the hearing date of ${record.caseTitle} to ${formatDate(nextDate)}?`
+        );
+
+        if (!accepted) return;
+
+        await requireSession();
+
+        requireVisibleApplication();
+
+        const result = await rescheduleHearing(
+            record.id,
+            {
+                nextHearingDate: nextDate,
+                nextHearingPurpose: purpose,
+                currentStage
+            },
+            record.revision
+        );
+
+        if (!result?.success) {
+            throw new Error(
+                "The hearing update could not be confirmed."
+            );
+        }
+
+        committed = true;
+
+        assertSession();
+
+        state.rescheduleRecord = null;
+
+        closeDialog("rescheduleDialog");
+
+        state.selectedDate = nextDate;
+        state.anchorDate = nextDate;
+
+        try {
+            await synchronize();
+
+            activateView("month");
+
+            showMessage(
+                `Hearing updated successfully to ${formatDate(nextDate)}.`,
+                "success"
+            );
+
+        } catch (refreshError) {
+            console.error(
+                "Hearing saved; refresh failed:",
+                refreshError
+            );
+
+            showMessage(
+                "Hearing date was saved, but the calendar could not refresh. Refresh before making another update.",
+                "warning"
+            );
+        }
+
+    } catch (error) {
+        console.error(
+            "Hearing update:",
+            error
+        );
+
+        if (!committed) {
+            showRescheduleError(
+                errorMessage(
+                    error,
+                    "Unable to update hearing. Refresh and verify the case before retrying."
+                )
+            );
+        }
+
+    } finally {
+        setSaving(false);
+    }
+}
+
+
+/* =========================================================
+   22. CAUSE LIST PREVIEW AND PRINTING
+   ========================================================= */
+
+function buildCauseListHTML(date) {
+    const events = getEventsForDate(
+        state.filteredEvents,
+        date
+    );
+
+    const causeList = generateDailyCauseList(
+        events,
+        date
+    );
+
+    const includeClient = checked(
+        "printIncludeClientName"
+    );
+
+    const includeAdvocate = checked(
+        "printIncludeAdvocate"
+    );
+
+    const includePurpose = checked(
+        "printIncludePurpose"
+    );
+
+    const courtGroups = causeList.courts
+        .map(court => `
+            <section class="print-court-group">
+
+                <h3 class="print-court-heading">
+
+                    ${displayValue(court.courtName)}
+
+                    ${esc(
+                        court.courtCity
+                            ? ` — ${court.courtCity}`
+                            : ""
+                    )}
+
+                    ${esc(
+                        court.courtNumber
+                            ? ` — Court No. ${court.courtNumber}`
+                            : ""
+                    )}
+
+                </h3>
+
+                <table class="print-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Sr.</th>
+
+                            <th>Case / Matter</th>
+
+                            <th>Case No.</th>
+
+                            ${
+                                includeClient
+                                    ? "<th>Client</th>"
+                                    : ""
+                            }
+
+                            ${
+                                includePurpose
+                                    ? "<th>Purpose</th>"
+                                    : ""
+                            }
+
+                            ${
+                                includeAdvocate
+                                    ? "<th>Advocate</th>"
+                                    : ""
+                            }
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        ${court.hearings.map((event, index) => `
+                            <tr>
+
+                                <td>
+                                    ${index + 1}
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        ${displayValue(event.caseTitle)}
+                                    </strong>
+                                    <div>
+                                        ${displayValue(event.caseCode)}
+                                    </div>
+                                </td>
+
+                                <td>
+                                    ${displayValue(event.caseNumber)}
+                                </td>
+
+                                ${
+                                    includeClient
+                                        ? `<td>${displayValue(event.clientName)}</td>`
+                                        : ""
+                                }
+
+                                ${
+                                    includePurpose
+                                        ? `<td>${displayValue(event.purpose)}</td>`
+                                        : ""
+                                }
+
+                                ${
+                                    includeAdvocate
+                                        ? `<td>${displayValue(event.assignedAdvocate)}</td>`
+                                        : ""
+                                }
+
+                            </tr>
+                        `).join("")}
+
+                    </tbody>
+
+                </table>
+
+            </section>
+        `).join("");
+
+    return `
+        <header class="print-header">
+
+            <img
+                src="/images/logo.png"
+                alt="MNM Legal Associates">
+
+            <h1>
+                MNM LEGAL ASSOCIATES
+            </h1>
+
+            <p>
+                Justice, Integrity &amp; Excellence
+            </p>
+
+            <h2>
+                INTERNAL DAILY CAUSE LIST
+            </h2>
+
+            <p>
+                CONFIDENTIAL — FOR INTERNAL USE ONLY
+            </p>
+
+        </header>
+
+        <div class="print-meta">
+
+            <span>
+                <strong>Date:</strong>
+                ${esc(fullDate(date))}
+            </span>
+
+            <span>
+                <strong>Total Hearings:</strong>
+                ${causeList.totalHearings}
+            </span>
+
+            <span>
+                <strong>Courts:</strong>
+                ${causeList.totalCourts}
+            </span>
+
+        </div>
+
+        <p class="print-disclaimer">
+            ${
+                Object.entries(state.filters).some(
+                    ([key, val]) =>
+                        key === "search"
+                            ? Boolean(val)
+                            : val !== "all"
+                )
+                    ? "This schedule is limited to the currently selected calendar filters."
+                    : "All matching recorded hearings are included."
+            }
+        </p>
+
+        ${
+            courtGroups ||
+            "<p>No matching hearings are recorded for this date.</p>"
+        }
+
+        <p class="print-disclaimer">
+
+            This is an internal schedule prepared from the firm's
+            Case Management records and is not an official
+            court-issued cause list. Hearing dates, courtroom
+            details and listing information must be independently
+            verified against official court records.
+
+        </p>
+
+        <footer class="print-footer">
+
+            <span>
+                MNM Legal Associates
+            </span>
+
+            <span>
+                Generated:
+                ${esc(formatDate(getIndianDate()))}
+                ${esc(formatTime(Date.now()))} IST
+            </span>
+
+        </footer>
+    `;
+}
+
+function renderCauseListPreview() {
+    if (!state.printDate) return;
+
+    $("causeListPreview").innerHTML =
+        buildCauseListHTML(state.printDate);
+}
+
+async function openCauseList(date) {
+    requireVisibleApplication();
+
+    await requireSession();
+
+    requireVisibleApplication();
+
+    if (!state.connected) {
+        throw new Error(
+            "Refresh the calendar before preparing a cause list."
+        );
+    }
+
+    state.printDate = date;
+
+    $("printIncludeClientName").checked = false;
+    $("printIncludeAdvocate").checked = true;
+    $("printIncludePurpose").checked = true;
+
+    renderCauseListPreview();
+
+    openDialog("causeListDialog");
+}
+
+function clearPrintContainer() {
+    visible("printContainer", false);
+
+    $("printContainer").replaceChildren();
+}
+
+async function printCauseList() {
+    requireVisibleApplication();
+
+    await requireSession();
+
+    requireVisibleApplication();
+
+    if (!state.connected || !state.printDate) {
+        throw new Error(
+            "A verified calendar connection and selected date are required."
+        );
+    }
+
+    const html = buildCauseListHTML(
+        state.printDate
+    );
+
+    closeDialog("causeListDialog");
+
+    const container = $("printContainer");
+
+    container.innerHTML = html;
+    container.hidden = false;
+
+    try {
+        await document.fonts?.ready;
+
+        requireVisibleApplication();
+
+        window.print();
+
+    } finally {
+        clearPrintContainer();
+    }
+}
+
+
+/* =========================================================
+   23. CSV EXPORT
+   ========================================================= */
+
+async function exportEvents(events, filename) {
+    requireVisibleApplication();
+
+    await requireSession();
+
+    requireVisibleApplication();
+
+    if (!state.connected) {
+        throw new Error(
+            "Refresh the calendar before exporting records."
+        );
+    }
+
+    if (!events.length) {
+        showMessage(
+            "No matching records are available for export.",
+            "warning"
+        );
+
+        return;
+    }
+
+    const accepted = await confirmAction(
+        "Export Confidential Schedule",
+        `Export ${events.length} calendar records? The CSV may contain confidential client and case information.`
+    );
+
+    if (!accepted) return;
+
+    await requireSession();
+
+    requireVisibleApplication();
+
+    if (!state.connected) {
+        throw new Error(
+            "The database connection must be refreshed."
+        );
+    }
+
+    const csv = generateCalendarCSV(events);
+
+    const blob = new Blob(
+        [csv],
+        {
+            type: "text/csv;charset=utf-8;"
+        }
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+
+    link.download =
+        `${filename}-${getIndianDate()}.csv`;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+    }, 1000);
+
+    showMessage(
+        "CSV export prepared successfully.",
+        "success"
+    );
+}
+
+
+/* =========================================================
+   24. STATISTICS QUICK ACTIONS
+   ========================================================= */
+
+function handleStatAction(action) {
+    clearFilters(false);
+
+    switch (action) {
+        case "today":
+            selectDate(
+                getIndianDate(),
+                "day"
+            );
+            break;
+
+        case "week":
+            $("upcomingPeriod").value = "7";
+
+            activateView("upcoming");
+            break;
+
+        case "month":
+            selectDate(
+                getIndianDate(),
+                "month"
+            );
+            break;
+
+        case "deadlines":
+            $("deadlinePeriod").value = "30";
+
+            $("includeOverdueDeadlines").checked =
+                false;
+
+            activateView("deadlines");
+            break;
+
+        case "overdue":
+            activateView("overdue");
+            break;
+
+        case "overdue-deadlines":
+            $("deadlinePeriod").value = "overdue";
+
+            activateView("deadlines");
+            break;
+    }
+}
+
+
+/* =========================================================
+   25. SAFE EVENT EXECUTION
+   ========================================================= */
+
+function runAction(action) {
+    return async (...args) => {
+        try {
+            requireVisibleApplication();
+
+            await action(...args);
+
+        } catch (error) {
+            reportError(
+                error,
+                "Unable to complete the requested action."
+            );
+        }
+    };
+}
+
+function bindButton(id, action) {
+    const button = $(id);
+
+    if (!button) {
+        throw new Error(
+            `Missing calendar control: ${id}`
+        );
+    }
+
+    button.addEventListener(
+        "click",
+        runAction(action)
+    );
+}
+
+
+/* =========================================================
+   26. APPLICATION EVENT LISTENERS
+   ========================================================= */
+
+function bindEvents() {
+
+    // Cloud synchronization.
+
+    bindButton(
+        "refreshCalendarButton",
+        () => synchronize({ notify: true })
+    );
+
+    // Calendar navigation.
+
+    bindButton(
+        "previousPeriodButton",
+        () => navigatePeriod(-1)
+    );
+
+    bindButton(
+        "nextPeriodButton",
+        () => navigatePeriod(1)
+    );
+
+    bindButton(
+        "todayButton",
+        () => selectDate(getIndianDate())
+    );
+
+    bindButton(
+        "jumpToDateButton",
+        () => selectDate(value("jumpToDate"))
+    );
+
+    $("jumpToDate").addEventListener(
+        "keydown",
+        runAction(event => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+
+                selectDate(
+                    value("jumpToDate")
+                );
+            }
+        })
+    );
+
+    // Filter controls.
+
+    Object.values(FILTER_FIELDS)
+        .forEach(id => {
+            $(id).addEventListener(
+                id === "calendarSearch"
+                    ? "input"
+                    : "change",
+                runAction(() => renderAll())
+            );
+        });
+
+    bindButton(
+        "clearFiltersButton",
+        () => clearFilters()
+    );
+
+    bindButton(
+        "toggleFiltersButton",
+        () => {
+            const filters = $("calendarFilters");
+
+            filters.hidden = !filters.hidden;
+
+            $("toggleFiltersButton").setAttribute(
+                "aria-expanded",
+                String(!filters.hidden)
+            );
+        }
+    );
+
+    // Period filters.
+
+    [
+        "upcomingPeriod",
+        "deadlinePeriod",
+        "includeOverdueDeadlines"
+    ].forEach(id => {
+        $(id).addEventListener(
+            "change",
+            runAction(() => renderAll())
+        );
+    });
+
+    // Daily schedule.
+
+    bindButton(
+        "openSelectedDayButton",
+        () => activateView("day")
+    );
+
+    bindButton(
+        "todayCauseListButton",
+        async () => {
+            clearFilters(false);
+
+            selectDate(
+                getIndianDate(),
+                "day"
+            );
+
+            await openCauseList(
+                state.selectedDate
+            );
+        }
+    );
+
+    // Printing.
+
+    bindButton(
+        "printSelectedDateButton",
+        () => openCauseList(state.selectedDate)
+    );
+
+    bindButton(
+        "printCauseListButton",
+        () => openCauseList(state.selectedDate)
+    );
+
+    bindButton(
+        "confirmPrintButton",
+        printCauseList
+    );
+
+    [
+        "printIncludeClientName",
+        "printIncludeAdvocate",
+        "printIncludePurpose"
+    ].forEach(id => {
+        $(id).addEventListener(
+            "change",
+            runAction(renderCauseListPreview)
+        );
+    });
+
+    window.addEventListener(
+        "afterprint",
+        clearPrintContainer
+    );
+
+    // CSV exports.
+
+    bindButton(
+        "exportWeekButton",
+        () => exportEvents(
+            getWeekEvents(),
+            "MNM-Weekly-Schedule"
+        )
+    );
+
+    bindButton(
+        "exportDailyButton",
+        () => exportEvents(
+            getDailyEvents().filter(
+                event => event.type === "hearing"
+            ),
+            `MNM-Daily-Cause-List-${state.selectedDate}`
+        )
+    );
+
+    bindButton(
+        "exportUpcomingButton",
+        () => exportEvents(
+            upcomingEvents(),
+            "MNM-Upcoming-Hearings"
+        )
+    );
+
+    bindButton(
+        "exportOverdueButton",
+        () => exportEvents(
+            overdueEvents(),
+            "MNM-Past-Hearing-Dates"
+        )
+    );
+
+    bindButton(
+        "exportDeadlinesButton",
+        () => exportEvents(
+            deadlineEvents(),
+            "MNM-Limitation-Deadlines"
+        )
+    );
+
+    // Event details and case integration.
+
+    bindButton(
+        "openCaseProfileButton",
+        openCaseProfile
+    );
+
+    bindButton(
+        "rescheduleEventButton",
+        () => openReschedule(
+            state.activeEventId
+        )
+    );
+
+    $("rescheduleForm").addEventListener(
+        "submit",
+        saveRescheduledHearing
+    );
+
+    $("rescheduleDialog").addEventListener(
+        "cancel",
+        event => {
+            if (state.saving) {
+                event.preventDefault();
+            }
+        }
+    );
+
+    $("rescheduleDialog").addEventListener(
+        "close",
+        () => {
+            state.rescheduleRequest++;
+            state.rescheduleRecord = null;
+
+            $("rescheduleForm").reset();
+
+            visible("rescheduleError", false);
+        }
+    );
+
+    // Confirmation dialog.
+
+    $("acceptConfirmation").addEventListener(
+        "click",
+        () => finishConfirmation(true)
+    );
+
+    $("cancelConfirmation").addEventListener(
+        "click",
+        () => finishConfirmation(false)
+    );
+
+    $("confirmationDialog").addEventListener(
+        "cancel",
+        event => {
+            event.preventDefault();
+
+            finishConfirmation(false);
+        }
+    );
+
+    $("confirmationDialog").addEventListener(
+        "close",
+        () => {
+            if (
+                !$("confirmationDialog").open &&
+                state.confirmationResolver
+            ) {
+                const resolver =
+                    state.confirmationResolver;
+
+                state.confirmationResolver = null;
+
+                resolver(false);
+            }
+        }
+    );
+
+    // Delegated event handling.
+
+    $("protectedContent").addEventListener(
+        "click",
+        runAction(async event => {
+
+            const target = event.target;
+
+            if (!(target instanceof Element)) {
+                return;
+            }
+
+            const closeButton = target.closest(
+                "[data-close-dialog]"
+            );
+
+            if (closeButton) {
+                const id =
+                    closeButton.dataset.closeDialog;
+
+                if (
+                    id === "rescheduleDialog" &&
+                    state.saving
+                ) {
+                    return;
+                }
+
+                closeDialog(id);
+
+                return;
+            }
+
+            const tab = target.closest(
+                "[data-view]"
+            );
+
+            if (tab) {
+                activateView(
+                    tab.dataset.view
+                );
+
+                return;
+            }
+
+            const stat = target.closest(
+                "[data-stat-action]"
+            );
+
+            if (stat) {
+                handleStatAction(
+                    stat.dataset.statAction
+                );
+
+                return;
+            }
+
+            const reschedule = target.closest(
+                "[data-reschedule-id]"
+            );
+
+            if (reschedule) {
+                await openReschedule(
+                    reschedule.dataset.rescheduleId
+                );
+
+                return;
+            }
+
+            const eventButton = target.closest(
+                "[data-event-id]"
+            );
+
+            if (eventButton) {
+                await openEventDetails(
+                    eventButton.dataset.eventId
+                );
+
+                return;
+            }
+
+            const openDay = target.closest(
+                "[data-open-day]"
+            );
+
+            if (openDay) {
+                selectDate(
+                    openDay.dataset.openDay,
+                    "day"
+                );
+
+                return;
+            }
+
+            const dateButton = target.closest(
+                "[data-select-date]"
+            );
+
+            if (dateButton) {
+                selectDate(
+                    dateButton.dataset.selectDate
+                );
+
+                return;
+            }
+
+            const dateCell = target.closest(
+                "[data-calendar-date]"
+            );
+
+            if (dateCell) {
+                selectDate(
+                    dateCell.dataset.calendarDate
+                );
+            }
+        })
+    );
+
+    // Keyboard-accessible calendar tabs.
+
+    document.querySelector(".module-tabs")
+        .addEventListener(
+            "keydown",
+            runAction(event => {
+
+                const keys = [
+                    "ArrowLeft",
+                    "ArrowRight",
+                    "Home",
+                    "End"
+                ];
+
+                if (!keys.includes(event.key)) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                let index = VIEWS.indexOf(
+                    state.view
+                );
+
+                if (event.key === "ArrowRight") {
+                    index =
+                        (index + 1) % VIEWS.length;
+
+                } else if (event.key === "ArrowLeft") {
+                    index =
+                        (index - 1 + VIEWS.length) %
+                        VIEWS.length;
+
+                } else if (event.key === "Home") {
+                    index = 0;
+
+                } else if (event.key === "End") {
+                    index = VIEWS.length - 1;
+                }
+
+                activateView(VIEWS[index]);
+
+                document.querySelector(
+                    `[data-view="${VIEWS[index]}"]`
+                )?.focus();
+            })
+        );
+
+    // Connection and browser lifecycle.
+
+    window.addEventListener(
+        "offline",
+        () => {
+            setConnection("offline");
+
+            showMessage(
+                "Internet connection lost. Hearing updates are disabled until synchronization succeeds.",
+                "warning"
+            );
+        }
+    );
+
+    window.addEventListener(
+        "online",
+        () => {
+            if (
+                state.initialized &&
+                !state.invalidated &&
+                !state.saving &&
+                !$("protectedContent").hidden
+            ) {
+                synchronize().catch(error =>
+                    reportError(
+                        error,
+                        "Unable to reconnect."
+                    )
+                );
+            }
+        }
+    );
+
+    window.addEventListener(
+        "focus",
+        automaticRefresh
+    );
+
+    document.addEventListener(
+        "visibilitychange",
+        () => {
+            if (!document.hidden) {
+                automaticRefresh();
+            }
+        }
+    );
+
+    window.addEventListener(
+        "beforeunload",
+        event => {
+            if (state.saving) {
+                event.preventDefault();
+
+                event.returnValue = "";
+            }
+        }
+    );
+
+    // Temporary authorization checks must not
+    // permanently invalidate the application.
+
+    const observer = new MutationObserver(() => {
+        if ($("protectedContent").hidden) {
+            closeDialogs();
+
+            clearPrintContainer();
+
+            $("causeListPreview").replaceChildren();
+
+            state.printDate = null;
+        }
+    });
+
+    observer.observe(
+        $("protectedContent"),
+        {
+            attributes: true,
+            attributeFilter: ["hidden"]
+        }
+    );
+}
+
+
+/* =========================================================
+   27. APPLICATION INITIALIZATION
+   ========================================================= */
+
+export async function initialiseCalendarSystem(user) {
+
+    if (!user?.uid) {
+        throw new Error(
+            "Authenticated user required."
+        );
+    }
+
+    if (state.initialized) {
+        if (
+            state.userId !== user.uid ||
+            state.invalidated
+        ) {
+            throw new Error(
+                "Calendar authentication session changed."
+            );
+        }
+
+        await requireSession();
+
+        return true;
+    }
+
+    state.userId = user.uid;
+
+    await requireSession();
+
+    state.today = getIndianDate();
+    state.selectedDate = state.today;
+    state.anchorDate = state.today;
+
+    setConnection("syncing");
+
+    // Obtain server-authorized data before exposing
+    // the application or binding operational controls.
+
+    await synchronize();
+
+    bindEvents();
+
+    activateView("month");
+
+    await requireSession();
+
+    state.initialized = true;
+
+    // A different or signed-out user must never
+    // inherit the existing confidential state.
+
+    auth.onAuthStateChanged(currentUser => {
+        if (
+            !currentUser ||
+            currentUser.uid !== state.userId
+        ) {
+            invalidateSession();
+        }
+    });
+
+    state.refreshTimer = setInterval(
+        automaticRefresh,
+        CONFIG.refreshInterval
+    );
+
+    return true;
+}
+
+
+/* =========================================================
+   END OF HEARING CALENDAR APPLICATION ENGINE
+
+   MNM LEGAL ASSOCIATES
+   Justice, Integrity & Excellence
+   ========================================================= */
