@@ -2,12 +2,10 @@
 
 
 
-
-
 /* =========================================================
    MNM LEGAL ASSOCIATES
    DOCUMENT MANAGEMENT CLOUD ENGINE
-   Version 3.0.0
+   Version 3.1.0
 
    Justice, Integrity & Excellence
    ========================================================= */
@@ -53,7 +51,7 @@ import {
 
 export const DMS_CONFIG = Object.freeze({
 
-    version: "3.0.0",
+    version: "3.1.0",
 
     documentStatuses: Object.freeze({
         active: "Active",
@@ -642,7 +640,7 @@ function requireGoogleSession() {
 }
 
 
-export async function connectGoogleDrive() {
+export async function connectGoogleDrive({ automatic = false } = {}) {
 
     if (authorizationPending) {
 
@@ -687,7 +685,7 @@ export async function connectGoogleDrive() {
                         "Google authorization timed out."
                     ));
 
-                }, 120000);
+                }, automatic ? 15000 : 120000);
 
                 const tokenClient =
                     google.accounts.oauth2.initTokenClient({
@@ -738,7 +736,7 @@ export async function connectGoogleDrive() {
 
                     tokenClient.requestAccessToken({
 
-                        prompt: ""
+                        prompt: automatic ? "none" : ""
 
                     });
 
