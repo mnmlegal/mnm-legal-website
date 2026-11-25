@@ -4,12 +4,13 @@
 /* =========================================================
    MNM LEGAL ASSOCIATES
    PROFESSIONAL CLOUD INVOICE MANAGEMENT SYSTEM
-   Version 6.0 - Monthly Invoice Numbering
+   Version 7.0 - Initial Receipt Integration
    Justice, Integrity & Excellence
    ========================================================= */
 
 import {
     createCloudInvoice,
+    syncNewInvoiceReceipt,
     updateCloudInvoice,
     fetchCentralInvoices,
     getCentralPaymentSettings,
@@ -1211,6 +1212,13 @@ async function saveInvoice(event) {
 
         const data = validateInvoice();
         const isEditing = editingId !== null;
+        // New receipts only. Existing invoices require reconciliation.
+        const initialReceipt = !isEditing && Number(data.receivedNow) > 0 && Number(data.receivedEarlier) === 0;
+        if (initialReceipt && !["cash", "upi", "bank transfer", "cheque", "card", "other"].includes(String(data.paymentMode).trim().toLowerCase())) {
+            throw new Error("Select a single payment mode before saving a paid invoice.");
+        }
+        const receiptDate = today();
+
 
         const payload = {
             ...data,
@@ -1297,7 +1305,23 @@ async function saveInvoice(event) {
             try {
                 const {linkInvoice} = await import('./finance-cloud.js');
                 if (!billingClient.existingInvoiceLink) await linkInvoice(saved.id, billingClient.id);
-                message('Invoice ' + saved.invoiceNo + ' saved and linked to ' + billingClient.clientCode + '.');
+                if (initialReceipt) {
+                    try {
+                        await syncNewInvoiceReceipt(saved.id, {confirmedReceipt: true, transactionDate: receiptDate});
+                        message('Invoice ' + saved.invoiceNo + ' saved. Payment posted to Financial Management.');
+                    } catch (paymentError) {
+                        console.error('Invoice receipt synchronization failed:', paymentError);
+                        const warning = 'Invoice saved and linked, but finance posting could not be confirmed. Check the Finance Ledger before recording or retrying payment. Do not create another invoice. ' + paymentError.message;
+                        message(warning, 'error');
+                        window.alert(warning);
+                    }
+                } else if (!isEditing && Number(data.receivedEarlier) > 0) {
+                    message('Invoice saved. Earlier receipts require reconciliation in Financial Management.', 'error');
+                } else if (isEditing) {
+                    message('Invoice updated. Payment changes are not automatically posted for existing invoices; reconcile in Financial Management.', 'error');
+                } else {
+                    message('Invoice ' + saved.invoiceNo + ' saved and linked to ' + billingClient.clientCode + '.');
+                }
             } catch (linkError) {
                 console.error('Invoice association failed:', linkError);
                 message('Invoice and client saved, but linking failed. Link this saved invoice in Financial Management. Do not create another invoice.', 'error');
