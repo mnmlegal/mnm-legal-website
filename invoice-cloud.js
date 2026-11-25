@@ -1,8 +1,10 @@
 
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    CENTRALIZED CLOUD INVOICE MANAGEMENT
-   Version 3.0 - Monthly Invoice Numbering
+   Version 3.1 - Monthly Numbering and Payment Reconciliation
 
    Justice, Integrity & Excellence
    ========================================================= */
@@ -1822,3 +1824,95 @@ export async function getCentralPaymentSettings() {
    MNM LEGAL ASSOCIATES
    Justice, Integrity & Excellence
    ========================================================= */
+
+
+/* Read-only integration. Existing invoice snapshots remain unchanged. */
+import {
+    fetchTransactions,
+    fetchInvoiceLinks,
+    calculateInvoiceReceipts
+} from "./finance-cloud.js";
+
+function reconciliationNumber(value) {
+    const n = Number(value ?? 0);
+    if (!Number.isFinite(n) || n < 0) {
+        throw new Error("Invalid invoice amount.");
+    }
+    return n;
+}
+
+function reconciliationInteger(n) {
+    if (!Number.isSafeInteger(n)) {
+        throw new Error("Invoice amount exceeds supported limit.");
+    }
+    return n;
+}
+
+function reconciliationPaise(value) {
+    return reconciliationInteger(Math.round(reconciliationNumber(value) * 100));
+}
+
+export function calculateInvoiceReconciliation(invoice, rows, link = null) {
+    if (!invoice?.id || !Array.isArray(invoice.items) || !Array.isArray(rows)) {
+        throw new Error("Invoice and complete financial ledger are required.");
+    }
+    if (link && link.invoiceId !== invoice.id) {
+        throw new Error("Invoice association mismatch.");
+    }
+    const subtotalPaise = invoice.items.reduce((sum, item) => {
+        const line = reconciliationInteger(Math.round(
+            reconciliationNumber(item.quantity ?? item.qty ?? 1) * reconciliationPaise(item.rate)
+        ));
+        return reconciliationInteger(sum + line);
+    }, 0);
+    const totalPaise = Math.max(0, subtotalPaise - reconciliationPaise(invoice.discountAmount));
+    const snapshotReceivedPaise = reconciliationInteger(
+        reconciliationPaise(invoice.receivedEarlier) +
+        reconciliationPaise(invoice.receivedNow ?? invoice.amountPaid)
+    );
+    const ledgerReceivedPaise = reconciliationInteger(calculateInvoiceReceipts(invoice.id, rows));
+    const differencePaise = reconciliationInteger(snapshotReceivedPaise - ledgerReceivedPaise);
+    return {
+        invoiceId: invoice.id,
+        invoiceNo: invoice.invoiceNo,
+        recordStatus: invoice.recordStatus,
+        clientId: link?.clientId ?? "",
+        caseId: link?.caseId ?? "",
+        linked: Boolean(link),
+        totalPaise,
+        snapshotReceivedPaise,
+        ledgerReceivedPaise,
+        differencePaise,
+        snapshotOutstandingPaise: Math.max(0, totalPaise - snapshotReceivedPaise),
+        ledgerOutstandingPaise: reconciliationInteger(Math.max(0, totalPaise - ledgerReceivedPaise)),
+        reconciliationStatus: !link ? "unlinked" : differencePaise === 0 ? "amounts_match" : "difference_detected",
+        reconciliationConfirmed: false,
+        paymentHistory: rows.filter(row => row.invoiceId === invoice.id)
+    };
+}
+
+export async function fetchInvoiceReconciliation() {
+    await requireAdministrator();
+    const uid = auth.currentUser?.uid;
+    const [invoices, rows, links] = await Promise.all([
+        fetchCentralInvoices(), fetchTransactions(), fetchInvoiceLinks()
+    ]);
+    await requireAdministrator();
+    if (!uid || auth.currentUser?.uid !== uid) throw new Error("Session changed.");
+    const linkMap = new Map(links.map(link => [link.invoiceId, link]));
+    return invoices.map(invoice => calculateInvoiceReconciliation(invoice, rows, linkMap.get(invoice.id) ?? null));
+}
+
+export async function getInvoiceReconciliation(invoiceId) {
+    if (typeof invoiceId !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(invoiceId)) {
+        throw new Error("Invalid invoice ID.");
+    }
+    const result = (await fetchInvoiceReconciliation()).find(item => item.invoiceId === invoiceId);
+    if (!result) throw new Error("Invoice not found.");
+    return result;
+}
+
+
+
+
+₹0
