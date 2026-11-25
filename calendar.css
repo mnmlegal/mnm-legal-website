@@ -3224,9 +3224,11 @@ input[type="checkbox"] {
     .print-header img,
     .cause-list-print-header img {
         width: 36mm;
-        height: 36mm;
-        object-fit: contain;
-        margin: 0 auto 3mm;
+        height: 20mm;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+        margin: 0 auto;
     }
 
     .print-header h1,
