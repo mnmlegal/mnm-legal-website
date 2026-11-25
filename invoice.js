@@ -1,6 +1,5 @@
 
 
-
 /* =========================================================
    MNM LEGAL ASSOCIATES
    PROFESSIONAL CLOUD INVOICE MANAGEMENT SYSTEM
@@ -539,10 +538,11 @@ function attachParticularSuggestions(field) {
     field.before(wrapper); wrapper.append(field);
     const panel = document.createElement('div');
     panel.hidden = true;
-    panel.style.cssText = 'position:absolute;top:100%;left:0;right:0;z-index:50;background:#fff;color:#263345;border:1px solid #c3a16b;border-radius:6px;box-shadow:0 5px 18px #0002;max-height:240px;overflow:auto;text-align:left;';
+    panel.style.cssText = 'position:static;width:100%;margin-top:4px;z-index:50;background:#fff;color:#263345;border:1px solid #c3a16b;border-radius:6px;box-shadow:0 5px 18px #0002;max-height:240px;overflow:auto;text-align:left;';
     wrapper.append(panel);
     let active = -1, matches = [];
-    const close = () => {panel.hidden = true; active = -1;};
+    const close = () => {panel.hidden = true; panel.style.display = 'none'; active = -1;};
+    close();
     function choose(text) {
         field.value = text; close();
         field.dispatchEvent(new Event('input', {bubbles:true}));
@@ -551,7 +551,7 @@ function attachParticularSuggestions(field) {
     function render() {
         const q = field.value.trim().toLowerCase();
         const words = q.split(/\s+/).filter(Boolean);
-        const history = cloudRecords.flatMap(r => (r.items || []).map(i => String(i.description ?? i.particular ?? '').trim())).filter(s => s && s.length <= 180 && !/[\r\n]/.test(s));
+        const history = (Array.isArray(cloudRecords) ? cloudRecords : []).flatMap(r => (Array.isArray(r?.items) ? r.items : []).map(i => String(i?.description ?? i?.particular ?? '').trim())).filter(s => s && s.length <= 180 && !/[\r\n]/.test(s));
         const unique = new Map();
         for (const s of [...LEGAL_PARTICULARS, ...history]) if (!unique.has(s.toLowerCase())) unique.set(s.toLowerCase(),s);
         matches = [...unique.values()].filter(s => words.every(w => s.toLowerCase().includes(w))).sort((a,b) => Number(b.toLowerCase().startsWith(q))-Number(a.toLowerCase().startsWith(q))).slice(0,12);
@@ -563,6 +563,7 @@ function attachParticularSuggestions(field) {
             b.addEventListener('click', () => choose(s)); panel.append(b);
         }
         panel.hidden = !matches.length;
+        panel.style.display = matches.length ? 'block' : 'none';
     }
     field.addEventListener('input', render);
     field.addEventListener('focus', render);
@@ -2249,5 +2250,3 @@ export async function initialiseInvoiceSystem(user) {
    Version 5.0
    Justice, Integrity & Excellence
    ========================================================= */
-
-
