@@ -1,0 +1,2908 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <meta name="robots"
+          content="noindex, nofollow, noarchive">
+
+    <meta name="theme-color" content="#101d30">
+
+    <meta name="referrer" content="no-referrer">
+
+    <title>Client Management | MNM Legal Associates</title>
+
+    <link rel="icon" href="/images/logo.png">
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <link rel="stylesheet" href="/clients.css">
+
+    <style>
+        [hidden] {
+            display: none !important;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- =================================================
+         MNM LEGAL ASSOCIATES
+         LEGAL PRACTICE MANAGEMENT SYSTEM
+         CLIENT MANAGEMENT MODULE
+         Version 1.0
+         Justice, Integrity & Excellence
+    ================================================== -->
+
+
+    <!-- AUTHENTICATION LOADING SCREEN -->
+
+    <div id="authLoading" class="auth-loading">
+
+        <div class="auth-loading-content">
+
+            <img src="/images/logo.png"
+                 class="auth-logo"
+                 alt="MNM Legal Associates">
+
+            <h1>MNM Legal Associates</h1>
+
+            <p>Legal Practice Management System</p>
+
+            <div id="loadingSpinner"
+                 class="loading-spinner"
+                 aria-hidden="true"></div>
+
+            <p id="loadingMessage"
+               role="status">
+
+                Verifying your authentication session...
+
+            </p>
+
+            <a href="/dashboard.html">
+
+                Return to Dashboard
+
+            </a>
+
+            <noscript>
+
+                <p>
+                    JavaScript is required to access
+                    Client Management.
+                </p>
+
+            </noscript>
+
+        </div>
+
+    </div>
+
+
+    <!-- PROTECTED APPLICATION -->
+
+    <div id="protectedContent" hidden>
+
+
+        <!-- APPLICATION HEADER -->
+
+        <header class="app-header">
+
+            <div class="header-brand">
+
+                <a href="/dashboard.html"
+                   class="brand-logo-link"
+                   aria-label="Return to dashboard">
+
+                    <img src="/images/logo.png"
+                         class="header-logo"
+                         alt="MNM Legal Associates">
+
+                </a>
+
+                <div class="header-brand-text">
+
+                    <strong>MNM Legal Associates</strong>
+
+                    <span>Legal Practice Management System</span>
+
+                </div>
+
+            </div>
+
+            <div class="header-actions">
+
+                <a href="/dashboard.html"
+                   class="button button-outline">
+
+                    <i class="fa-solid fa-arrow-left"
+                       aria-hidden="true"></i>
+
+                    <span>Dashboard</span>
+
+                </a>
+
+                <div class="staff-profile">
+
+                    <i class="fa-solid fa-circle-user"
+                       aria-hidden="true"></i>
+
+                    <div>
+
+                        <strong id="staffName">
+                            Administrator
+                        </strong>
+
+                        <span>Authorized Access</span>
+
+                    </div>
+
+                </div>
+
+                <button type="button"
+                        id="logoutButton"
+                        class="button button-danger-outline">
+
+                    <i class="fa-solid fa-right-from-bracket"
+                       aria-hidden="true"></i>
+
+                    <span>Sign Out</span>
+
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- MAIN APPLICATION -->
+
+        <main class="app-container">
+
+            <!-- PAGE HEADING -->
+
+            <section class="page-heading">
+
+                <div>
+
+                    <div class="breadcrumb">
+
+                        <a href="/dashboard.html">
+                            Dashboard
+                        </a>
+
+                        <i class="fa-solid fa-chevron-right"
+                           aria-hidden="true"></i>
+
+                        <span>Client Management</span>
+
+                    </div>
+
+                    <h1>Client Management</h1>
+
+                    <p>
+
+                        Manage client relationships,
+                        professional engagements and
+                        confidential client records.
+
+                    </p>
+
+                </div>
+
+                <div class="page-heading-actions">
+
+                    <button type="button"
+                            id="refreshClientsButton"
+                            class="button button-secondary">
+
+                        <i class="fa-solid fa-rotate"
+                           aria-hidden="true"></i>
+
+                        Refresh
+
+                    </button>
+
+                    <button type="button"
+                            id="newClientButton"
+                            class="button button-primary">
+
+                        <i class="fa-solid fa-user-plus"
+                           aria-hidden="true"></i>
+
+                        Add New Client
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- CLOUD CONNECTION STATUS -->
+
+            <div class="cloud-status-bar">
+
+                <div class="cloud-status-info">
+
+                    <span id="cloudStatusIndicator"
+                          class="connection-indicator"></span>
+
+                    <i class="fa-solid fa-cloud"
+                       aria-hidden="true"></i>
+
+                    <span id="cloudStatus">
+
+                        Checking cloud connection...
+
+                    </span>
+
+                </div>
+
+                <span id="lastSynced">
+
+                    Last synchronized: —
+
+                </span>
+
+            </div>
+
+
+            <!-- APPLICATION NOTIFICATIONS -->
+
+            <div id="appMessage"
+                 class="app-message"
+                 role="status"
+                 aria-live="polite"
+                 hidden></div>
+
+
+            <!-- APPLICATION NAVIGATION -->
+
+            <nav class="module-navigation"
+                 aria-label="Client management sections">
+
+                <div class="module-tabs"
+                     role="tablist"
+                     aria-label="Client Management">
+
+                    <button type="button"
+                            id="overviewTab"
+                            class="module-tab active"
+                            role="tab"
+                            aria-selected="true"
+                            aria-controls="overviewPanel"
+                            data-tab="overview">
+
+                        <i class="fa-solid fa-chart-pie"
+                           aria-hidden="true"></i>
+
+                        Overview
+
+                    </button>
+
+                    <button type="button"
+                            id="directoryTab"
+                            class="module-tab"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="directoryPanel"
+                            data-tab="directory"
+                            tabindex="-1">
+
+                        <i class="fa-solid fa-users"
+                           aria-hidden="true"></i>
+
+                        Client Directory
+
+                    </button>
+
+                    <button type="button"
+                            id="registrationTab"
+                            class="module-tab"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="registrationPanel"
+                            data-tab="registration"
+                            tabindex="-1">
+
+                        <i class="fa-solid fa-user-plus"
+                           aria-hidden="true"></i>
+
+                        New Registration
+
+                    </button>
+
+                    <button type="button"
+                            id="settingsTab"
+                            class="module-tab"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="settingsPanel"
+                            data-tab="settings"
+                            tabindex="-1">
+
+                        <i class="fa-solid fa-gear"
+                           aria-hidden="true"></i>
+
+                        Settings &amp; Backup
+
+                    </button>
+
+                </div>
+
+            </nav>
+
+
+            <!-- =========================================
+                 OVERVIEW PANEL
+            ========================================== -->
+
+            <section id="overviewPanel"
+                     class="module-panel"
+                     role="tabpanel"
+                     aria-labelledby="overviewTab">
+
+                <div class="statistics-grid">
+
+                    <article class="stat-card">
+
+                        <div class="stat-icon">
+
+                            <i class="fa-solid fa-users"
+                               aria-hidden="true"></i>
+
+                        </div>
+
+                        <span>Total Clients</span>
+
+                        <strong id="totalClients">0</strong>
+
+                        <small>All registered profiles</small>
+
+                    </article>
+
+                    <article class="stat-card">
+
+                        <div class="stat-icon stat-active">
+
+                            <i class="fa-solid fa-user-check"
+                               aria-hidden="true"></i>
+
+                        </div>
+
+                        <span>Active Clients</span>
+
+                        <strong id="activeClients">0</strong>
+
+                        <small>Current engagements</small>
+
+                    </article>
+
+                    <article class="stat-card">
+
+                        <div class="stat-icon stat-new">
+
+                            <i class="fa-solid fa-user-plus"
+                               aria-hidden="true"></i>
+
+                        </div>
+
+                        <span>New This Month</span>
+
+                        <strong id="newThisMonth">0</strong>
+
+                        <small>Recent registrations</small>
+
+                    </article>
+
+                    <article class="stat-card">
+
+                        <div class="stat-icon stat-prospective">
+
+                            <i class="fa-solid fa-user-clock"
+                               aria-hidden="true"></i>
+
+                        </div>
+
+                        <span>Prospective Clients</span>
+
+                        <strong id="prospectiveClients">0</strong>
+
+                        <small>Potential engagements</small>
+
+                    </article>
+
+                    <article class="stat-card">
+
+                        <div class="stat-icon stat-inactive">
+
+                            <i class="fa-solid fa-user-minus"
+                               aria-hidden="true"></i>
+
+                        </div>
+
+                        <span>Inactive Clients</span>
+
+                        <strong id="inactiveClients">0</strong>
+
+                        <small>Inactive engagements</small>
+
+                    </article>
+
+                    <article class="stat-card">
+
+                        <div class="stat-icon stat-archived">
+
+                            <i class="fa-solid fa-box-archive"
+                               aria-hidden="true"></i>
+
+                        </div>
+
+                        <span>Archived Clients</span>
+
+                        <strong id="archivedClients">0</strong>
+
+                        <small>Preserved historical records</small>
+
+                    </article>
+
+                </div>
+
+
+                <!-- QUICK ACTIONS -->
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Quick Actions</h2>
+
+                            <p>
+                                Frequently used client
+                                management functions.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="quick-actions-grid">
+
+                        <button type="button"
+                                class="quick-action"
+                                data-open-tab="registration">
+
+                            <i class="fa-solid fa-user-plus"
+                               aria-hidden="true"></i>
+
+                            <strong>Register Client</strong>
+
+                            <span>Create a new client profile</span>
+
+                        </button>
+
+                        <button type="button"
+                                class="quick-action"
+                                data-open-tab="directory">
+
+                            <i class="fa-solid fa-address-book"
+                               aria-hidden="true"></i>
+
+                            <strong>Client Directory</strong>
+
+                            <span>Find and manage clients</span>
+
+                        </button>
+
+                        <button type="button"
+                                id="quickProspectiveButton"
+                                class="quick-action">
+
+                            <i class="fa-solid fa-handshake"
+                               aria-hidden="true"></i>
+
+                            <strong>Prospective Clients</strong>
+
+                            <span>Review potential engagements</span>
+
+                        </button>
+
+                        <button type="button"
+                                class="quick-action"
+                                data-open-tab="settings">
+
+                            <i class="fa-solid fa-cloud-arrow-down"
+                               aria-hidden="true"></i>
+
+                            <strong>Cloud Backup</strong>
+
+                            <span>Export confidential records</span>
+
+                        </button>
+
+                    </div>
+
+                </section>
+
+
+                <!-- RECENT CLIENT REGISTRATIONS -->
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Recently Registered Clients</h2>
+
+                            <p>Latest additions to your client directory.</p>
+
+                        </div>
+
+                        <button type="button"
+                                class="button button-secondary"
+                                data-open-tab="directory">
+
+                            View All Clients
+
+                            <i class="fa-solid fa-arrow-right"
+                               aria-hidden="true"></i>
+
+                        </button>
+
+                    </div>
+
+                    <div class="table-wrapper">
+
+                        <table class="data-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Client ID</th>
+                                    <th>Client Name</th>
+                                    <th>Mobile Number</th>
+                                    <th>Client Type</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="recentClientsBody"></tbody>
+
+                        </table>
+
+                    </div>
+
+                    <div id="emptyRecentClients"
+                         class="empty-state">
+
+                        <i class="fa-solid fa-users"
+                           aria-hidden="true"></i>
+
+                        <h3>No clients registered yet</h3>
+
+                        <p>
+                            Register your first client
+                            to start building your directory.
+                        </p>
+
+                        <button type="button"
+                                class="button button-primary"
+                                data-open-tab="registration">
+
+                            Register First Client
+
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+
+            <!-- =========================================
+                 CLIENT DIRECTORY
+            ========================================== -->
+
+            <section id="directoryPanel"
+                     class="module-panel"
+                     role="tabpanel"
+                     aria-labelledby="directoryTab"
+                     hidden>
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Client Directory</h2>
+
+                            <p>
+                                Search, view and manage
+                                registered client profiles.
+                            </p>
+
+                        </div>
+
+                        <button type="button"
+                                id="exportClientsCSVButton"
+                                class="button button-secondary">
+
+                            <i class="fa-solid fa-file-csv"
+                               aria-hidden="true"></i>
+
+                            Export CSV
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- SEARCH AND FILTERS -->
+
+                    <div class="directory-toolbar">
+
+                        <div class="search-field">
+
+                            <label for="clientSearch">
+                                Search Clients
+                            </label>
+
+                            <div class="search-input-wrapper">
+
+                                <i class="fa-solid fa-magnifying-glass"
+                                   aria-hidden="true"></i>
+
+                                <input type="search"
+                                       id="clientSearch"
+                                       placeholder="Name, Client ID, mobile or email"
+                                       autocomplete="off">
+
+                            </div>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="clientStatusFilter">
+                                Status
+                            </label>
+
+                            <select id="clientStatusFilter">
+
+                                <option value="all">
+                                    All Statuses
+                                </option>
+
+                                <option value="active">
+                                    Active
+                                </option>
+
+                                <option value="prospective">
+                                    Prospective
+                                </option>
+
+                                <option value="inactive">
+                                    Inactive
+                                </option>
+
+                                <option value="archived">
+                                    Archived
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="clientTypeFilter">
+                                Client Type
+                            </label>
+
+                            <select id="clientTypeFilter">
+
+                                <option value="all">All Types</option>
+                                <option value="individual">Individual</option>
+                                <option value="company">Company</option>
+                                <option value="partnership">Partnership Firm</option>
+                                <option value="llp">LLP</option>
+                                <option value="society">Society</option>
+                                <option value="trust">Trust</option>
+                                <option value="other">Other</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="clientYearFilter">
+                                Registration Year
+                            </label>
+
+                            <select id="clientYearFilter">
+
+                                <option value="all">
+                                    All Years
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="clientSort">
+                                Sort By
+                            </label>
+
+                            <select id="clientSort">
+
+                                <option value="newest">
+                                    Latest Registration
+                                </option>
+
+                                <option value="oldest">
+                                    Oldest Registration
+                                </option>
+
+                                <option value="name-asc">
+                                    Name: A to Z
+                                </option>
+
+                                <option value="name-desc">
+                                    Name: Z to A
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <button type="button"
+                                id="clearFiltersButton"
+                                class="button button-secondary">
+
+                            Clear Filters
+
+                        </button>
+
+                    </div>
+
+                    <div class="directory-result-bar">
+
+                        <span id="clientResultCount">
+
+                            0 clients found
+
+                        </span>
+
+                        <span>
+
+                            <i class="fa-solid fa-lock"
+                               aria-hidden="true"></i>
+
+                            Confidential Records
+
+                        </span>
+
+                    </div>
+
+
+                    <!-- CLIENT TABLE -->
+
+                    <div class="table-wrapper">
+
+                        <table class="data-table client-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Client ID</th>
+                                    <th>Client Name</th>
+                                    <th>Contact Details</th>
+                                    <th>Client Type</th>
+                                    <th>Assigned Advocate</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="clientsTableBody"></tbody>
+
+                        </table>
+
+                    </div>
+
+                    <div id="emptyClients"
+                         class="empty-state"
+                         hidden>
+
+                        <i class="fa-solid fa-address-book"
+                           aria-hidden="true"></i>
+
+                        <h3>No matching clients found</h3>
+
+                        <p>
+                            Change the search criteria or
+                            register a new client.
+                        </p>
+
+                    </div>
+
+                    <div class="pagination-bar">
+
+                        <span id="paginationInfo">
+                            Showing 0 clients
+                        </span>
+
+                        <div class="pagination-actions">
+
+                            <button type="button"
+                                    id="previousPageButton"
+                                    class="button button-secondary"
+                                    disabled>
+
+                                <i class="fa-solid fa-chevron-left"
+                                   aria-hidden="true"></i>
+
+                                Previous
+
+                            </button>
+
+                            <span id="currentPageNumber">
+                                Page 1
+                            </span>
+
+                            <button type="button"
+                                    id="nextPageButton"
+                                    class="button button-secondary"
+                                    disabled>
+
+                                Next
+
+                                <i class="fa-solid fa-chevron-right"
+                                   aria-hidden="true"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+
+            <!-- =========================================
+                 CLIENT REGISTRATION AND EDITING
+            ========================================== -->
+
+            <section id="registrationPanel"
+                     class="module-panel"
+                     role="tabpanel"
+                     aria-labelledby="registrationTab"
+                     hidden>
+
+                <form id="clientForm">
+
+                    <input type="hidden"
+                           id="editingClientId">
+
+                    <section class="content-card">
+
+                        <div class="card-heading">
+
+                            <div>
+
+                                <h2 id="registrationHeading">
+                                    New Client Registration
+                                </h2>
+
+                                <p id="registrationDescription">
+
+                                    Enter client information
+                                    to create a permanent profile.
+
+                                </p>
+
+                            </div>
+
+                            <span class="confidential-label">
+
+                                <i class="fa-solid fa-lock"
+                                   aria-hidden="true"></i>
+
+                                Confidential
+
+                            </span>
+
+                        </div>
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="clientCode">
+                                    Client ID
+                                </label>
+
+                                <input type="text"
+                                       id="clientCode"
+                                       readonly
+                                       placeholder="Automatically generated">
+
+                                <small class="field-help">
+
+                                    Final Client ID is allocated
+                                    when registration is saved.
+
+                                </small>
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="clientType">
+
+                                    Client Type
+                                    <span class="required">*</span>
+
+                                </label>
+
+                                <select id="clientType" required>
+
+                                    <option value="individual">
+                                        Individual
+                                    </option>
+
+                                    <option value="company">
+                                        Company
+                                    </option>
+
+                                    <option value="partnership">
+                                        Partnership Firm
+                                    </option>
+
+                                    <option value="llp">
+                                        Limited Liability Partnership
+                                    </option>
+
+                                    <option value="society">
+                                        Society
+                                    </option>
+
+                                    <option value="trust">
+                                        Trust
+                                    </option>
+
+                                    <option value="other">
+                                        Other
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="clientStatus">
+
+                                    Client Status
+                                    <span class="required">*</span>
+
+                                </label>
+
+                                <select id="clientStatus" required>
+
+                                    <option value="active">
+                                        Active
+                                    </option>
+
+                                    <option value="prospective">
+                                        Prospective
+                                    </option>
+
+                                    <option value="inactive">
+                                        Inactive
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- PERSONAL INFORMATION -->
+
+                    <section class="content-card">
+
+                        <div class="card-heading">
+
+                            <div>
+
+                                <h2>
+
+                                    <i class="fa-solid fa-id-card"
+                                       aria-hidden="true"></i>
+
+                                    Personal / Organization Information
+
+                                </h2>
+
+                                <p>
+                                    Basic client identification details.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="form-grid">
+
+                            <div class="form-group full-width">
+
+                                <label for="fullName">
+
+                                    Full Name / Organization Name
+
+                                    <span class="required">*</span>
+
+                                </label>
+
+                                <input type="text"
+                                       id="fullName"
+                                       maxlength="250"
+                                       autocomplete="off"
+                                       placeholder="Enter full legal name"
+                                       required>
+
+                            </div>
+
+                            <div class="form-group"
+                                 id="relativeNameGroup">
+
+                                <label for="relativeName">
+
+                                    Father's / Husband's / Relative's Name
+
+                                </label>
+
+                                <input type="text"
+                                       id="relativeName"
+                                       maxlength="250"
+                                       autocomplete="off"
+                                       placeholder="Optional">
+
+                            </div>
+
+                            <div class="form-group"
+                                 id="contactPersonGroup"
+                                 hidden>
+
+                                <label for="contactPerson">
+
+                                    Authorized Contact Person
+
+                                </label>
+
+                                <input type="text"
+                                       id="contactPerson"
+                                       maxlength="250"
+                                       autocomplete="off"
+                                       placeholder="Representative / Director">
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="occupation">
+                                    Occupation / Business
+                                </label>
+
+                                <input type="text"
+                                       id="occupation"
+                                       maxlength="250"
+                                       placeholder="Profession or nature of business">
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- CONTACT INFORMATION -->
+
+                    <section class="content-card">
+
+                        <div class="card-heading">
+
+                            <div>
+
+                                <h2>
+
+                                    <i class="fa-solid fa-address-book"
+                                       aria-hidden="true"></i>
+
+                                    Contact Information
+
+                                </h2>
+
+                                <p>
+                                    Client communication and address details.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="mobile">
+                                    Primary Mobile Number
+                                </label>
+
+                                <input type="tel"
+                                       id="mobile"
+                                       maxlength="40"
+                                       autocomplete="off"
+                                       placeholder="+91 XXXXX XXXXX">
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="alternateMobile">
+                                    Alternate Mobile Number
+                                </label>
+
+                                <input type="tel"
+                                       id="alternateMobile"
+                                       maxlength="40"
+                                       autocomplete="off"
+                                       placeholder="Optional">
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="email">
+                                    Email Address
+                                </label>
+
+                                <input type="email"
+                                       id="email"
+                                       maxlength="254"
+                                       autocomplete="off"
+                                       placeholder="client@example.com">
+
+                            </div>
+
+                            <div class="form-group full-width">
+
+                                <label for="address">
+                                    Complete Residential / Office Address
+                                </label>
+
+                                <textarea id="address"
+                                          rows="3"
+                                          maxlength="2000"
+                                          autocomplete="off"
+                                          placeholder="House / Office No., Street, Area and Landmark"></textarea>
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="city">City</label>
+
+                                <input type="text"
+                                       id="city"
+                                       maxlength="150"
+                                       placeholder="Ahmedabad">
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="state">State</label>
+
+                                <input type="text"
+                                       id="state"
+                                       maxlength="150"
+                                       placeholder="Gujarat"
+                                       list="indianStates">
+
+                                <datalist id="indianStates">
+
+                                    <option value="Gujarat">
+                                    <option value="Maharashtra">
+                                    <option value="Rajasthan">
+                                    <option value="Madhya Pradesh">
+                                    <option value="Delhi">
+                                    <option value="Uttar Pradesh">
+                                    <option value="Punjab">
+                                    <option value="Haryana">
+                                    <option value="Bihar">
+                                    <option value="Karnataka">
+                                    <option value="Tamil Nadu">
+                                    <option value="Telangana">
+                                    <option value="Andhra Pradesh">
+                                    <option value="Kerala">
+                                    <option value="West Bengal">
+                                    <option value="Odisha">
+                                    <option value="Chhattisgarh">
+                                    <option value="Jharkhand">
+                                    <option value="Uttarakhand">
+                                    <option value="Himachal Pradesh">
+                                    <option value="Goa">
+                                    <option value="Assam">
+                                    <option value="Arunachal Pradesh">
+                                    <option value="Manipur">
+                                    <option value="Meghalaya">
+                                    <option value="Mizoram">
+                                    <option value="Nagaland">
+                                    <option value="Sikkim">
+                                    <option value="Tripura">
+                                    <option value="Chandigarh">
+                                    <option value="Jammu and Kashmir">
+                                    <option value="Ladakh">
+                                    <option value="Puducherry">
+                                    <option value="Lakshadweep">
+                                    <option value="Andaman and Nicobar Islands">
+                                    <option value="Dadra and Nagar Haveli and Daman and Diu">
+
+                                </datalist>
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="pinCode">
+                                    PIN Code
+                                </label>
+
+                                <input type="text"
+                                       id="pinCode"
+                                       inputmode="numeric"
+                                       maxlength="6"
+                                       pattern="[1-9][0-9]{5}"
+                                       placeholder="382424">
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- PROFESSIONAL ENGAGEMENT -->
+
+                    <section class="content-card">
+
+                        <div class="card-heading">
+
+                            <div>
+
+                                <h2>
+
+                                    <i class="fa-solid fa-scale-balanced"
+                                       aria-hidden="true"></i>
+
+                                    Professional Engagement
+
+                                </h2>
+
+                                <p>
+                                    Internal engagement and assignment details.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="engagementDate">
+
+                                    Date of Engagement
+
+                                </label>
+
+                                <input type="date"
+                                       id="engagementDate">
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="assignedAdvocate">
+
+                                    Assigned Advocate
+
+                                </label>
+
+                                <input type="text"
+                                       id="assignedAdvocate"
+                                       maxlength="250"
+                                       list="advocateList"
+                                       placeholder="Select or enter advocate">
+
+                                <datalist id="advocateList">
+
+                                    <option value="Adv. Aman Mishra">
+
+                                    <option value="Adv. Sonali Pandey">
+
+                                </datalist>
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="referenceSource">
+
+                                    Reference Source
+
+                                </label>
+
+                                <input type="text"
+                                       id="referenceSource"
+                                       maxlength="250"
+                                       list="referenceSources"
+                                       placeholder="How did the client approach us?">
+
+                                <datalist id="referenceSources">
+
+                                    <option value="Google Search">
+                                    <option value="Firm Website">
+                                    <option value="Existing Client">
+                                    <option value="Personal Reference">
+                                    <option value="Advocate Reference">
+                                    <option value="Walk-in">
+                                    <option value="Social Media">
+                                    <option value="Other">
+
+                                </datalist>
+
+                            </div>
+
+                            <div class="form-group full-width">
+
+                                <label for="notes">
+
+                                    Confidential Internal Notes
+
+                                </label>
+
+                                <textarea id="notes"
+                                          rows="5"
+                                          maxlength="10000"
+                                          autocomplete="off"
+                                          placeholder="Internal remarks, consultation summary or relevant engagement information"></textarea>
+
+                                <small class="field-help">
+
+                                    Record only information necessary
+                                    for professional purposes.
+                                    Do not enter passwords, OTPs or
+                                    unnecessary identity numbers.
+
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- DUPLICATE CLIENT WARNING -->
+
+                    <section id="duplicateWarning"
+                             class="warning-card"
+                             hidden>
+
+                        <h3>
+
+                            <i class="fa-solid fa-triangle-exclamation"
+                               aria-hidden="true"></i>
+
+                            Possible Duplicate Client
+
+                        </h3>
+
+                        <p>
+
+                            Similar client records were found.
+                            Review them before continuing.
+
+                        </p>
+
+                        <div id="duplicateClientsList"></div>
+
+                    </section>
+
+
+                    <!-- REGISTRATION ACTIONS -->
+
+                    <div class="form-action-bar">
+
+                        <div class="form-action-note">
+
+                            <i class="fa-solid fa-shield-halved"
+                               aria-hidden="true"></i>
+
+                            Client information is stored in
+                            the authorized cloud database.
+
+                        </div>
+
+                        <div class="form-actions">
+
+                            <button type="button"
+                                    id="cancelRegistrationButton"
+                                    class="button button-secondary">
+
+                                Cancel
+
+                            </button>
+
+                            <button type="button"
+                                    id="resetClientFormButton"
+                                    class="button button-secondary">
+
+                                <i class="fa-solid fa-rotate-left"
+                                   aria-hidden="true"></i>
+
+                                Reset
+
+                            </button>
+
+                            <button type="submit"
+                                    id="saveClientButton"
+                                    class="button button-primary">
+
+                                <i class="fa-solid fa-floppy-disk"
+                                   aria-hidden="true"></i>
+
+                                <span id="saveClientButtonText">
+
+                                    Register Client
+
+                                </span>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+
+            <!-- =========================================
+                 INDIVIDUAL CLIENT PROFILE
+            ========================================== -->
+
+            <section id="profilePanel"
+                     class="module-panel"
+                     aria-labelledby="profileName"
+                     hidden>
+
+                <div class="profile-toolbar">
+
+                    <button type="button"
+                            id="backToDirectoryButton"
+                            class="button button-secondary">
+
+                        <i class="fa-solid fa-arrow-left"
+                           aria-hidden="true"></i>
+
+                        Back to Directory
+
+                    </button>
+
+                    <div class="profile-actions">
+
+                        <button type="button"
+                                id="editClientButton"
+                                class="button button-primary">
+
+                            <i class="fa-solid fa-pen"
+                               aria-hidden="true"></i>
+
+                            Edit Profile
+
+                        </button>
+
+                        <button type="button"
+                                id="archiveClientButton"
+                                class="button button-danger">
+
+                            <i class="fa-solid fa-box-archive"
+                               aria-hidden="true"></i>
+
+                            Archive Client
+
+                        </button>
+
+                        <button type="button"
+                                id="reactivateClientButton"
+                                class="button button-primary"
+                                hidden>
+
+                            <i class="fa-solid fa-user-check"
+                               aria-hidden="true"></i>
+
+                            Reactivate Client
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- CLIENT PROFILE HEADER -->
+
+                <section class="profile-header">
+
+                    <div id="profileInitials"
+                         class="profile-avatar">
+
+                        CL
+
+                    </div>
+
+                    <div class="profile-heading">
+
+                        <span id="profileClientCode"
+                              class="profile-code">
+
+                            Client ID
+
+                        </span>
+
+                        <h2 id="profileName">
+
+                            Client Name
+
+                        </h2>
+
+                        <div class="profile-meta">
+
+                            <span id="profileClientType">—</span>
+
+                            <span id="profileStatus"
+                                  class="status-badge">
+
+                                —
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="profile-registration">
+
+                        <span>Registered On</span>
+
+                        <strong id="profileRegisteredOn">—</strong>
+
+                    </div>
+
+                </section>
+
+
+                <!-- ARCHIVED CLIENT NOTICE -->
+
+                <section id="archivedClientNotice"
+                         class="warning-card"
+                         hidden>
+
+                    <h3>
+
+                        <i class="fa-solid fa-box-archive"
+                           aria-hidden="true"></i>
+
+                        Archived Client
+
+                    </h3>
+
+                    <p id="profileArchiveReason"></p>
+
+                    <p>
+
+                        This profile is preserved for historical
+                        reference. Reactivate it before editing
+                        or recording new activities.
+
+                    </p>
+
+                </section>
+
+
+                <!-- CLIENT DETAILS -->
+
+                <div class="profile-details-grid">
+
+                    <section class="content-card">
+
+                        <div class="card-heading">
+
+                            <h2>
+
+                                <i class="fa-solid fa-user"
+                                   aria-hidden="true"></i>
+
+                                Personal Information
+
+                            </h2>
+
+                        </div>
+
+                        <dl class="details-list">
+
+                            <div>
+
+                                <dt>Full Name</dt>
+
+                                <dd id="profileFullName">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Relative's Name</dt>
+
+                                <dd id="profileRelativeName">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Contact Person</dt>
+
+                                <dd id="profileContactPerson">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Occupation / Business</dt>
+
+                                <dd id="profileOccupation">—</dd>
+
+                            </div>
+
+                        </dl>
+
+                    </section>
+
+                    <section class="content-card">
+
+                        <div class="card-heading">
+
+                            <h2>
+
+                                <i class="fa-solid fa-phone"
+                                   aria-hidden="true"></i>
+
+                                Contact Information
+
+                            </h2>
+
+                        </div>
+
+                        <dl class="details-list">
+
+                            <div>
+
+                                <dt>Primary Mobile</dt>
+
+                                <dd id="profileMobile">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Alternate Mobile</dt>
+
+                                <dd id="profileAlternateMobile">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Email Address</dt>
+
+                                <dd id="profileEmail">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Complete Address</dt>
+
+                                <dd id="profileAddress">—</dd>
+
+                            </div>
+
+                        </dl>
+
+                    </section>
+
+                    <section class="content-card">
+
+                        <div class="card-heading">
+
+                            <h2>
+
+                                <i class="fa-solid fa-scale-balanced"
+                                   aria-hidden="true"></i>
+
+                                Professional Engagement
+
+                            </h2>
+
+                        </div>
+
+                        <dl class="details-list">
+
+                            <div>
+
+                                <dt>Engagement Date</dt>
+
+                                <dd id="profileEngagementDate">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Assigned Advocate</dt>
+
+                                <dd id="profileAssignedAdvocate">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Reference Source</dt>
+
+                                <dd id="profileReferenceSource">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Last Updated</dt>
+
+                                <dd id="profileLastUpdated">—</dd>
+
+                            </div>
+
+                        </dl>
+
+                    </section>
+
+                    <section class="content-card">
+
+                        <div class="card-heading">
+
+                            <h2>
+
+                                <i class="fa-solid fa-lock"
+                                   aria-hidden="true"></i>
+
+                                Confidential Notes
+
+                            </h2>
+
+                        </div>
+
+                        <p id="profileNotes"
+                           class="profile-notes">
+
+                            No internal notes recorded.
+
+                        </p>
+
+                    </section>
+
+                </div>
+
+
+                <!-- FUTURE MODULE INTEGRATIONS -->
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Associated Legal Records</h2>
+
+                            <p>
+
+                                Additional modules will be linked
+                                to this permanent client profile.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="integration-grid">
+
+                        <article class="integration-card">
+
+                            <i class="fa-solid fa-scale-balanced"
+                               aria-hidden="true"></i>
+
+                            <h3>Legal Cases</h3>
+
+                            <span class="coming-soon">
+                                Coming Soon
+                            </span>
+
+                            <p>
+
+                                Case details, court information
+                                and proceedings.
+
+                            </p>
+
+                        </article>
+
+                        <article class="integration-card">
+
+                            <i class="fa-solid fa-file-invoice"
+                               aria-hidden="true"></i>
+
+                            <h3>Invoices &amp; Payments</h3>
+
+                            <span class="coming-soon">
+                                Integration Pending
+                            </span>
+
+                            <p>
+
+                                Client-specific billing and
+                                professional fee history.
+
+                            </p>
+
+                        </article>
+
+                        <article class="integration-card">
+
+                            <i class="fa-solid fa-calendar-days"
+                               aria-hidden="true"></i>
+
+                            <h3>Hearing Calendar</h3>
+
+                            <span class="coming-soon">
+                                Coming Soon
+                            </span>
+
+                            <p>
+
+                                Upcoming hearings, meetings
+                                and important deadlines.
+
+                            </p>
+
+                        </article>
+
+                        <article class="integration-card">
+
+                            <i class="fa-solid fa-folder-open"
+                               aria-hidden="true"></i>
+
+                            <h3>Client Documents</h3>
+
+                            <span class="coming-soon">
+                                Coming Soon
+                            </span>
+
+                            <p>
+
+                                Petitions, affidavits, notices
+                                and supporting documents.
+
+                            </p>
+
+                        </article>
+
+                    </div>
+
+                </section>
+
+
+                <!-- COMMUNICATION HISTORY -->
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="fa-solid fa-clock-rotate-left"
+                                   aria-hidden="true"></i>
+
+                                Activity &amp; Communication History
+
+                            </h2>
+
+                            <p>
+
+                                Maintain a chronological record
+                                of professional interactions.
+
+                            </p>
+
+                        </div>
+
+                        <button type="button"
+                                id="addActivityButton"
+                                class="button button-primary">
+
+                            <i class="fa-solid fa-plus"
+                               aria-hidden="true"></i>
+
+                            Add Activity
+
+                        </button>
+
+                    </div>
+
+                    <div id="activityTimeline"
+                         class="activity-timeline"></div>
+
+                    <div id="emptyActivities"
+                         class="empty-state"
+                         hidden>
+
+                        <i class="fa-solid fa-clock"
+                           aria-hidden="true"></i>
+
+                        <h3>No activities recorded</h3>
+
+                        <p>
+
+                            Add consultations, meetings,
+                            calls or internal notes.
+
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+
+            <!-- =========================================
+                 SETTINGS AND BACKUP
+            ========================================== -->
+
+            <section id="settingsPanel"
+                     class="module-panel"
+                     role="tabpanel"
+                     aria-labelledby="settingsTab"
+                     hidden>
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Client Numbering Configuration</h2>
+
+                            <p>
+
+                                Automatic permanent client identification.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label for="clientNumberingFormat">
+
+                                Client ID Format
+
+                            </label>
+
+                            <input type="text"
+                                   id="clientNumberingFormat"
+                                   value="MNM/CL/NNN/YYYY"
+                                   readonly>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="currentRegistrationYear">
+
+                                Current Registration Year
+
+                            </label>
+
+                            <input type="text"
+                                   id="currentRegistrationYear"
+                                   readonly>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="nextClientCodeSetting">
+
+                                Next Available Client ID
+
+                            </label>
+
+                            <input type="text"
+                                   id="nextClientCodeSetting"
+                                   readonly>
+
+                        </div>
+
+                    </div>
+
+                    <div class="information-note">
+
+                        <i class="fa-solid fa-circle-info"
+                           aria-hidden="true"></i>
+
+                        Client numbering automatically restarts
+                        each calendar year. Previously allocated
+                        Client IDs remain unchanged.
+
+                    </div>
+
+                </section>
+
+
+                <!-- CLOUD DATABASE INFORMATION -->
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Cloud Database</h2>
+
+                            <p>
+                                Centralized client record storage.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <dl class="details-list">
+
+                        <div>
+
+                            <dt>Storage Provider</dt>
+
+                            <dd>Firebase Cloud Firestore</dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Connection Status</dt>
+
+                            <dd id="databaseConnectionStatus">
+                                Checking...
+                            </dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Authorized Role</dt>
+
+                            <dd>Administrator</dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Total Stored Client Records</dt>
+
+                            <dd id="storageClientCount">0</dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Permanent Deletion</dt>
+
+                            <dd>Disabled</dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Record History</dt>
+
+                            <dd>Activity and revision tracking</dd>
+
+                        </div>
+
+                    </dl>
+
+                    <button type="button"
+                            id="checkConnectionButton"
+                            class="button button-secondary">
+
+                        <i class="fa-solid fa-cloud"
+                           aria-hidden="true"></i>
+
+                        Verify Cloud Connection
+
+                    </button>
+
+                </section>
+
+
+                <!-- CONFIDENTIAL BACKUP -->
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="fa-solid fa-cloud-arrow-down"
+                                   aria-hidden="true"></i>
+
+                                Confidential Data Backup
+
+                            </h2>
+
+                            <p>
+
+                                Export client profiles, numbering
+                                counters and activity history.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="backup-information">
+
+                        <i class="fa-solid fa-file-shield"
+                           aria-hidden="true"></i>
+
+                        <div>
+
+                            <h3>Complete Client Database Backup</h3>
+
+                            <p>
+
+                                Includes active, prospective,
+                                inactive and archived client records,
+                                along with their communication history.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <button type="button"
+                            id="downloadClientBackupButton"
+                            class="button button-primary">
+
+                        <i class="fa-solid fa-download"
+                           aria-hidden="true"></i>
+
+                        Download JSON Backup
+
+                    </button>
+
+                    <div class="warning-card">
+
+                        <h3>
+
+                            <i class="fa-solid fa-lock"
+                               aria-hidden="true"></i>
+
+                            Confidentiality Notice
+
+                        </h3>
+
+                        <p>
+
+                            Exported files may contain confidential
+                            client information and professional
+                            communications. Store them securely
+                            and restrict unauthorized access.
+
+                        </p>
+
+                        <p>
+
+                            Automatic backup restoration is not
+                            available in this version.
+
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+
+
+        <!-- APPLICATION FOOTER -->
+
+        <footer class="app-footer">
+
+            <div>
+
+                &copy; <span id="currentYear">2026</span>
+
+                MNM Legal Associates.
+
+                All rights reserved.
+
+            </div>
+
+            <div>
+
+                Justice, Integrity &amp; Excellence
+
+            </div>
+
+            <div>
+
+                <i class="fa-solid fa-lock"
+                   aria-hidden="true"></i>
+
+                Internal Authorized Access Only
+
+            </div>
+
+        </footer>
+
+
+        <!-- =========================================
+             CONFIRMATION DIALOG
+        ========================================== -->
+
+        <dialog id="confirmationDialog"
+                class="app-dialog"
+                aria-labelledby="confirmationTitle">
+
+            <div class="dialog-content">
+
+                <div class="dialog-heading">
+
+                    <h2 id="confirmationTitle">
+
+                        Confirm Action
+
+                    </h2>
+
+                </div>
+
+                <p id="confirmationMessage"></p>
+
+                <div class="dialog-actions">
+
+                    <button type="button"
+                            id="cancelConfirmation"
+                            class="button button-secondary">
+
+                        Cancel
+
+                    </button>
+
+                    <button type="button"
+                            id="acceptConfirmation"
+                            class="button button-primary">
+
+                        Confirm
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </dialog>
+
+
+        <!-- =========================================
+             ADD ACTIVITY DIALOG
+        ========================================== -->
+
+        <dialog id="activityDialog"
+                class="app-dialog"
+                aria-labelledby="activityDialogTitle">
+
+            <form id="activityForm"
+                  class="dialog-content">
+
+                <div class="dialog-heading">
+
+                    <h2 id="activityDialogTitle">
+
+                        Record Client Activity
+
+                    </h2>
+
+                    <button type="button"
+                            id="closeActivityDialogButton"
+                            class="icon-button"
+                            aria-label="Close activity dialog">
+
+                        <i class="fa-solid fa-xmark"
+                           aria-hidden="true"></i>
+
+                    </button>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="activityType">
+
+                        Activity Type
+
+                        <span class="required">*</span>
+
+                    </label>
+
+                    <select id="activityType" required>
+
+                        <option value="consultation">
+                            Consultation
+                        </option>
+
+                        <option value="phone_call">
+                            Phone Call
+                        </option>
+
+                        <option value="meeting">
+                            Meeting
+                        </option>
+
+                        <option value="email">
+                            Email Communication
+                        </option>
+
+                        <option value="whatsapp">
+                            WhatsApp Communication
+                        </option>
+
+                        <option value="note">
+                            Internal Note
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="activityDescription">
+
+                        Description
+
+                        <span class="required">*</span>
+
+                    </label>
+
+                    <textarea id="activityDescription"
+                              rows="5"
+                              maxlength="10000"
+                              placeholder="Enter relevant communication or consultation details"
+                              required></textarea>
+
+                </div>
+
+                <div class="dialog-actions">
+
+                    <button type="button"
+                            id="cancelActivityButton"
+                            class="button button-secondary">
+
+                        Cancel
+
+                    </button>
+
+                    <button type="submit"
+                            id="saveActivityButton"
+                            class="button button-primary">
+
+                        <i class="fa-solid fa-floppy-disk"
+                           aria-hidden="true"></i>
+
+                        Save Activity
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </dialog>
+
+
+        <!-- =========================================
+             ARCHIVE CLIENT DIALOG
+        ========================================== -->
+
+        <dialog id="archiveDialog"
+                class="app-dialog"
+                aria-labelledby="archiveDialogTitle">
+
+            <form id="archiveForm"
+                  class="dialog-content">
+
+                <div class="dialog-heading">
+
+                    <h2 id="archiveDialogTitle">
+
+                        Archive Client
+
+                    </h2>
+
+                </div>
+
+                <p>
+
+                    The client profile and permanent Client ID
+                    will remain preserved in the cloud database.
+                    Archived clients can be reactivated later.
+
+                </p>
+
+                <div class="form-group">
+
+                    <label for="archiveReason">
+
+                        Reason for Archiving
+
+                        <span class="required">*</span>
+
+                    </label>
+
+                    <textarea id="archiveReason"
+                              rows="4"
+                              maxlength="2000"
+                              placeholder="Enter the reason for archiving this client"
+                              required></textarea>
+
+                </div>
+
+                <div class="dialog-actions">
+
+                    <button type="button"
+                            id="cancelArchiveButton"
+                            class="button button-secondary">
+
+                        Cancel
+
+                    </button>
+
+                    <button type="submit"
+                            id="confirmArchiveButton"
+                            class="button button-danger">
+
+                        <i class="fa-solid fa-box-archive"
+                           aria-hidden="true"></i>
+
+                        Archive Client
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </dialog>
+
+    </div>
+
+
+    <!-- =============================================
+         SECURE APPLICATION INITIALIZATION
+    ============================================== -->
+
+    <script type="module">
+
+        "use strict";
+
+        const content = document.getElementById(
+            "protectedContent"
+        );
+
+        const loading = document.getElementById(
+            "authLoading"
+        );
+
+        const loadingMessage = document.getElementById(
+            "loadingMessage"
+        );
+
+        const loadingSpinner = document.getElementById(
+            "loadingSpinner"
+        );
+
+        const logoutButton = document.getElementById(
+            "logoutButton"
+        );
+
+        let activeUser = null;
+
+        let applicationPromise = null;
+
+        let logoutInProgress = false;
+
+
+        /* INITIALIZATION ERROR */
+
+        function showInitializationError(message) {
+
+            content.hidden = true;
+
+            loading.hidden = false;
+
+            loadingSpinner.hidden = true;
+
+            loadingMessage.textContent = message;
+
+        }
+
+
+        /* SECURE APPLICATION STARTUP */
+
+        async function initialiseClientApplication() {
+
+            try {
+
+                const {
+
+                    protectPage,
+
+                    logoutUser,
+
+                    verifyStaffAccess
+
+                } = await import("./auth.js");
+
+
+                /* SECURE LOGOUT */
+
+                logoutButton.addEventListener(
+
+                    "click",
+
+                    async () => {
+
+                        if (logoutInProgress) return;
+
+                        logoutInProgress = true;
+
+                        logoutButton.disabled = true;
+
+                        try {
+
+                            const result = await logoutUser();
+
+                            if (result?.success === false) {
+
+                                window.alert(
+
+                                    result.message ||
+
+                                    "Unable to sign out."
+
+                                );
+
+                            }
+
+                        } catch {
+
+                            window.alert(
+
+                                "Unable to sign out. Please try again."
+
+                            );
+
+                        } finally {
+
+                            logoutInProgress = false;
+
+                            logoutButton.disabled = false;
+
+                        }
+
+                    }
+
+                );
+
+
+                /* ADMINISTRATOR AUTHORIZATION */
+
+                protectPage({
+
+                    contentSelector: "#protectedContent",
+
+                    loadingSelector: "#authLoading",
+
+                    allowedRoles: ["admin"],
+
+                    onAuthenticated: async (user, profile) => {
+
+                        if (
+
+                            !user?.uid ||
+
+                            !profile ||
+
+                            profile.uid !== user.uid ||
+
+                            profile.active !== true ||
+
+                            profile.role !== "admin"
+
+                        ) {
+
+                            throw new Error(
+
+                                "Administrator authorization required."
+
+                            );
+
+                        }
+
+
+                        /* PREVENT CROSS-ACCOUNT ACCESS */
+
+                        if (
+
+                            activeUser &&
+
+                            activeUser !== user.uid
+
+                        ) {
+
+                            content.hidden = true;
+
+                            window.location.reload();
+
+                            throw new Error(
+
+                                "Authentication session changed."
+
+                            );
+
+                        }
+
+                        activeUser = user.uid;
+
+
+                        /* KEEP CONTENT HIDDEN DURING STARTUP */
+
+                        content.hidden = true;
+
+                        loading.hidden = false;
+
+                        loadingSpinner.hidden = false;
+
+                        loadingMessage.textContent =
+
+                            "Initialising authorized client management...";
+
+
+                        /* STAFF INFORMATION */
+
+                        document.getElementById(
+
+                            "staffName"
+
+                        ).textContent =
+
+                            profile.name || "Administrator";
+
+
+                        document.getElementById(
+
+                            "currentYear"
+
+                        ).textContent =
+
+                            new Intl.DateTimeFormat("en-IN", {
+
+                                year: "numeric",
+
+                                timeZone: "Asia/Kolkata"
+
+                            }).format(new Date());
+
+
+                        /* LOAD CLIENT MANAGEMENT ENGINE */
+
+                        if (!applicationPromise) {
+
+                            applicationPromise = (async () => {
+
+                                const {
+
+                                    initialiseClientSystem
+
+                                } = await import("./clients.js");
+
+                                await initialiseClientSystem(user);
+
+                            })();
+
+                        }
+
+
+                        /* VERIFY INITIALIZATION */
+
+                        try {
+
+                            await applicationPromise;
+
+                        } catch (error) {
+
+                            console.error(
+
+                                "Client initialization failed:",
+
+                                error
+
+                            );
+
+                            showInitializationError(
+
+                                "Client Management could not be loaded. " +
+
+                                "Please refresh or return to the Dashboard."
+
+                            );
+
+                            throw error;
+
+                        }
+
+
+                        /* FINAL SERVER AUTHORIZATION CHECK */
+
+                        const verifiedProfile =
+
+                            await verifyStaffAccess(user);
+
+                        if (
+
+                            verifiedProfile.uid !== user.uid ||
+
+                            verifiedProfile.active !== true ||
+
+                            verifiedProfile.role !== "admin"
+
+                        ) {
+
+                            throw new Error(
+
+                                "Client Management access is no longer authorized."
+
+                            );
+
+                        }
+
+                        /*
+                         * Final application visibility is controlled
+                         * by protectPage() in auth.js.
+                         *
+                         * Never reveal protected content manually.
+                         */
+
+                    }
+
+                });
+
+            } catch (error) {
+
+                console.error(
+
+                    "Client authorization error:",
+
+                    error
+
+                );
+
+                showInitializationError(
+
+                    "Authorization service unavailable. " +
+
+                    "Please refresh or return to Staff Login."
+
+                );
+
+            }
+
+        }
+
+
+        /* START CLIENT MANAGEMENT APPLICATION */
+
+        initialiseClientApplication();
+
+    </script>
+
+</body>
+
+</html>
