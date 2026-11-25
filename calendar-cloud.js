@@ -1,4 +1,12 @@
 
+
+
+
+
+
+
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    HEARING CALENDAR — CLOUD ENGINE
@@ -10,6 +18,7 @@
    ========================================================= */
 
 import { auth } from "./firebase-config.js";
+import { fetchClients } from "./clients-cloud.js";
 
 import {
     verifyStaffAccess
@@ -17,7 +26,6 @@ import {
 
 import {
     fetchCases,
-    fetchCaseClients,
     getCase,
     updateCaseHearing
 } from "./cases-cloud.js";
@@ -748,6 +756,7 @@ export function buildCalendarEvents(
             clientId: record.clientId || "",
 
             clientName: client?.fullName || "",
+            clientMobile: String(client?.mobile ?? "").trim(),
 
             clientCode: client?.clientCode || "",
 
@@ -947,7 +956,7 @@ export async function fetchCalendarData() {
 
         }),
 
-        fetchCaseClients({
+        fetchClients({
 
             includeArchived: true
 
@@ -2183,3 +2192,7 @@ export async function checkCalendarCloudConnection() {
 
    Justice, Integrity & Excellence
    ========================================================= */
+
+
+
+
