@@ -1,19 +1,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,7 +22,7 @@
 
     <style>
         /* MNM LEGAL ASSOCIATES
-           STAFF DASHBOARD VERSION 3.2 */
+           STAFF DASHBOARD VERSION 3.3 */
 
         :root {
             --navy: #101d30;
@@ -1207,7 +1194,7 @@
                         </div>
 
                         <span id="moduleCount" class="module-count">
-                            4 of 6 modules released
+                            5 of 6 modules released
                         </span>
 
                     </div>
@@ -1461,59 +1448,23 @@
                         </article>
 
                         <!-- DOCUMENT MANAGEMENT -->
-
-                        <article class="module-card">
-
+                        <article class="module-card" id="documentModuleCard">
                             <div class="module-top">
-
-                                <div class="module-icon">
-                                    <i class="fa-solid fa-folder-open"></i>
-                                </div>
-
-                                <span class="module-status">
-                                    Coming Soon
-                                </span>
-
+                                <div class="module-icon"><i class="fa-solid fa-folder-open"></i></div>
+                                <span class="module-status" id="documentModuleStatus">Restricted</span>
                             </div>
-
                             <h3>Document Management</h3>
-
-                            <p>
-                                Organize legal documents and supporting
-                                records within client and case profiles.
-                            </p>
-
+                            <p>Organize legal documents and supporting evidence through integrated Google Drive storage.</p>
                             <ul class="module-features">
-
-                                <li>
-                                    <i class="fa-solid fa-check"></i>
-                                    Petitions and affidavits
-                                </li>
-
-                                <li>
-                                    <i class="fa-solid fa-check"></i>
-                                    Legal notices and agreements
-                                </li>
-
-                                <li>
-                                    <i class="fa-solid fa-check"></i>
-                                    Evidence and court orders
-                                </li>
-
-                                <li>
-                                    <i class="fa-solid fa-check"></i>
-                                    Document categorization
-                                </li>
-
+                                <li><i class="fa-solid fa-check"></i> Google Drive document storage</li>
+                                <li><i class="fa-solid fa-check"></i> Client and case-linked documents</li>
+                                <li><i class="fa-solid fa-check"></i> Document version history</li>
+                                <li><i class="fa-solid fa-check"></i> Document archive and metadata backup</li>
                             </ul>
-
-                            <button class="module-action" disabled>
-
-                                <span>Coming Soon</span>
-                                <i class="fa-solid fa-lock"></i>
-
-                            </button>
-
+                            <a class="module-action" data-document-link aria-disabled="true" tabindex="-1">
+                                <span id="documentAction">Administrator Access Required</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </a>
                         </article>
 
                         <!-- FINANCIAL MANAGEMENT -->
@@ -1648,6 +1599,11 @@
                                 <strong id="calendarAccessStatus">—</strong>
                             </div>
 
+                            <div class="account-field">
+                                <span>Document Management Access</span>
+                                <strong id="documentAccessStatus">—</strong>
+                            </div>
+
                         </div>
 
                     </div>
@@ -1773,6 +1729,18 @@
                 cardId: "calendarModuleCard",
                 accessId: "calendarAccessStatus",
                 actionText: "Open Hearing Calendar"
+            }),
+
+            documents: Object.freeze({
+                enabled: true,
+                url: "/documents.html",
+                roles: ["admin"],
+                selector: "[data-document-link]",
+                actionId: "documentAction",
+                statusId: "documentModuleStatus",
+                cardId: "documentModuleCard",
+                accessId: "documentAccessStatus",
+                actionText: "Open Document Management"
             })
 
         });
@@ -2691,7 +2659,7 @@
         initialiseDashboard();
 
         /* =========================================
-           END OF STAFF DASHBOARD VERSION 3.2
+           END OF STAFF DASHBOARD VERSION 3.3
 
            MNM LEGAL ASSOCIATES
            Justice, Integrity & Excellence
