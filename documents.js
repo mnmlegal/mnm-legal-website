@@ -1,8 +1,11 @@
 
+
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    DOCUMENT MANAGEMENT APPLICATION ENGINE
-   Version 1.0.0
+   Version 2.0.0
    Justice, Integrity & Excellence
    ========================================================= */
 
@@ -31,6 +34,7 @@ const state = {
     userId: null,
     invalidated: false,
     busy: false,
+    connectionOperation: false,
     records: [],
     clients: [],
     cases: [],
@@ -263,13 +267,14 @@ function setBusy(busy) {
     updateSaveAvailability();
 }
 
-async function perform(operation, errorId = null) {
+async function perform(operation, errorId = null, connectionOnly = false) {
     if (state.busy) return;
 
     if (errorId) clearError(errorId);
 
     try {
         requireVisibleApplication();
+        state.connectionOperation = connectionOnly;
         setBusy(true);
 
         await requireSession();
@@ -287,6 +292,7 @@ async function perform(operation, errorId = null) {
             }
         }
     } finally {
+        state.connectionOperation = false;
         setBusy(false);
     }
 }
@@ -312,7 +318,7 @@ function renderDriveConnection() {
 
     text(
         "driveConnectionBadge",
-        connected ? "Connected" : "Disconnected"
+        connected ? "Connected" : state.connectionOperation && state.busy ? "Connecting / verifying" : "Disconnected"
     );
 
     $("driveConnectionBadge").className =
@@ -368,8 +374,8 @@ function renderDriveConnection() {
         driveReady()
             ? "Google Drive is connected and the root folder is authorized."
             : connected
-                ? "Authorize the designated root folder before uploading documents."
-                : "Connect your authorized Google account to access document files."
+                ? "Click Authorize Root Folder to verify or prepare private storage."
+                : "Click Connect Google Drive. Previous consent can be reused; a Google window may still appear after a browser reload."
     );
 }
 
@@ -380,40 +386,31 @@ function renderDriveConnection() {
 
 async function connectDrive() {
     await perform(async () => {
+        message("Connecting to Google Drive. Complete the Google window if prompted.", "warning");
         await Cloud.connectGoogleDrive();
-
         renderDriveConnection();
-
-        message("Google Drive connected successfully.");
-    });
+        message(driveReady()
+            ? "Google Drive connected. Existing storage is ready."
+            : "Google Drive connected. Click Authorize Root Folder to prepare storage.");
+    }, null, true);
 }
 
 async function authorizeRoot() {
     await perform(async () => {
+        message("Verifying private storage. A new folder is created only if needed.", "warning");
         await Cloud.authorizeRootFolder();
-
+        await Cloud.initialiseDriveFolders();
         renderDriveConnection();
-
-        message(
-            driveReady()
-                ? "Root folder authorized successfully."
-                : "Root folder authorization has not been completed.",
-            driveReady() ? "success" : "warning"
-        );
+        message("Private Google Drive storage is ready.");
     });
 }
 
 async function checkDrive() {
     await perform(async () => {
-        const result = await Cloud.checkRootFolderAccess();
-
+        await Cloud.checkRootFolderAccess();
         renderDriveConnection();
-
-        text(
-            "driveConnectionMessage",
-            JSON.stringify(result, null, 2)
-        );
-    });
+        message("Existing private storage verified.");
+    }, null, true);
 }
 
 async function disconnectDrive() {
@@ -1065,7 +1062,7 @@ async function selectDriveFile() {
         state.pendingId = null;
 
         renderSelectedFile();
-    }, "documentFormError");
+    }, "documentFormError", true);
 }
 
 function updateSaveAvailability() {
@@ -2291,7 +2288,10 @@ function bindEvents() {
     });
 
     window.addEventListener("beforeunload", event => {
-        if (state.busy || state.recovery) {
+        if ((state.busy && !state.connectionOperation) || state.recovery ||
+            state.selectedFile || state.selectedDriveFile ||
+            (state.tab === "registration" && (value("documentTitle").trim() || value("documentDescription").trim())) ||
+            ($("versionDialog")?.open && $("versionFile")?.files?.length)) {
             event.preventDefault();
             event.returnValue = "";
         }
@@ -2571,6 +2571,9 @@ export async function initialiseDocumentSystem(user) {
 
     bindEvents();
 
+    // Preload identity script without opening an OAuth popup or failing Firebase login.
+    Cloud.initialiseGoogleDrive().catch(() => {});
+
     renderDriveConnection();
 
     activateTab("overview");
@@ -2610,3 +2613,7 @@ export async function initialiseDocumentSystem(user) {
    MNM LEGAL ASSOCIATES
    Justice, Integrity & Excellence
    ========================================================= */
+
+
+
+
