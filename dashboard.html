@@ -22,7 +22,7 @@
 
     <style>
         /* MNM LEGAL ASSOCIATES
-           STAFF DASHBOARD VERSION 3.3 */
+           STAFF DASHBOARD VERSION 3.4 */
 
         :root {
             --navy: #101d30;
@@ -1001,13 +1001,10 @@
 
 </a>
 
-                <button class="nav-link" disabled>
-
+                <a class="nav-link" data-finance-link aria-disabled="true" tabindex="-1">
                     <i class="fa-solid fa-chart-line"></i>
                     <span>Financial Management</span>
-                    <i class="fa-solid fa-lock nav-lock"></i>
-
-                </button>
+                </a>
 
                 <div class="navigation-label">
                     ACCOUNT
@@ -1199,7 +1196,7 @@
                         </div>
 
                         <span id="moduleCount" class="module-count">
-                            5 of 6 modules released
+                            6 of 6 modules released
                         </span>
 
                     </div>
@@ -1474,7 +1471,7 @@
 
                         <!-- FINANCIAL MANAGEMENT -->
 
-                        <article class="module-card">
+                        <article class="module-card" id="financeModuleCard">
 
                             <div class="module-top">
 
@@ -1482,9 +1479,7 @@
                                     <i class="fa-solid fa-chart-line"></i>
                                 </div>
 
-                                <span class="module-status">
-                                    Coming Soon
-                                </span>
+                                <span class="module-status" id="financeModuleStatus">Restricted</span>
 
                             </div>
 
@@ -1519,12 +1514,10 @@
 
                             </ul>
 
-                            <button class="module-action" disabled>
-
-                                <span>Coming Soon</span>
-                                <i class="fa-solid fa-lock"></i>
-
-                            </button>
+                            <a class="module-action" data-finance-link aria-disabled="true" tabindex="-1">
+                                <span id="financeAction">Administrator Access Required</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </a>
 
                         </article>
 
@@ -1607,6 +1600,11 @@
                             <div class="account-field">
                                 <span>Document Management Access</span>
                                 <strong id="documentAccessStatus">—</strong>
+                            </div>
+
+                            <div class="account-field">
+                                <span>Financial Management Access</span>
+                                <strong id="financeAccessStatus">—</strong>
                             </div>
 
                         </div>
@@ -1746,6 +1744,18 @@
                 cardId: "documentModuleCard",
                 accessId: "documentAccessStatus",
                 actionText: "Open Document Management"
+            }),
+
+            finance: Object.freeze({
+                enabled: true,
+                url: "/finance.html",
+                roles: ["admin"],
+                selector: "[data-finance-link]",
+                actionId: "financeAction",
+                statusId: "financeModuleStatus",
+                cardId: "financeModuleCard",
+                accessId: "financeAccessStatus",
+                actionText: "Open Financial Management"
             })
 
         });
@@ -2664,7 +2674,7 @@
         initialiseDashboard();
 
         /* =========================================
-           END OF STAFF DASHBOARD VERSION 3.3
+           END OF STAFF DASHBOARD VERSION 3.4
 
            MNM LEGAL ASSOCIATES
            Justice, Integrity & Excellence
@@ -2678,3 +2688,4 @@
 
 
 
+₹0
