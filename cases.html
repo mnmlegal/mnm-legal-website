@@ -1,0 +1,5605 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <meta name="robots"
+          content="noindex, nofollow, noarchive">
+
+    <meta name="theme-color" content="#101d30">
+
+    <meta name="referrer" content="no-referrer">
+
+    <title>Case Management | MNM Legal Associates</title>
+
+    <link rel="icon" href="/images/logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <link rel="stylesheet" href="/cases.css">
+
+    <style>
+        [hidden] {
+            display: none !important;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<!-- ======================================================
+     MNM LEGAL ASSOCIATES
+     LEGAL PRACTICE MANAGEMENT SYSTEM
+     CASE MANAGEMENT MODULE - VERSION 1.0
+
+     Justice, Integrity & Excellence
+======================================================= -->
+
+
+<!-- AUTHENTICATION LOADING SCREEN -->
+
+<div id="authLoading" class="auth-loading">
+
+    <div class="auth-loading-content">
+
+        <img src="/images/logo.png"
+             class="auth-logo"
+             alt="MNM Legal Associates">
+
+        <h1>MNM Legal Associates</h1>
+
+        <p>Legal Practice Management System</p>
+
+        <div id="loadingSpinner"
+             class="loading-spinner"
+             aria-hidden="true"></div>
+
+        <p id="loadingMessage" role="status">
+            Verifying your authentication session...
+        </p>
+
+        <a href="/dashboard.html">
+            Return to Dashboard
+        </a>
+
+        <noscript>
+            <p>
+                JavaScript is required to access
+                Case Management.
+            </p>
+        </noscript>
+
+    </div>
+
+</div>
+
+
+<!-- PROTECTED APPLICATION -->
+
+<div id="protectedContent" hidden>
+
+
+    <!-- APPLICATION HEADER -->
+
+    <header class="app-header">
+
+        <div class="header-brand">
+
+            <a href="/dashboard.html"
+               class="brand-logo-link"
+               aria-label="Return to dashboard">
+
+                <img src="/images/logo.png"
+                     class="header-logo"
+                     alt="MNM Legal Associates">
+
+            </a>
+
+            <div class="header-brand-text">
+
+                <strong>MNM Legal Associates</strong>
+
+                <span>Legal Practice Management System</span>
+
+            </div>
+
+        </div>
+
+        <div class="header-actions">
+
+            <a href="/dashboard.html"
+               class="button button-outline">
+
+                <i class="fa-solid fa-arrow-left"
+                   aria-hidden="true"></i>
+
+                <span>Dashboard</span>
+
+            </a>
+
+            <div class="staff-profile">
+
+                <i class="fa-solid fa-circle-user"
+                   aria-hidden="true"></i>
+
+                <div>
+
+                    <strong id="staffName">
+                        Administrator
+                    </strong>
+
+                    <span>Authorized Access</span>
+
+                </div>
+
+            </div>
+
+            <button type="button"
+                    id="logoutButton"
+                    class="button button-danger-outline">
+
+                <i class="fa-solid fa-right-from-bracket"
+                   aria-hidden="true"></i>
+
+                <span>Sign Out</span>
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN APPLICATION -->
+
+    <main class="app-container">
+
+
+        <!-- PAGE HEADING -->
+
+        <section class="page-heading">
+
+            <div>
+
+                <div class="breadcrumb">
+
+                    <a href="/dashboard.html">Dashboard</a>
+
+                    <i class="fa-solid fa-chevron-right"
+                       aria-hidden="true"></i>
+
+                    <span>Case Management</span>
+
+                </div>
+
+                <h1>Case Management</h1>
+
+                <p>
+                    Manage legal matters, court proceedings,
+                    deadlines and professional assignments.
+                </p>
+
+            </div>
+
+            <div class="page-heading-actions">
+
+                <button type="button"
+                        id="refreshCasesButton"
+                        class="button button-secondary">
+
+                    <i class="fa-solid fa-rotate"></i>
+
+                    Refresh
+
+                </button>
+
+                <button type="button"
+                        id="newCaseButton"
+                        class="button button-primary">
+
+                    <i class="fa-solid fa-plus"></i>
+
+                    New Case
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- CLOUD CONNECTION STATUS -->
+
+        <div class="cloud-status-bar">
+
+            <div class="cloud-status-info">
+
+                <span id="cloudStatusIndicator"
+                      class="connection-indicator syncing"></span>
+
+                <i class="fa-solid fa-cloud"></i>
+
+                <span id="cloudStatus">
+                    Connecting to secure database...
+                </span>
+
+            </div>
+
+            <span id="lastSynced">
+                Awaiting synchronization
+            </span>
+
+        </div>
+
+
+        <!-- APPLICATION MESSAGES -->
+
+        <div id="appMessage"
+             class="app-message"
+             role="status"
+             aria-live="polite"
+             hidden></div>
+
+
+        <!-- MODULE NAVIGATION -->
+
+        <nav class="module-navigation"
+             aria-label="Case Management Navigation">
+
+            <div class="module-tabs"
+                 role="tablist"
+                 aria-label="Case Management Sections">
+
+                <button type="button"
+                        id="overviewTab"
+                        class="module-tab active"
+                        data-tab="overview"
+                        role="tab"
+                        aria-selected="true"
+                        aria-controls="overviewPanel">
+
+                    <i class="fa-solid fa-chart-pie"></i>
+
+                    Overview
+
+                </button>
+
+                <button type="button"
+                        id="directoryTab"
+                        class="module-tab"
+                        data-tab="directory"
+                        role="tab"
+                        tabindex="-1"
+                        aria-selected="false"
+                        aria-controls="directoryPanel">
+
+                    <i class="fa-solid fa-folder-open"></i>
+
+                    Case Directory
+
+                </button>
+
+                <button type="button"
+                        id="registrationTab"
+                        class="module-tab"
+                        data-tab="registration"
+                        role="tab"
+                        tabindex="-1"
+                        aria-selected="false"
+                        aria-controls="registrationPanel">
+
+                    <i class="fa-solid fa-file-circle-plus"></i>
+
+                    New Case
+
+                </button>
+
+                <button type="button"
+                        id="hearingsTab"
+                        class="module-tab"
+                        data-tab="hearings"
+                        role="tab"
+                        tabindex="-1"
+                        aria-selected="false"
+                        aria-controls="hearingsPanel">
+
+                    <i class="fa-solid fa-calendar-days"></i>
+
+                    Hearings
+
+                </button>
+
+                <button type="button"
+                        id="tasksTab"
+                        class="module-tab"
+                        data-tab="tasks"
+                        role="tab"
+                        tabindex="-1"
+                        aria-selected="false"
+                        aria-controls="tasksPanel">
+
+                    <i class="fa-solid fa-list-check"></i>
+
+                    Tasks
+
+                </button>
+
+                <button type="button"
+                        id="settingsTab"
+                        class="module-tab"
+                        data-tab="settings"
+                        role="tab"
+                        tabindex="-1"
+                        aria-selected="false"
+                        aria-controls="settingsPanel">
+
+                    <i class="fa-solid fa-gear"></i>
+
+                    Settings
+
+                </button>
+
+            </div>
+
+        </nav>
+
+
+        <!-- ==============================================
+             SECTION 01 - OVERVIEW
+        =============================================== -->
+
+        <section id="overviewPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="overviewTab">
+
+
+            <!-- CASE STATISTICS -->
+
+            <div class="statistics-grid">
+
+                <article class="stat-card">
+
+                    <div class="stat-icon">
+                        <i class="fa-solid fa-folder-tree"></i>
+                    </div>
+
+                    <span>Total Cases</span>
+
+                    <strong id="totalCases">—</strong>
+
+                    <small>All registered matters</small>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-active">
+                        <i class="fa-solid fa-briefcase"></i>
+                    </div>
+
+                    <span>Active Cases</span>
+
+                    <strong id="activeCases">—</strong>
+
+                    <small>Ongoing legal matters</small>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-new">
+                        <i class="fa-solid fa-file-pen"></i>
+                    </div>
+
+                    <span>Pre-Filing Matters</span>
+
+                    <strong id="preFilingCases">—</strong>
+
+                    <small>Drafting and preparation</small>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-hearing">
+                        <i class="fa-solid fa-calendar-day"></i>
+                    </div>
+
+                    <span>Hearings Today</span>
+
+                    <strong id="hearingsToday">—</strong>
+
+                    <small>Scheduled court matters</small>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-urgent">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                    </div>
+
+                    <span>Urgent Cases</span>
+
+                    <strong id="urgentCases">—</strong>
+
+                    <small>Priority attention required</small>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-closed">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+
+                    <span>Closed Cases</span>
+
+                    <strong id="closedCases">—</strong>
+
+                    <small>Disposed, settled or closed</small>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-warning">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+
+                    <span>Upcoming Deadlines</span>
+
+                    <strong id="upcomingDeadlines">—</strong>
+
+                    <small>Within the next 30 days</small>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-danger">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+
+                    <span>Overdue Deadlines</span>
+
+                    <strong id="overdueDeadlines">—</strong>
+
+                    <small>Recorded dates requiring review</small>
+
+                </article>
+
+            </div>
+
+
+            <!-- QUICK ACTIONS -->
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Quick Actions</h2>
+
+                        <p>Frequently used case management functions.</p>
+
+                    </div>
+
+                </div>
+
+                <div class="quick-actions-grid">
+
+                    <button type="button"
+                            class="quick-action"
+                            data-open-tab="registration">
+
+                        <i class="fa-solid fa-file-circle-plus"></i>
+
+                        <strong>Register Case</strong>
+
+                        <span>Create a new legal matter</span>
+
+                    </button>
+
+                    <button type="button"
+                            class="quick-action"
+                            data-open-tab="directory">
+
+                        <i class="fa-solid fa-folder-open"></i>
+
+                        <strong>Case Directory</strong>
+
+                        <span>Access existing case files</span>
+
+                    </button>
+
+                    <button type="button"
+                            class="quick-action"
+                            data-open-tab="hearings">
+
+                        <i class="fa-solid fa-calendar-check"></i>
+
+                        <strong>Court Hearings</strong>
+
+                        <span>Review hearing schedules</span>
+
+                    </button>
+
+                    <button type="button"
+                            class="quick-action"
+                            data-open-tab="tasks">
+
+                        <i class="fa-solid fa-list-check"></i>
+
+                        <strong>Pending Tasks</strong>
+
+                        <span>Manage professional assignments</span>
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- IMPORTANT ALERTS -->
+
+            <section class="content-card"
+                     id="caseAlertsCard">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>
+
+                            <i class="fa-solid fa-bell"></i>
+
+                            Important Alerts
+
+                        </h2>
+
+                        <p>
+                            Urgent matters and dates requiring review.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div id="caseAlertsList"
+                     class="alerts-list"></div>
+
+                <div id="emptyCaseAlerts"
+                     class="empty-state"
+                     hidden>
+
+                    <i class="fa-solid fa-circle-check"></i>
+
+                    <h3>No current alerts</h3>
+
+                    <p>
+                        No urgent or overdue records were identified
+                        in the synchronized case data.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- UPCOMING HEARINGS -->
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Upcoming Court Hearings</h2>
+
+                        <p>Scheduled hearings within the next seven days.</p>
+
+                    </div>
+
+                    <button type="button"
+                            class="button button-secondary"
+                            data-open-tab="hearings">
+
+                        View All Hearings
+
+                    </button>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table class="data-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Hearing Date</th>
+
+                                <th>Case / Matter</th>
+
+                                <th>Court</th>
+
+                                <th>Purpose</th>
+
+                                <th>Advocate</th>
+
+                                <th>Action</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="upcomingHearingsBody"></tbody>
+
+                    </table>
+
+                </div>
+
+                <div id="emptyUpcomingHearings"
+                     class="empty-state"
+                     hidden>
+
+                    <i class="fa-solid fa-calendar"></i>
+
+                    <h3>No upcoming hearings</h3>
+
+                    <p>
+                        Scheduled hearing dates will appear here.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- RECENT CASES -->
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Recently Registered Cases</h2>
+
+                        <p>Latest matters added to the firm database.</p>
+
+                    </div>
+
+                    <button type="button"
+                            class="button button-secondary"
+                            data-open-tab="directory">
+
+                        View All Cases
+
+                    </button>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table class="data-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Internal Case ID</th>
+
+                                <th>Case Title</th>
+
+                                <th>Client</th>
+
+                                <th>Practice Area</th>
+
+                                <th>Status</th>
+
+                                <th>Action</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="recentCasesBody"></tbody>
+
+                    </table>
+
+                </div>
+
+                <div id="emptyRecentCases"
+                     class="empty-state"
+                     hidden>
+
+                    <i class="fa-solid fa-folder-open"></i>
+
+                    <h3>No cases registered</h3>
+
+                    <p>Register your first legal matter to get started.</p>
+
+                    <button type="button"
+                            class="button button-primary"
+                            data-open-tab="registration">
+
+                        Register First Case
+
+                    </button>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- ==============================================
+             SECTION 02 - CASE DIRECTORY
+        =============================================== -->
+
+        <section id="directoryPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="directoryTab"
+                 hidden>
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Case Directory</h2>
+
+                        <p>
+                            Search, filter and manage registered legal matters.
+                        </p>
+
+                    </div>
+
+                    <button type="button"
+                            id="exportCasesCSVButton"
+                            class="button button-secondary">
+
+                        <i class="fa-solid fa-file-csv"></i>
+
+                        Export CSV
+
+                    </button>
+
+                </div>
+
+
+                <!-- SEARCH AND FILTERS -->
+
+                <div class="directory-toolbar">
+
+                    <div class="search-field">
+
+                        <label for="caseSearch">
+                            Search Cases
+                        </label>
+
+                        <div class="search-input-wrapper">
+
+                            <i class="fa-solid fa-magnifying-glass"></i>
+
+                            <input type="search"
+                                   id="caseSearch"
+                                   placeholder="Case ID, title, client, CNR or court..."
+                                   autocomplete="off">
+
+                        </div>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="caseStatusFilter">Status</label>
+
+                        <select id="caseStatusFilter">
+
+                            <option value="all">All Statuses</option>
+
+                            <option value="pre_litigation">Pre-Litigation</option>
+
+                            <option value="drafting">Drafting</option>
+
+                            <option value="ready_for_filing">Ready for Filing</option>
+
+                            <option value="filed">Filed</option>
+
+                            <option value="pending">Pending</option>
+
+                            <option value="stayed">Stayed</option>
+
+                            <option value="reserved_for_judgment">Reserved for Judgment</option>
+
+                            <option value="disposed">Disposed</option>
+
+                            <option value="settled">Settled</option>
+
+                            <option value="withdrawn">Withdrawn</option>
+
+                            <option value="closed">Closed</option>
+
+                            <option value="archived">Archived</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="practiceAreaFilter">
+                            Practice Area
+                        </label>
+
+                        <select id="practiceAreaFilter">
+
+                            <option value="all">All Practice Areas</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="matterTypeFilter">
+                            Matter Type
+                        </label>
+
+                        <select id="matterTypeFilter">
+
+                            <option value="all">All Matters</option>
+
+                            <option value="litigation">Litigation</option>
+
+                            <option value="non_litigation">Non-Litigation</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="casePriorityFilter">
+                            Priority
+                        </label>
+
+                        <select id="casePriorityFilter">
+
+                            <option value="all">All Priorities</option>
+
+                            <option value="normal">Normal</option>
+
+                            <option value="high">High</option>
+
+                            <option value="urgent">Urgent</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="caseAdvocateFilter">
+                            Assigned Advocate
+                        </label>
+
+                        <select id="caseAdvocateFilter">
+
+                            <option value="all">All Advocates</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="caseYearFilter">
+                            Registration Year
+                        </label>
+
+                        <select id="caseYearFilter">
+
+                            <option value="all">All Years</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="caseSort">Sort By</label>
+
+                        <select id="caseSort">
+
+                            <option value="newest">Newest First</option>
+
+                            <option value="oldest">Oldest First</option>
+
+                            <option value="title-asc">Case Title A-Z</option>
+
+                            <option value="hearing-asc">Next Hearing</option>
+
+                            <option value="priority">Priority</option>
+
+                        </select>
+
+                    </div>
+
+                    <button type="button"
+                            id="clearCaseFiltersButton"
+                            class="button button-secondary">
+
+                        <i class="fa-solid fa-filter-circle-xmark"></i>
+
+                        Clear Filters
+
+                    </button>
+
+                </div>
+
+
+                <div class="directory-result-bar">
+
+                    <span id="caseResultCount">Loading records...</span>
+
+                    <span class="confidential-label">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        Confidential Records
+
+                    </span>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table class="data-table case-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Internal Case ID</th>
+
+                                <th>Case Title / Court No.</th>
+
+                                <th>Client</th>
+
+                                <th>Court / Authority</th>
+
+                                <th>Next Hearing</th>
+
+                                <th>Priority</th>
+
+                                <th>Status</th>
+
+                                <th>Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="casesTableBody"></tbody>
+
+                    </table>
+
+                </div>
+
+
+                <div id="emptyCases"
+                     class="empty-state"
+                     hidden>
+
+                    <i class="fa-solid fa-folder-open"></i>
+
+                    <h3>No matching cases</h3>
+
+                    <p>
+                        Change your search filters or register a new case.
+                    </p>
+
+                </div>
+
+
+                <div class="pagination-bar">
+
+                    <span id="paginationInfo">—</span>
+
+                    <div class="pagination-actions">
+
+                        <button type="button"
+                                id="previousPageButton"
+                                class="button button-secondary"
+                                disabled>
+
+                            <i class="fa-solid fa-chevron-left"></i>
+
+                            Previous
+
+                        </button>
+
+                        <span id="currentPageNumber">1</span>
+
+                        <button type="button"
+                                id="nextPageButton"
+                                class="button button-secondary"
+                                disabled>
+
+                            Next
+
+                            <i class="fa-solid fa-chevron-right"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- ==============================================
+             SECTION 03 - CASE REGISTRATION
+        =============================================== -->
+
+        <section id="registrationPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="registrationTab"
+                 hidden>
+
+            <form id="caseForm" autocomplete="off">
+
+                <input type="hidden" id="editingCaseId">
+
+
+                <!-- BASIC CASE INFORMATION -->
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2 id="registrationHeading">
+                                Register New Case
+                            </h2>
+
+                            <p id="registrationDescription">
+                                Create a permanent internal record for a legal matter.
+                            </p>
+
+                        </div>
+
+                        <span class="confidential-label">
+
+                            <i class="fa-solid fa-lock"></i>
+
+                            Confidential
+
+                        </span>
+
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label for="caseCode">
+                                Internal Case ID
+                            </label>
+
+                            <input type="text"
+                                   id="caseCode"
+                                   readonly>
+
+                            <small class="field-help">
+                                Final number is allocated when saved.
+                            </small>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="matterType">
+                                Matter Type
+                                <span class="required">*</span>
+                            </label>
+
+                            <select id="matterType" required>
+
+                                <option value="litigation">
+                                    Litigation
+                                </option>
+
+                                <option value="non_litigation">
+                                    Non-Litigation
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="caseTitle">
+                                Case Title
+                                <span class="required">*</span>
+                            </label>
+
+                            <input type="text"
+                                   id="caseTitle"
+                                   maxlength="500"
+                                   placeholder="e.g. A v. B — Child Custody Petition"
+                                   required>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="clientId">
+                                Primary Client
+                                <span class="required">*</span>
+                            </label>
+
+                            <select id="clientId" required>
+
+                                <option value="">
+                                    Select registered client
+                                </option>
+
+                            </select>
+
+                            <small class="field-help">
+
+                                Client must be registered in
+
+                                <a href="/clients.html">
+                                    Client Management
+                                </a>.
+
+                            </small>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="clientCapacity">
+                                Client's Legal Capacity
+                                <span class="required">*</span>
+                            </label>
+
+                            <input type="text"
+                                   id="clientCapacity"
+                                   list="clientCapacityList"
+                                   maxlength="100"
+                                   placeholder="Petitioner, Defendant, Accused..."
+                                   required>
+
+                        </div>
+
+                        <div id="selectedClientSummary"
+                             class="client-summary full-width"
+                             hidden></div>
+
+                        <div class="form-group">
+
+                            <label for="practiceArea">
+                                Practice Area
+                                <span class="required">*</span>
+                            </label>
+
+                            <input type="text"
+                                   id="practiceArea"
+                                   list="practiceAreaList"
+                                   maxlength="150"
+                                   required>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="natureOfProceedings">
+                                Nature of Proceedings
+                            </label>
+
+                            <input type="text"
+                                   id="natureOfProceedings"
+                                   list="proceedingNatureList"
+                                   maxlength="250"
+                                   placeholder="Petition, Suit, Application...">
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="applicableLaw">
+                                Applicable Acts & Legal Provisions
+                            </label>
+
+                            <textarea id="applicableLaw"
+                                      rows="4"
+                                      maxlength="5000"
+                                      placeholder="Relevant Acts, sections, rules and legal provisions"></textarea>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- COURT AND FILING DETAILS -->
+
+                <section class="content-card"
+                         id="courtDetailsCard">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="fa-solid fa-scale-balanced"></i>
+
+                                Court & Filing Details
+
+                            </h2>
+
+                            <p>
+                                Official court identifiers and jurisdiction.
+                                Leave unknown details blank.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label for="courtName">
+                                Court / Tribunal / Authority
+                            </label>
+
+                            <input type="text"
+                                   id="courtName"
+                                   list="courtNameList"
+                                   maxlength="300"
+                                   placeholder="Select or enter court name">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="courtCity">
+                                Court City / District
+                            </label>
+
+                            <input type="text"
+                                   id="courtCity"
+                                   maxlength="150"
+                                   placeholder="Ahmedabad">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="courtNumber">
+                                Courtroom / Court Number
+                            </label>
+
+                            <input type="text"
+                                   id="courtNumber"
+                                   maxlength="100">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="presidingJudge">
+                                Presiding Judge / Officer
+                            </label>
+
+                            <input type="text"
+                                   id="presidingJudge"
+                                   maxlength="250">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="caseNumber">
+                                Official Case Number
+                            </label>
+
+                            <input type="text"
+                                   id="caseNumber"
+                                   maxlength="150"
+                                   placeholder="Case type / Number / Year">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="cnrNumber">
+                                CNR Number
+                            </label>
+
+                            <input type="text"
+                                   id="cnrNumber"
+                                   maxlength="16"
+                                   pattern="[A-Za-z0-9]{16}"
+                                   autocapitalize="characters"
+                                   spellcheck="false"
+                                   placeholder="16-character CNR number">
+
+                            <small class="field-help">
+                                Enter only if officially allotted.
+                            </small>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="filingNumber">
+                                Filing / Diary Number
+                            </label>
+
+                            <input type="text"
+                                   id="filingNumber"
+                                   maxlength="150">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="filingDate">
+                                Filing Date
+                            </label>
+
+                            <input type="date" id="filingDate">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="courtRegistrationDate">
+                                Court Registration Date
+                            </label>
+
+                            <input type="date"
+                                   id="courtRegistrationDate">
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- OPPOSITE PARTY INFORMATION -->
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="fa-solid fa-users"></i>
+
+                                Opposite Party Details
+
+                            </h2>
+
+                            <p>
+                                Record opposing parties and their representation.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group full-width">
+
+                            <label for="oppositeParty">
+                                Opposite Party / Parties
+                            </label>
+
+                            <textarea id="oppositeParty"
+                                      rows="3"
+                                      maxlength="3000"
+                                      placeholder="Enter names of opposing parties"></textarea>
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="oppositePartyAdvocate">
+                                Opposite Party Advocate
+                            </label>
+
+                            <input type="text"
+                                   id="oppositePartyAdvocate"
+                                   maxlength="500">
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="oppositePartyAddress">
+                                Opposite Party Address
+                            </label>
+
+                            <textarea id="oppositePartyAddress"
+                                      rows="4"
+                                      maxlength="5000"></textarea>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- PROFESSIONAL ENGAGEMENT -->
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="fa-solid fa-briefcase"></i>
+
+                                Engagement & Case Status
+
+                            </h2>
+
+                            <p>
+                                Professional responsibility, stage and priority.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label for="assignedAdvocate">
+                                Assigned Advocate
+                            </label>
+
+                            <input type="text"
+                                   id="assignedAdvocate"
+                                   list="advocateList"
+                                   maxlength="250">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="engagementDate">
+                                Engagement Date
+                            </label>
+
+                            <input type="date"
+                                   id="engagementDate">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="status">
+                                Case Status
+                                <span class="required">*</span>
+                            </label>
+
+                            <select id="status" required>
+
+                                <option value="pre_litigation">Pre-Litigation</option>
+
+                                <option value="drafting" selected>Drafting</option>
+
+                                <option value="ready_for_filing">Ready for Filing</option>
+
+                                <option value="filed">Filed</option>
+
+                                <option value="pending">Pending</option>
+
+                                <option value="stayed">Stayed</option>
+
+                                <option value="reserved_for_judgment">Reserved for Judgment</option>
+
+                                <option value="disposed">Disposed</option>
+
+                                <option value="settled">Settled</option>
+
+                                <option value="withdrawn">Withdrawn</option>
+
+                                <option value="closed">Closed</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="priority">
+                                Case Priority
+                            </label>
+
+                            <select id="priority">
+
+                                <option value="normal">Normal</option>
+
+                                <option value="high">High</option>
+
+                                <option value="urgent">Urgent</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="currentStage">
+                                Current Stage
+                            </label>
+
+                            <input type="text"
+                                   id="currentStage"
+                                   list="caseStageList"
+                                   maxlength="500"
+                                   placeholder="Notice, Evidence, Arguments...">
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- HEARING AND LIMITATION DETAILS -->
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="fa-solid fa-calendar-days"></i>
+
+                                Hearing & Limitation Dates
+
+                            </h2>
+
+                            <p>
+                                Track important dates and procedural deadlines.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label for="nextHearingDate">
+                                Next Hearing Date
+                            </label>
+
+                            <input type="date"
+                                   id="nextHearingDate">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="limitationDate">
+                                Limitation / Critical Deadline
+                            </label>
+
+                            <input type="date"
+                                   id="limitationDate">
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="nextHearingPurpose">
+                                Purpose of Next Hearing
+                            </label>
+
+                            <input type="text"
+                                   id="nextHearingPurpose"
+                                   maxlength="500"
+                                   placeholder="Reply, Evidence, Arguments, Order...">
+
+                        </div>
+
+                    </div>
+
+                    <div class="information-note">
+
+                        <i class="fa-solid fa-circle-info"></i>
+
+                        <p>
+                            Hearing and limitation dates must be independently
+                            verified against official court records and
+                            applicable law. The system does not automatically
+                            calculate statutory limitation.
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+                <!-- CONFIDENTIAL CASE INFORMATION -->
+
+                <section class="content-card confidential-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="fa-solid fa-user-shield"></i>
+
+                                Confidential Case Information
+
+                            </h2>
+
+                            <p>
+                                Internal legal preparation and case strategy.
+                            </p>
+
+                        </div>
+
+                        <span class="confidential-label">
+
+                            <i class="fa-solid fa-lock"></i>
+
+                            Restricted Access
+
+                        </span>
+
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group full-width">
+
+                            <label for="briefFacts">
+                                Brief Facts & Chronology
+                            </label>
+
+                            <textarea id="briefFacts"
+                                      rows="8"
+                                      maxlength="30000"
+                                      placeholder="Record material facts and chronological background"></textarea>
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="reliefsSought">
+                                Reliefs Sought / Client Objectives
+                            </label>
+
+                            <textarea id="reliefsSought"
+                                      rows="5"
+                                      maxlength="20000"></textarea>
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="legalStrategy">
+                                Legal Strategy & Research
+                            </label>
+
+                            <textarea id="legalStrategy"
+                                      rows="7"
+                                      maxlength="30000"
+                                      placeholder="Legal grounds, precedents, evidentiary issues and strategy"></textarea>
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="pendingWork">
+                                Pending Work / Required Documents
+                            </label>
+
+                            <textarea id="pendingWork"
+                                      rows="5"
+                                      maxlength="10000"
+                                      placeholder="Outstanding documents, drafting and procedural requirements"></textarea>
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="notes">
+                                Internal Case Notes
+                            </label>
+
+                            <textarea id="notes"
+                                      rows="5"
+                                      maxlength="20000"></textarea>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- DISPOSAL DETAILS -->
+
+                <section class="content-card"
+                         id="disposalDetailsCard"
+                         hidden>
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Disposal & Closure Details</h2>
+
+                            <p>
+                                Record the final outcome of the matter.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label for="disposalDate">
+                                Disposal / Closure Date
+                            </label>
+
+                            <input type="date" id="disposalDate">
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="disposalOutcome">
+                                Judgment / Final Outcome
+                            </label>
+
+                            <textarea id="disposalOutcome"
+                                      rows="5"
+                                      maxlength="10000"></textarea>
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="closureReason">
+                                Closure Reason
+                            </label>
+
+                            <textarea id="closureReason"
+                                      rows="4"
+                                      maxlength="5000"></textarea>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- DUPLICATE CASE WARNING -->
+
+                <div id="duplicateWarning"
+                     class="warning-card"
+                     role="alert"
+                     hidden>
+
+                    <h3>
+
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+
+                        Possible Duplicate Case
+
+                    </h3>
+
+                    <p>
+                        Similar records have been identified.
+                        Review them before proceeding.
+                    </p>
+
+                    <div id="duplicateCasesList"></div>
+
+                </div>
+
+
+                <!-- FORM ACTIONS -->
+
+                <div class="form-action-bar">
+
+                    <div class="form-action-note">
+
+                        <i class="fa-solid fa-shield-halved"></i>
+
+                        Case information is stored in the
+                        authorized cloud database.
+
+                    </div>
+
+                    <div class="form-actions">
+
+                        <button type="button"
+                                id="cancelRegistrationButton"
+                                class="button button-secondary">
+
+                            Cancel
+
+                        </button>
+
+                        <button type="button"
+                                id="resetCaseFormButton"
+                                class="button button-secondary">
+
+                            <i class="fa-solid fa-rotate-left"></i>
+
+                            Reset Form
+
+                        </button>
+
+                        <button type="submit"
+                                id="saveCaseButton"
+                                class="button button-primary">
+
+                            <i class="fa-solid fa-floppy-disk"></i>
+
+                            <span id="saveCaseButtonText">
+                                Register Case
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+        <!-- ==============================================
+             SECTION 04 - HEARING MANAGEMENT
+        =============================================== -->
+
+        <section id="hearingsPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="hearingsTab"
+                 hidden>
+
+            <div class="statistics-grid hearing-statistics">
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-hearing">
+                        <i class="fa-solid fa-calendar-day"></i>
+                    </div>
+
+                    <span>Today's Hearings</span>
+
+                    <strong id="hearingTodayCount">—</strong>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-active">
+                        <i class="fa-solid fa-calendar-week"></i>
+                    </div>
+
+                    <span>Next Seven Days</span>
+
+                    <strong id="hearingWeekCount">—</strong>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </div>
+
+                    <span>Next 30 Days</span>
+
+                    <strong id="hearingMonthCount">—</strong>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-danger">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+
+                    <span>Past Hearing Dates</span>
+
+                    <strong id="overdueHearingCount">—</strong>
+
+                </article>
+
+            </div>
+
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Court Hearing Schedule</h2>
+
+                        <p>
+                            Hearing dates recorded against individual cases.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="directory-toolbar">
+
+                    <div class="form-group">
+
+                        <label for="hearingPeriodFilter">
+                            Hearing Period
+                        </label>
+
+                        <select id="hearingPeriodFilter">
+
+                            <option value="today">Today</option>
+
+                            <option value="7">Next 7 Days</option>
+
+                            <option value="30" selected>Next 30 Days</option>
+
+                            <option value="90">Next 90 Days</option>
+
+                            <option value="overdue">Past Dates / Review Required</option>
+
+                            <option value="all">All Recorded Hearing Dates</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="hearingAdvocateFilter">
+                            Advocate
+                        </label>
+
+                        <select id="hearingAdvocateFilter">
+
+                            <option value="all">All Advocates</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="search-field">
+
+                        <label for="hearingSearch">
+                            Search Hearing
+                        </label>
+
+                        <div class="search-input-wrapper">
+
+                            <i class="fa-solid fa-magnifying-glass"></i>
+
+                            <input type="search"
+                                   id="hearingSearch"
+                                   placeholder="Case, court or purpose">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table class="data-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Date</th>
+
+                                <th>Case Title</th>
+
+                                <th>Case Number</th>
+
+                                <th>Court</th>
+
+                                <th>Purpose</th>
+
+                                <th>Advocate</th>
+
+                                <th>Action</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="hearingsTableBody"></tbody>
+
+                    </table>
+
+                </div>
+
+                <div id="emptyHearings"
+                     class="empty-state"
+                     hidden>
+
+                    <i class="fa-solid fa-calendar-check"></i>
+
+                    <h3>No matching hearings</h3>
+
+                    <p>
+                        Hearing dates are managed through individual case profiles.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- CRITICAL DEADLINES -->
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Limitation & Critical Deadlines</h2>
+
+                        <p>
+                            Manually recorded deadlines due within 30 days,
+                            including overdue dates.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table class="data-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Deadline</th>
+
+                                <th>Case</th>
+
+                                <th>Advocate</th>
+
+                                <th>Priority</th>
+
+                                <th>Date Status</th>
+
+                                <th>Action</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="deadlinesTableBody"></tbody>
+
+                    </table>
+
+                </div>
+
+                <div id="emptyDeadlines"
+                     class="empty-state"
+                     hidden>
+
+                    <i class="fa-solid fa-clock"></i>
+
+                    <h3>No recorded deadlines in this period</h3>
+
+                    <p>
+                        Verify limitation independently for every relevant matter.
+                    </p>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- ==============================================
+             SECTION 05 - CENTRAL TASK MANAGER
+        =============================================== -->
+
+        <section id="tasksPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="tasksTab"
+                 hidden>
+
+            <div class="statistics-grid task-statistics">
+
+                <article class="stat-card">
+
+                    <div class="stat-icon">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+
+                    <span>Total Tasks</span>
+
+                    <strong id="totalTasks">—</strong>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-warning">
+                        <i class="fa-solid fa-hourglass-half"></i>
+                    </div>
+
+                    <span>Pending</span>
+
+                    <strong id="pendingTasks">—</strong>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-new">
+                        <i class="fa-solid fa-spinner"></i>
+                    </div>
+
+                    <span>In Progress</span>
+
+                    <strong id="inProgressTasks">—</strong>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-danger">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+
+                    <span>Overdue</span>
+
+                    <strong id="overdueTasks">—</strong>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-active">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+
+                    <span>Completed</span>
+
+                    <strong id="completedTasks">—</strong>
+
+                </article>
+
+            </div>
+
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Professional Task Manager</h2>
+
+                        <p>
+                            Review drafting, filing, evidence and compliance work.
+                        </p>
+
+                    </div>
+
+                    <button type="button"
+                            id="refreshTasksButton"
+                            class="button button-secondary">
+
+                        <i class="fa-solid fa-rotate"></i>
+
+                        Refresh Tasks
+
+                    </button>
+
+                </div>
+
+                <div class="directory-toolbar">
+
+                    <div class="form-group">
+
+                        <label for="taskCaseFilter">
+                            Case / Matter
+                        </label>
+
+                        <select id="taskCaseFilter">
+
+                            <option value="all">All Non-Archived Cases</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="taskStatusFilter">
+                            Task Status
+                        </label>
+
+                        <select id="taskStatusFilter">
+
+                            <option value="all">All Statuses</option>
+
+                            <option value="pending">Pending</option>
+
+                            <option value="in_progress">In Progress</option>
+
+                            <option value="completed">Completed</option>
+
+                            <option value="cancelled">Cancelled</option>
+
+                            <option value="overdue">Overdue</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="taskPriorityFilter">
+                            Priority
+                        </label>
+
+                        <select id="taskPriorityFilter">
+
+                            <option value="all">All Priorities</option>
+
+                            <option value="normal">Normal</option>
+
+                            <option value="high">High</option>
+
+                            <option value="urgent">Urgent</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="search-field">
+
+                        <label for="taskSearch">
+                            Search Tasks
+                        </label>
+
+                        <div class="search-input-wrapper">
+
+                            <i class="fa-solid fa-magnifying-glass"></i>
+
+                            <input type="search"
+                                   id="taskSearch"
+                                   placeholder="Task, case or assigned person">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <p id="taskLoadingMessage"
+                   class="field-help"
+                   role="status"
+                   hidden>
+
+                    Loading case tasks...
+
+                </p>
+
+                <div class="table-wrapper">
+
+                    <table class="data-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Task</th>
+
+                                <th>Case</th>
+
+                                <th>Assigned To</th>
+
+                                <th>Due Date</th>
+
+                                <th>Priority</th>
+
+                                <th>Status</th>
+
+                                <th>Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="allTasksTableBody"></tbody>
+
+                    </table>
+
+                </div>
+
+                <div id="emptyAllTasks"
+                     class="empty-state"
+                     hidden>
+
+                    <i class="fa-solid fa-list-check"></i>
+
+                    <h3>No matching tasks</h3>
+
+                    <p>
+                        Open a case profile to create a task for that matter.
+                    </p>
+
+                    <button type="button"
+                            class="button button-secondary"
+                            data-open-tab="directory">
+
+                        Open Case Directory
+
+                    </button>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- ==============================================
+             SECTION 06 - INDIVIDUAL CASE PROFILE
+        =============================================== -->
+
+        <section id="profilePanel"
+                 class="module-panel"
+                 aria-label="Individual Case Profile"
+                 hidden>
+
+            <div class="profile-toolbar">
+
+                <button type="button"
+                        id="backToDirectoryButton"
+                        class="button button-secondary">
+
+                    <i class="fa-solid fa-arrow-left"></i>
+
+                    Back to Directory
+
+                </button>
+
+                <div class="profile-actions">
+
+                    <button type="button"
+                            id="editCaseButton"
+                            class="button button-primary">
+
+                        <i class="fa-solid fa-pen"></i>
+
+                        Edit Case
+
+                    </button>
+
+                    <button type="button"
+                            id="closeCaseButton"
+                            class="button button-secondary">
+
+                        <i class="fa-solid fa-circle-check"></i>
+
+                        Close Case
+
+                    </button>
+
+                    <button type="button"
+                            id="reopenCaseButton"
+                            class="button button-secondary"
+                            hidden>
+
+                        <i class="fa-solid fa-folder-open"></i>
+
+                        Reopen Case
+
+                    </button>
+
+                    <button type="button"
+                            id="archiveCaseButton"
+                            class="button button-danger">
+
+                        <i class="fa-solid fa-box-archive"></i>
+
+                        Archive
+
+                    </button>
+
+                    <button type="button"
+                            id="reactivateCaseButton"
+                            class="button button-primary"
+                            hidden>
+
+                        <i class="fa-solid fa-rotate-left"></i>
+
+                        Reactivate
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- CASE PROFILE HEADER -->
+
+            <div class="profile-header">
+
+                <div class="profile-avatar">
+
+                    <i class="fa-solid fa-scale-balanced"></i>
+
+                </div>
+
+                <div class="profile-heading">
+
+                    <span id="profileCaseCode"
+                          class="profile-code">—</span>
+
+                    <h2 id="profileCaseTitle">Case Profile</h2>
+
+                    <div class="profile-meta">
+
+                        <span id="profilePracticeArea">—</span>
+
+                        <span id="profileStatus"
+                              class="status-badge">—</span>
+
+                        <span id="profilePriority"
+                              class="priority-badge">—</span>
+
+                    </div>
+
+                </div>
+
+                <div class="profile-registration">
+
+                    <span>Registered On</span>
+
+                    <strong id="profileRegisteredOn">—</strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- ARCHIVE NOTICE -->
+
+            <div id="archivedCaseNotice"
+                 class="warning-card"
+                 hidden>
+
+                <h3>
+
+                    <i class="fa-solid fa-box-archive"></i>
+
+                    Archived Case
+
+                </h3>
+
+                <p>
+                    This case is read-only until reactivated.
+                </p>
+
+                <p id="profileArchiveReason"></p>
+
+            </div>
+
+
+            <!-- CLOSED CASE NOTICE -->
+
+            <div id="closedCaseNotice"
+                 class="information-note"
+                 hidden>
+
+                <i class="fa-solid fa-circle-check"></i>
+
+                <p>
+                    This matter is closed. Reopen it before
+                    scheduling a new hearing.
+                </p>
+
+            </div>
+
+
+            <!-- PROFILE SUB-NAVIGATION -->
+
+            <nav class="profile-navigation"
+                 aria-label="Case Profile Sections">
+
+                <div class="profile-tabs"
+                     role="tablist"
+                     aria-label="Individual Case Sections">
+
+                    <button type="button"
+                            id="profileSummaryTab"
+                            class="profile-tab active"
+                            data-profile-tab="summary"
+                            role="tab"
+                            aria-selected="true"
+                            aria-controls="profileSummaryPanel">
+
+                        <i class="fa-solid fa-circle-info"></i>
+
+                        Case Summary
+
+                    </button>
+
+                    <button type="button"
+                            id="profileClientsTab"
+                            class="profile-tab"
+                            data-profile-tab="clients"
+                            role="tab"
+                            tabindex="-1"
+                            aria-selected="false"
+                            aria-controls="profileClientsPanel">
+
+                        <i class="fa-solid fa-users"></i>
+
+                        Clients
+
+                    </button>
+
+                    <button type="button"
+                            id="profileProceedingsTab"
+                            class="profile-tab"
+                            data-profile-tab="proceedings"
+                            role="tab"
+                            tabindex="-1"
+                            aria-selected="false"
+                            aria-controls="profileProceedingsPanel">
+
+                        <i class="fa-solid fa-gavel"></i>
+
+                        Proceedings
+
+                    </button>
+
+                    <button type="button"
+                            id="profileTasksTab"
+                            class="profile-tab"
+                            data-profile-tab="tasks"
+                            role="tab"
+                            tabindex="-1"
+                            aria-selected="false"
+                            aria-controls="profileTasksPanel">
+
+                        <i class="fa-solid fa-list-check"></i>
+
+                        Tasks
+
+                    </button>
+
+                    <button type="button"
+                            id="profileStrategyTab"
+                            class="profile-tab"
+                            data-profile-tab="strategy"
+                            role="tab"
+                            tabindex="-1"
+                            aria-selected="false"
+                            aria-controls="profileStrategyPanel">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        Legal Strategy
+
+                    </button>
+
+                    <button type="button"
+                            id="profileActivityTab"
+                            class="profile-tab"
+                            data-profile-tab="activity"
+                            role="tab"
+                            tabindex="-1"
+                            aria-selected="false"
+                            aria-controls="profileActivityPanel">
+
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+
+                        Activity History
+
+                    </button>
+
+                </div>
+
+            </nav>
+
+
+            <!-- PROFILE SUMMARY -->
+
+            <section id="profileSummaryPanel"
+                     class="profile-panel"
+                     role="tabpanel"
+                     aria-labelledby="profileSummaryTab">
+
+                <div class="profile-details-grid">
+
+                    <article class="content-card">
+
+                        <div class="card-heading">
+
+                            <h2>Case Information</h2>
+
+                        </div>
+
+                        <dl class="details-list">
+
+                            <div>
+
+                                <dt>Case Title</dt>
+
+                                <dd id="profileFullCaseTitle">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Matter Type</dt>
+
+                                <dd id="profileMatterType">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Primary Client</dt>
+
+                                <dd id="profilePrimaryClientName">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Client Capacity</dt>
+
+                                <dd id="profileClientCapacity">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Nature of Proceedings</dt>
+
+                                <dd id="profileNatureOfProceedings">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Assigned Advocate</dt>
+
+                                <dd id="profileAssignedAdvocate">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Engagement Date</dt>
+
+                                <dd id="profileEngagementDate">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Current Stage</dt>
+
+                                <dd id="profileCurrentStage">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Last Updated</dt>
+
+                                <dd id="profileLastUpdated">—</dd>
+
+                            </div>
+
+                        </dl>
+
+                    </article>
+
+
+                    <article class="content-card">
+
+                        <div class="card-heading">
+
+                            <h2>Court & Filing Information</h2>
+
+                        </div>
+
+                        <dl class="details-list">
+
+                            <div>
+
+                                <dt>Court / Authority</dt>
+
+                                <dd id="profileCourtName">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Court City</dt>
+
+                                <dd id="profileCourtCity">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Courtroom</dt>
+
+                                <dd id="profileCourtNumber">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Presiding Judge</dt>
+
+                                <dd id="profilePresidingJudge">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Official Case Number</dt>
+
+                                <dd id="profileCaseNumber">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>CNR Number</dt>
+
+                                <dd id="profileCnrNumber">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Filing Number</dt>
+
+                                <dd id="profileFilingNumber">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Filing Date</dt>
+
+                                <dd id="profileFilingDate">—</dd>
+
+                            </div>
+
+                            <div>
+
+                                <dt>Court Registration Date</dt>
+
+                                <dd id="profileCourtRegistrationDate">—</dd>
+
+                            </div>
+
+                        </dl>
+
+                        <div class="card-actions">
+
+                            <a href="https://services.ecourts.gov.in/"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="button button-secondary">
+
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+
+                                eCourts Services
+
+                            </a>
+
+                            <button type="button"
+                                    id="copyCnrButton"
+                                    class="button button-secondary"
+                                    disabled>
+
+                                <i class="fa-solid fa-copy"></i>
+
+                                Copy CNR
+
+                            </button>
+
+                        </div>
+
+                    </article>
+
+                </div>
+
+
+                <!-- NEXT HEARING CARD -->
+
+                <article class="content-card hearing-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="fa-solid fa-calendar-days"></i>
+
+                                Next Hearing & Deadline
+
+                            </h2>
+
+                        </div>
+
+                        <button type="button"
+                                id="updateHearingButton"
+                                class="button button-primary">
+
+                            <i class="fa-solid fa-calendar-pen"></i>
+
+                            Update Hearing
+
+                        </button>
+
+                    </div>
+
+                    <div class="hearing-details-grid">
+
+                        <div class="hearing-date-box">
+
+                            <span>Next Hearing</span>
+
+                            <strong id="profileNextHearingDate">—</strong>
+
+                            <small id="profileHearingCountdown">—</small>
+
+                        </div>
+
+                        <div class="hearing-purpose-box">
+
+                            <span>Purpose</span>
+
+                            <strong id="profileNextHearingPurpose">—</strong>
+
+                        </div>
+
+                        <div class="deadline-box">
+
+                            <span>Limitation / Critical Deadline</span>
+
+                            <strong id="profileLimitationDate">—</strong>
+
+                            <small id="profileDeadlineCountdown">—</small>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+
+                <!-- OPPOSITE PARTY PROFILE -->
+
+                <article class="content-card">
+
+                    <div class="card-heading">
+
+                        <h2>Opposite Party Information</h2>
+
+                    </div>
+
+                    <dl class="details-list">
+
+                        <div>
+
+                            <dt>Opposite Party / Parties</dt>
+
+                            <dd id="profileOppositeParty">—</dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Opposite Party Advocate</dt>
+
+                            <dd id="profileOppositePartyAdvocate">—</dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Address</dt>
+
+                            <dd id="profileOppositePartyAddress">—</dd>
+
+                        </div>
+
+                    </dl>
+
+                </article>
+
+
+                <!-- DISPOSAL PROFILE -->
+
+                <article class="content-card"
+                         id="profileDisposalCard"
+                         hidden>
+
+                    <div class="card-heading">
+
+                        <h2>Disposal & Final Outcome</h2>
+
+                    </div>
+
+                    <dl class="details-list">
+
+                        <div>
+
+                            <dt>Disposal Date</dt>
+
+                            <dd id="profileDisposalDate">—</dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Final Outcome</dt>
+
+                            <dd id="profileDisposalOutcome">—</dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Closure Reason</dt>
+
+                            <dd id="profileClosureReason">—</dd>
+
+                        </div>
+
+                    </dl>
+
+                </article>
+
+
+                <!-- FUTURE MODULE INTEGRATIONS -->
+
+                <div class="integration-grid">
+
+                    <article class="integration-card">
+
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+
+                        <h3>Invoices & Fees</h3>
+
+                        <span class="coming-soon">
+                            Integration Pending
+                        </span>
+
+                        <p>
+                            Case-specific billing and professional fee records.
+                        </p>
+
+                    </article>
+
+                    <article class="integration-card">
+
+                        <i class="fa-solid fa-folder-closed"></i>
+
+                        <h3>Case Documents</h3>
+
+                        <span class="coming-soon">
+                            Coming Soon
+                        </span>
+
+                        <p>
+                            Petitions, affidavits, evidence and court orders.
+                        </p>
+
+                    </article>
+
+                    <article class="integration-card">
+
+                        <i class="fa-solid fa-calendar-check"></i>
+
+                        <h3>Hearing Calendar</h3>
+
+                        <span class="coming-soon">
+                            Integration Pending
+                        </span>
+
+                        <p>
+                            Firm-wide calendar and hearing schedules.
+                        </p>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+
+            <!-- LINKED CLIENTS -->
+
+            <section id="profileClientsPanel"
+                     class="profile-panel"
+                     role="tabpanel"
+                     aria-labelledby="profileClientsTab"
+                     hidden>
+
+                <article class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Primary Client</h2>
+
+                            <p>
+                                Principal client associated with this matter.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <dl class="details-list">
+
+                        <div>
+
+                            <dt>Client ID</dt>
+
+                            <dd id="profilePrimaryClientCode">—</dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Client Name</dt>
+
+                            <dd id="profileLinkedPrimaryName">—</dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Mobile Number</dt>
+
+                            <dd id="profilePrimaryClientMobile">—</dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Email</dt>
+
+                            <dd id="profilePrimaryClientEmail">—</dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Legal Capacity</dt>
+
+                            <dd id="profilePrimaryClientCapacity">—</dd>
+
+                        </div>
+
+                    </dl>
+
+                    <a id="openPrimaryClientButton"
+                       href="/clients.html"
+                       class="button button-secondary">
+
+                        <i class="fa-solid fa-user"></i>
+
+                        Open Client Management
+
+                    </a>
+
+                </article>
+
+
+                <article class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Additional Represented Clients</h2>
+
+                            <p>
+                                Joint applicants, co-petitioners,
+                                co-accused or other represented parties.
+                            </p>
+
+                        </div>
+
+                        <button type="button"
+                                id="linkClientButton"
+                                class="button button-primary">
+
+                            <i class="fa-solid fa-user-plus"></i>
+
+                            Link Client
+
+                        </button>
+
+                    </div>
+
+                    <div class="information-note">
+
+                        <i class="fa-solid fa-circle-info"></i>
+
+                        <p>
+                            Verify authority to represent each client
+                            and check for conflicts of interest before
+                            creating an additional association.
+                        </p>
+
+                    </div>
+
+                    <div class="table-wrapper">
+
+                        <table class="data-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Client ID</th>
+
+                                    <th>Client Name</th>
+
+                                    <th>Capacity</th>
+
+                                    <th>Status</th>
+
+                                    <th>Actions</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="linkedClientsTableBody"></tbody>
+
+                        </table>
+
+                    </div>
+
+                    <div id="emptyLinkedClients"
+                         class="empty-state"
+                         hidden>
+
+                        <i class="fa-solid fa-users"></i>
+
+                        <h3>No additional clients</h3>
+
+                        <p>
+                            Additional represented parties may be linked here.
+                        </p>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- DATE-WISE COURT PROCEEDINGS -->
+
+            <section id="profileProceedingsPanel"
+                     class="profile-panel"
+                     role="tabpanel"
+                     aria-labelledby="profileProceedingsTab"
+                     hidden>
+
+                <article class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Date-wise Court Proceedings</h2>
+
+                            <p>
+                                Maintain chronological hearing records
+                                and court order summaries.
+                            </p>
+
+                        </div>
+
+                        <button type="button"
+                                id="addProceedingButton"
+                                class="button button-primary">
+
+                            <i class="fa-solid fa-plus"></i>
+
+                            Add Proceedings
+
+                        </button>
+
+                    </div>
+
+                    <div class="information-note">
+
+                        <i class="fa-solid fa-circle-info"></i>
+
+                        <p>
+                            Historical proceedings are append-only.
+                            Record corrections through a supplementary
+                            entry identifying the original proceeding.
+                        </p>
+
+                    </div>
+
+                    <div id="proceedingsTimeline"
+                         class="proceedings-timeline"></div>
+
+                    <div id="emptyProceedings"
+                         class="empty-state"
+                         hidden>
+
+                        <i class="fa-solid fa-gavel"></i>
+
+                        <h3>No proceedings recorded</h3>
+
+                        <p>
+                            Add the first hearing record for this matter.
+                        </p>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- CASE-SPECIFIC TASKS -->
+
+            <section id="profileTasksPanel"
+                     class="profile-panel"
+                     role="tabpanel"
+                     aria-labelledby="profileTasksTab"
+                     hidden>
+
+                <article class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Case Tasks & Pending Work</h2>
+
+                            <p>
+                                Assign and track work relating to this case.
+                            </p>
+
+                        </div>
+
+                        <button type="button"
+                                id="addTaskButton"
+                                class="button button-primary">
+
+                            <i class="fa-solid fa-plus"></i>
+
+                            Add Task
+
+                        </button>
+
+                    </div>
+
+                    <div class="task-summary-grid">
+
+                        <div>
+
+                            <span>Total</span>
+
+                            <strong id="profileTotalTasks">—</strong>
+
+                        </div>
+
+                        <div>
+
+                            <span>Pending</span>
+
+                            <strong id="profilePendingTasks">—</strong>
+
+                        </div>
+
+                        <div>
+
+                            <span>In Progress</span>
+
+                            <strong id="profileInProgressTasks">—</strong>
+
+                        </div>
+
+                        <div>
+
+                            <span>Completed</span>
+
+                            <strong id="profileCompletedTasks">—</strong>
+
+                        </div>
+
+                        <div>
+
+                            <span>Overdue</span>
+
+                            <strong id="profileOverdueTasks">—</strong>
+
+                        </div>
+
+                    </div>
+
+                    <div class="table-wrapper">
+
+                        <table class="data-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Task</th>
+
+                                    <th>Assigned To</th>
+
+                                    <th>Due Date</th>
+
+                                    <th>Priority</th>
+
+                                    <th>Status</th>
+
+                                    <th>Actions</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="caseTasksTableBody"></tbody>
+
+                        </table>
+
+                    </div>
+
+                    <div id="emptyCaseTasks"
+                         class="empty-state"
+                         hidden>
+
+                        <i class="fa-solid fa-list-check"></i>
+
+                        <h3>No tasks registered</h3>
+
+                        <p>
+                            Create drafting, filing or other case-related tasks.
+                        </p>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- CONFIDENTIAL LEGAL STRATEGY -->
+
+            <section id="profileStrategyPanel"
+                     class="profile-panel"
+                     role="tabpanel"
+                     aria-labelledby="profileStrategyTab"
+                     hidden>
+
+                <div class="information-note">
+
+                    <i class="fa-solid fa-lock"></i>
+
+                    <p>
+                        Confidential professional information.
+                        Do not disclose or export without proper authority.
+                    </p>
+
+                </div>
+
+                <article class="content-card confidential-card">
+
+                    <div class="card-heading">
+
+                        <h2>Applicable Acts & Legal Provisions</h2>
+
+                    </div>
+
+                    <div id="profileApplicableLaw"
+                         class="profile-notes">—</div>
+
+                </article>
+
+                <article class="content-card confidential-card">
+
+                    <div class="card-heading">
+
+                        <h2>Brief Facts & Chronology</h2>
+
+                    </div>
+
+                    <div id="profileBriefFacts"
+                         class="profile-notes">—</div>
+
+                </article>
+
+                <article class="content-card confidential-card">
+
+                    <div class="card-heading">
+
+                        <h2>Reliefs Sought</h2>
+
+                    </div>
+
+                    <div id="profileReliefsSought"
+                         class="profile-notes">—</div>
+
+                </article>
+
+                <article class="content-card confidential-card">
+
+                    <div class="card-heading">
+
+                        <h2>Legal Strategy & Research</h2>
+
+                    </div>
+
+                    <div id="profileLegalStrategy"
+                         class="profile-notes">—</div>
+
+                </article>
+
+                <article class="content-card confidential-card">
+
+                    <div class="card-heading">
+
+                        <h2>Pending Work & Required Documents</h2>
+
+                    </div>
+
+                    <div id="profilePendingWork"
+                         class="profile-notes">—</div>
+
+                </article>
+
+                <article class="content-card confidential-card">
+
+                    <div class="card-heading">
+
+                        <h2>Internal Case Notes</h2>
+
+                    </div>
+
+                    <div id="profileNotes"
+                         class="profile-notes">—</div>
+
+                </article>
+
+            </section>
+
+
+            <!-- CASE ACTIVITY HISTORY -->
+
+            <section id="profileActivityPanel"
+                     class="profile-panel"
+                     role="tabpanel"
+                     aria-labelledby="profileActivityTab"
+                     hidden>
+
+                <article class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Case Activity & Communication History</h2>
+
+                            <p>
+                                Recorded system activities and professional communications.
+                            </p>
+
+                        </div>
+
+                        <button type="button"
+                                id="addActivityButton"
+                                class="button button-primary">
+
+                            <i class="fa-solid fa-plus"></i>
+
+                            Add Activity
+
+                        </button>
+
+                    </div>
+
+                    <div id="activityTimeline"
+                         class="activity-timeline"></div>
+
+                    <div id="emptyActivities"
+                         class="empty-state"
+                         hidden>
+
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+
+                        <h3>No recorded activities</h3>
+
+                        <p>
+                            Case updates and communication entries
+                            will appear here.
+                        </p>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+        </section>
+
+
+        <!-- ==============================================
+             SECTION 07 - SETTINGS & BACKUP
+        =============================================== -->
+
+        <section id="settingsPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="settingsTab"
+                 hidden>
+
+            <article class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Case Numbering Settings</h2>
+
+                        <p>
+                            Centralized annual case numbering.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="caseNumberingFormat">
+                            Numbering Format
+                        </label>
+
+                        <input type="text"
+                               id="caseNumberingFormat"
+                               value="MNM/CASE/NNN/YYYY"
+                               readonly>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="currentRegistrationYear">
+                            Current Registration Year
+                        </label>
+
+                        <input type="text"
+                               id="currentRegistrationYear"
+                               readonly>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="nextCaseCodeSetting">
+                            Next Available Case ID
+                        </label>
+
+                        <input type="text"
+                               id="nextCaseCodeSetting"
+                               readonly>
+
+                    </div>
+
+                </div>
+
+                <div class="information-note">
+
+                    <i class="fa-solid fa-circle-info"></i>
+
+                    <p>
+                        Internal Case IDs are allocated through database
+                        transactions. Numbering restarts annually.
+                        Existing numbers cannot be edited or reused.
+                        The displayed next number is provisional until saved.
+                    </p>
+
+                </div>
+
+            </article>
+
+
+            <!-- DATABASE SETTINGS -->
+
+            <article class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Cloud Database Connection</h2>
+
+                        <p>
+                            Verify database access and authorization.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <dl class="details-list">
+
+                    <div>
+
+                        <dt>Database Provider</dt>
+
+                        <dd>Firebase Cloud Firestore</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>Access Level</dt>
+
+                        <dd>Administrator</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>Connection Status</dt>
+
+                        <dd id="databaseConnectionStatus">Not checked</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>Stored Case Records</dt>
+
+                        <dd id="storageCaseCount">—</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>Registered Client Records</dt>
+
+                        <dd id="storageClientCount">—</dd>
+
+                    </div>
+
+                </dl>
+
+                <button type="button"
+                        id="checkConnectionButton"
+                        class="button button-secondary">
+
+                    <i class="fa-solid fa-cloud-arrow-down"></i>
+
+                    Check Database Connection
+
+                </button>
+
+            </article>
+
+
+            <!-- BACKUP MANAGEMENT -->
+
+            <article class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Confidential Case Backup</h2>
+
+                        <p>
+                            Export a copy of the case management database.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="backup-information">
+
+                    <i class="fa-solid fa-database"></i>
+
+                    <div>
+
+                        <h3>Complete Case Management Export</h3>
+
+                        <p>
+                            Includes case records, proceedings, tasks,
+                            activity history, annual sequence counters
+                            and linked client associations.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <button type="button"
+                        id="downloadCaseBackupButton"
+                        class="button button-primary">
+
+                    <i class="fa-solid fa-download"></i>
+
+                    Download JSON Backup
+
+                </button>
+
+                <div class="warning-card">
+
+                    <h3>
+
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+
+                        Confidential Information
+
+                    </h3>
+
+                    <p>
+                        Exported files are not encrypted and may contain
+                        privileged communications and confidential legal
+                        strategies. Store them securely.
+                    </p>
+
+                    <p>
+                        This is a manual application-level export,
+                        not an atomic database snapshot.
+                        Automatic restoration is not currently available.
+                        Separate client and invoice backups remain necessary.
+                    </p>
+
+                </div>
+
+            </article>
+
+
+            <!-- MODULE INFORMATION -->
+
+            <article class="content-card">
+
+                <div class="card-heading">
+
+                    <h2>Module Information</h2>
+
+                </div>
+
+                <dl class="details-list">
+
+                    <div>
+
+                        <dt>Module</dt>
+
+                        <dd>Case Management</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>Version</dt>
+
+                        <dd>1.0</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>Organization</dt>
+
+                        <dd>MNM Legal Associates</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>Time Zone</dt>
+
+                        <dd>Asia/Kolkata (IST)</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>Record Retention</dt>
+
+                        <dd>Archive instead of permanent deletion</dd>
+
+                    </div>
+
+                </dl>
+
+            </article>
+
+        </section>
+
+    </main>
+
+
+    <!-- ==============================================
+         SHARED DATALISTS
+    =============================================== -->
+
+    <datalist id="clientCapacityList"></datalist>
+
+    <datalist id="practiceAreaList"></datalist>
+
+    <datalist id="advocateList">
+
+        <option value="Adv. Aman Mishra">
+
+        <option value="Adv. Sonali Pandey">
+
+    </datalist>
+
+    <datalist id="courtNameList">
+
+        <option value="Supreme Court of India">
+
+        <option value="High Court of Gujarat">
+
+        <option value="City Civil and Sessions Court, Ahmedabad">
+
+        <option value="Family Court, Ahmedabad">
+
+        <option value="Metropolitan Magistrate Court, Ahmedabad">
+
+        <option value="Chief Judicial Magistrate Court">
+
+        <option value="Judicial Magistrate First Class Court">
+
+        <option value="District and Sessions Court">
+
+        <option value="District Consumer Disputes Redressal Commission">
+
+        <option value="State Consumer Disputes Redressal Commission">
+
+        <option value="National Consumer Disputes Redressal Commission">
+
+        <option value="Debt Recovery Tribunal">
+
+        <option value="Gujarat Real Estate Regulatory Authority">
+
+        <option value="Labour Court">
+
+        <option value="Industrial Tribunal">
+
+        <option value="National Company Law Tribunal">
+
+        <option value="Arbitral Tribunal">
+
+        <option value="Police Authority">
+
+    </datalist>
+
+    <datalist id="proceedingNatureList">
+
+        <option value="Civil Suit">
+
+        <option value="Special Civil Suit">
+
+        <option value="Summary Suit">
+
+        <option value="Criminal Complaint">
+
+        <option value="Criminal Miscellaneous Application">
+
+        <option value="Anticipatory Bail Application">
+
+        <option value="Regular Bail Application">
+
+        <option value="FIR Quashing Petition">
+
+        <option value="Writ Petition">
+
+        <option value="Divorce Petition">
+
+        <option value="Restitution of Conjugal Rights">
+
+        <option value="Child Custody Petition">
+
+        <option value="Maintenance Application">
+
+        <option value="Domestic Violence Application">
+
+        <option value="Consumer Complaint">
+
+        <option value="Cheque Bounce Complaint">
+
+        <option value="Execution Application">
+
+        <option value="Appeal">
+
+        <option value="Revision Application">
+
+        <option value="Review Application">
+
+        <option value="Legal Notice">
+
+        <option value="Legal Consultation">
+
+        <option value="Legal Documentation">
+
+    </datalist>
+
+    <datalist id="caseStageList">
+
+        <option value="Client Consultation">
+
+        <option value="Document Collection">
+
+        <option value="Legal Research">
+
+        <option value="Drafting">
+
+        <option value="Pre-Filing Scrutiny">
+
+        <option value="Filing">
+
+        <option value="Removal of Office Objections">
+
+        <option value="Admission">
+
+        <option value="Issuance of Notice">
+
+        <option value="Service of Summons">
+
+        <option value="Appearance">
+
+        <option value="Written Statement / Reply">
+
+        <option value="Rejoinder">
+
+        <option value="Interim Application">
+
+        <option value="Framing of Issues">
+
+        <option value="Framing of Charge">
+
+        <option value="Evidence">
+
+        <option value="Examination-in-Chief">
+
+        <option value="Cross-Examination">
+
+        <option value="Final Arguments">
+
+        <option value="Reserved for Judgment">
+
+        <option value="Judgment / Order">
+
+        <option value="Execution">
+
+        <option value="Settlement">
+
+        <option value="Compliance">
+
+    </datalist>
+
+
+    <!-- ==============================================
+         APPLICATION FOOTER
+    =============================================== -->
+
+    <footer class="app-footer">
+
+        <div>
+
+            &copy; <span id="currentYear"></span>
+
+            MNM Legal Associates. All Rights Reserved.
+
+        </div>
+
+        <div>Justice, Integrity &amp; Excellence</div>
+
+        <div>
+
+            <i class="fa-solid fa-lock"></i>
+
+            Internal Authorized Use Only
+
+        </div>
+
+    </footer>
+
+
+    <!-- ==============================================
+         DIALOG 01 - GENERAL CONFIRMATION
+    =============================================== -->
+
+    <dialog id="confirmationDialog"
+            class="app-dialog"
+            aria-labelledby="confirmationTitle">
+
+        <div class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="confirmationTitle">
+                    Confirm Action
+                </h2>
+
+            </div>
+
+            <p id="confirmationMessage"></p>
+
+            <div class="dialog-actions">
+
+                <button type="button"
+                        id="cancelConfirmation"
+                        class="button button-secondary">
+
+                    Cancel
+
+                </button>
+
+                <button type="button"
+                        id="acceptConfirmation"
+                        class="button button-primary">
+
+                    Confirm
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- ==============================================
+         DIALOG 02 - UPDATE HEARING
+    =============================================== -->
+
+    <dialog id="hearingDialog"
+            class="app-dialog"
+            aria-labelledby="hearingDialogTitle">
+
+        <form id="hearingForm"
+              class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="hearingDialogTitle">
+                    Update Next Hearing
+                </h2>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="hearingNextDate">
+                    Next Hearing Date
+                </label>
+
+                <input type="date"
+                       id="hearingNextDate">
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="hearingNextPurpose">
+                    Purpose of Hearing
+                </label>
+
+                <input type="text"
+                       id="hearingNextPurpose"
+                       maxlength="500">
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="hearingCurrentStage">
+                    Current Case Stage
+                </label>
+
+                <input type="text"
+                       id="hearingCurrentStage"
+                       list="caseStageList"
+                       maxlength="500">
+
+            </div>
+
+            <small class="field-help">
+                Leave the date blank only if no next hearing
+                is presently recorded.
+            </small>
+
+            <div class="dialog-actions">
+
+                <button type="button"
+                        id="cancelHearingButton"
+                        class="button button-secondary">
+
+                    Cancel
+
+                </button>
+
+                <button type="submit"
+                        id="saveHearingButton"
+                        class="button button-primary">
+
+                    Save Hearing
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+
+    <!-- ==============================================
+         DIALOG 03 - ADD COURT PROCEEDINGS
+    =============================================== -->
+
+    <dialog id="proceedingDialog"
+            class="app-dialog dialog-wide"
+            aria-labelledby="proceedingDialogTitle">
+
+        <form id="proceedingForm"
+              class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="proceedingDialogTitle">
+                    Record Court Proceedings
+                </h2>
+
+            </div>
+
+            <div class="form-grid">
+
+                <div class="form-group">
+
+                    <label for="proceedingHearingDate">
+                        Hearing Date
+                        <span class="required">*</span>
+                    </label>
+
+                    <input type="date"
+                           id="proceedingHearingDate"
+                           required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="proceedingCourtName">
+                        Court
+                    </label>
+
+                    <input type="text"
+                           id="proceedingCourtName"
+                           maxlength="300">
+
+                </div>
+
+                <div class="form-group full-width">
+
+                    <label for="proceedingJudge">
+                        Presiding Judge
+                    </label>
+
+                    <input type="text"
+                           id="proceedingJudge"
+                           maxlength="250">
+
+                </div>
+
+                <div class="form-group full-width">
+
+                    <label for="proceedingAppearance">
+                        Appearance / Representation
+                    </label>
+
+                    <textarea id="proceedingAppearance"
+                              rows="2"
+                              maxlength="2000"
+                              placeholder="Advocates and parties present"></textarea>
+
+                </div>
+
+                <div class="form-group full-width">
+
+                    <label for="proceedingDetails">
+                        Proceedings
+                        <span class="required">*</span>
+                    </label>
+
+                    <textarea id="proceedingDetails"
+                              rows="6"
+                              maxlength="20000"
+                              required
+                              placeholder="Record what transpired before the court"></textarea>
+
+                </div>
+
+                <div class="form-group full-width">
+
+                    <label for="proceedingOrderSummary">
+                        Order / Direction Summary
+                    </label>
+
+                    <textarea id="proceedingOrderSummary"
+                              rows="4"
+                              maxlength="20000"></textarea>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="proceedingNextDate">
+                        Next Hearing Date
+                    </label>
+
+                    <input type="date"
+                           id="proceedingNextDate">
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="proceedingNextPurpose">
+                        Next Hearing Purpose
+                    </label>
+
+                    <input type="text"
+                           id="proceedingNextPurpose"
+                           maxlength="500">
+
+                </div>
+
+                <div class="form-group full-width">
+
+                    <label for="proceedingConfidentialNotes">
+                        Confidential Hearing Notes
+                    </label>
+
+                    <textarea id="proceedingConfidentialNotes"
+                              rows="4"
+                              maxlength="20000"></textarea>
+
+                </div>
+
+                <label class="checkbox-field full-width">
+
+                    <input type="checkbox"
+                           id="updateMainHearingCheckbox">
+
+                    <span>
+                        Replace the case's current hearing schedule
+                        with the next hearing details entered above.
+                    </span>
+
+                </label>
+
+            </div>
+
+            <div class="information-note">
+
+                <i class="fa-solid fa-circle-info"></i>
+
+                <p>
+                    Leave the checkbox unchecked when entering an older
+                    hearing record. If checked with a blank next date,
+                    the existing hearing date will be cleared.
+                    Saved proceedings cannot be overwritten.
+                </p>
+
+            </div>
+
+            <div class="dialog-actions">
+
+                <button type="button"
+                        id="cancelProceedingButton"
+                        class="button button-secondary">
+
+                    Cancel
+
+                </button>
+
+                <button type="submit"
+                        id="saveProceedingButton"
+                        class="button button-primary">
+
+                    Save Proceedings
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+
+    <!-- ==============================================
+         DIALOG 04 - CREATE / EDIT TASK
+    =============================================== -->
+
+    <dialog id="taskDialog"
+            class="app-dialog dialog-wide"
+            aria-labelledby="taskDialogTitle">
+
+        <form id="taskForm"
+              class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="taskDialogTitle">Create Case Task</h2>
+
+            </div>
+
+            <input type="hidden" id="editingTaskId">
+
+            <input type="hidden" id="taskParentCaseId">
+
+            <div class="form-grid">
+
+                <div class="form-group full-width">
+
+                    <label for="taskTitle">
+                        Task Title
+                        <span class="required">*</span>
+                    </label>
+
+                    <input type="text"
+                           id="taskTitle"
+                           maxlength="300"
+                           required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="taskType">
+                        Task Type
+                    </label>
+
+                    <select id="taskType">
+
+                        <option value="drafting">Drafting</option>
+
+                        <option value="filing">Filing</option>
+
+                        <option value="documentation">Documentation</option>
+
+                        <option value="evidence">Evidence Collection</option>
+
+                        <option value="research">Legal Research</option>
+
+                        <option value="compliance">Compliance</option>
+
+                        <option value="client_followup">Client Follow-up</option>
+
+                        <option value="court_appearance">Court Appearance</option>
+
+                        <option value="payment_followup">Payment Follow-up</option>
+
+                        <option value="other">Other</option>
+
+                    </select>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="taskAssignedTo">
+                        Assigned To
+                    </label>
+
+                    <input type="text"
+                           id="taskAssignedTo"
+                           list="advocateList"
+                           maxlength="250">
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="taskDueDate">
+                        Due Date
+                    </label>
+
+                    <input type="date"
+                           id="taskDueDate">
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="taskPriority">
+                        Priority
+                    </label>
+
+                    <select id="taskPriority">
+
+                        <option value="normal">Normal</option>
+
+                        <option value="high">High</option>
+
+                        <option value="urgent">Urgent</option>
+
+                    </select>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="taskStatus">
+                        Status
+                    </label>
+
+                    <select id="taskStatus">
+
+                        <option value="pending">Pending</option>
+
+                        <option value="in_progress">In Progress</option>
+
+                        <option value="completed">Completed</option>
+
+                        <option value="cancelled">Cancelled</option>
+
+                    </select>
+
+                </div>
+
+                <div class="form-group full-width">
+
+                    <label for="taskDescription">
+                        Task Description
+                    </label>
+
+                    <textarea id="taskDescription"
+                              rows="5"
+                              maxlength="10000"></textarea>
+
+                </div>
+
+                <div id="taskCompletionNotesGroup"
+                     class="form-group full-width"
+                     hidden>
+
+                    <label for="taskCompletionNotes">
+                        Completion / Cancellation Notes
+                    </label>
+
+                    <textarea id="taskCompletionNotes"
+                              rows="4"
+                              maxlength="5000"></textarea>
+
+                </div>
+
+            </div>
+
+            <div class="dialog-actions">
+
+                <button type="button"
+                        id="cancelTaskButton"
+                        class="button button-secondary">
+
+                    Cancel
+
+                </button>
+
+                <button type="submit"
+                        id="saveTaskButton"
+                        class="button button-primary">
+
+                    Save Task
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+
+    <!-- ==============================================
+         DIALOG 05 - MANUAL ACTIVITY
+    =============================================== -->
+
+    <dialog id="activityDialog"
+            class="app-dialog"
+            aria-labelledby="activityDialogTitle">
+
+        <form id="activityForm"
+              class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="activityDialogTitle">
+                    Record Case Activity
+                </h2>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="activityType">
+                    Activity Type
+                </label>
+
+                <select id="activityType">
+
+                    <option value="consultation">Consultation</option>
+
+                    <option value="phone_call">Phone Call</option>
+
+                    <option value="email">Email</option>
+
+                    <option value="meeting">Meeting</option>
+
+                    <option value="whatsapp">WhatsApp</option>
+
+                    <option value="note">Confidential Note</option>
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="activityDescription">
+                    Description
+                    <span class="required">*</span>
+                </label>
+
+                <textarea id="activityDescription"
+                          rows="6"
+                          maxlength="10000"
+                          required></textarea>
+
+            </div>
+
+            <div class="dialog-actions">
+
+                <button type="button"
+                        id="cancelActivityButton"
+                        class="button button-secondary">
+
+                    Cancel
+
+                </button>
+
+                <button type="submit"
+                        id="saveActivityButton"
+                        class="button button-primary">
+
+                    Save Activity
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+
+    <!-- ==============================================
+         DIALOG 06 - LINK ADDITIONAL CLIENT
+    =============================================== -->
+
+    <dialog id="linkClientDialog"
+            class="app-dialog"
+            aria-labelledby="linkClientDialogTitle">
+
+        <form id="linkClientForm"
+              class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="linkClientDialogTitle">
+                    Link Additional Client
+                </h2>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="additionalClientId">
+                    Registered Client
+                    <span class="required">*</span>
+                </label>
+
+                <select id="additionalClientId" required>
+
+                    <option value="">Select Client</option>
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="additionalClientCapacity">
+                    Legal Capacity
+                    <span class="required">*</span>
+                </label>
+
+                <input type="text"
+                       id="additionalClientCapacity"
+                       list="clientCapacityList"
+                       maxlength="100"
+                       required>
+
+            </div>
+
+            <label class="checkbox-field">
+
+                <input type="checkbox"
+                       id="clientConflictCheck"
+                       required>
+
+                <span>
+                    I have reviewed representation authority
+                    and potential conflicts of interest.
+                </span>
+
+            </label>
+
+            <div class="dialog-actions">
+
+                <button type="button"
+                        id="cancelLinkClientButton"
+                        class="button button-secondary">
+
+                    Cancel
+
+                </button>
+
+                <button type="submit"
+                        id="confirmLinkClientButton"
+                        class="button button-primary">
+
+                    Link Client
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+
+    <!-- ==============================================
+         DIALOG 07 - UNLINK ADDITIONAL CLIENT
+    =============================================== -->
+
+    <dialog id="unlinkClientDialog"
+            class="app-dialog"
+            aria-labelledby="unlinkClientDialogTitle">
+
+        <form id="unlinkClientForm"
+              class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="unlinkClientDialogTitle">
+                    Deactivate Client Association
+                </h2>
+
+            </div>
+
+            <input type="hidden" id="unlinkClientId">
+
+            <p id="unlinkClientName"></p>
+
+            <div class="form-group">
+
+                <label for="unlinkClientReason">
+                    Reason
+                    <span class="required">*</span>
+                </label>
+
+                <textarea id="unlinkClientReason"
+                          rows="4"
+                          maxlength="2000"
+                          required></textarea>
+
+            </div>
+
+            <p class="field-help">
+                This does not delete the client or the case.
+                The historical association is retained.
+            </p>
+
+            <div class="dialog-actions">
+
+                <button type="button"
+                        id="cancelUnlinkClientButton"
+                        class="button button-secondary">
+
+                    Cancel
+
+                </button>
+
+                <button type="submit"
+                        id="confirmUnlinkClientButton"
+                        class="button button-danger">
+
+                    Deactivate Association
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+
+    <!-- ==============================================
+         DIALOG 08 - CLOSE CASE
+    =============================================== -->
+
+    <dialog id="closeCaseDialog"
+            class="app-dialog dialog-wide"
+            aria-labelledby="closeCaseDialogTitle">
+
+        <form id="closeCaseForm"
+              class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="closeCaseDialogTitle">
+                    Close Legal Matter
+                </h2>
+
+            </div>
+
+            <div class="form-grid">
+
+                <div class="form-group">
+
+                    <label for="closureStatus">
+                        Final Status
+                    </label>
+
+                    <select id="closureStatus">
+
+                        <option value="disposed">Disposed</option>
+
+                        <option value="settled">Settled</option>
+
+                        <option value="withdrawn">Withdrawn</option>
+
+                        <option value="closed">Closed</option>
+
+                    </select>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="closureDate">
+                        Closure Date
+                        <span class="required">*</span>
+                    </label>
+
+                    <input type="date"
+                           id="closureDate"
+                           required>
+
+                </div>
+
+                <div class="form-group full-width">
+
+                    <label for="closureOutcome">
+                        Judgment / Final Outcome
+                    </label>
+
+                    <textarea id="closureOutcome"
+                              rows="5"
+                              maxlength="10000"></textarea>
+
+                </div>
+
+                <div class="form-group full-width">
+
+                    <label for="closureExplanation">
+                        Closure Reason
+                    </label>
+
+                    <textarea id="closureExplanation"
+                              rows="4"
+                              maxlength="5000"></textarea>
+
+                </div>
+
+            </div>
+
+            <div class="warning-card">
+
+                <p>
+                    Closing this case clears its current hearing schedule.
+                    Existing proceedings and tasks will remain preserved.
+                    Review outstanding tasks and legal obligations before
+                    confirming closure.
+                </p>
+
+            </div>
+
+            <div class="dialog-actions">
+
+                <button type="button"
+                        id="cancelCloseCaseButton"
+                        class="button button-secondary">
+
+                    Cancel
+
+                </button>
+
+                <button type="submit"
+                        id="confirmCloseCaseButton"
+                        class="button button-primary">
+
+                    Confirm Closure
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+
+    <!-- ==============================================
+         DIALOG 09 - REOPEN CASE
+    =============================================== -->
+
+    <dialog id="reopenCaseDialog"
+            class="app-dialog"
+            aria-labelledby="reopenCaseDialogTitle">
+
+        <form id="reopenCaseForm"
+              class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="reopenCaseDialogTitle">
+                    Reopen Closed Case
+                </h2>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="reopenCaseStatus">
+                    Restored Status
+                </label>
+
+                <select id="reopenCaseStatus">
+
+                    <option value="pending">Pending</option>
+
+                    <option value="drafting">Drafting</option>
+
+                    <option value="pre_litigation">Pre-Litigation</option>
+
+                    <option value="ready_for_filing">Ready for Filing</option>
+
+                    <option value="filed">Filed</option>
+
+                    <option value="stayed">Stayed</option>
+
+                    <option value="reserved_for_judgment">Reserved for Judgment</option>
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="reopenCaseReason">
+                    Reason for Reopening
+                    <span class="required">*</span>
+                </label>
+
+                <textarea id="reopenCaseReason"
+                          rows="4"
+                          maxlength="2000"
+                          required></textarea>
+
+            </div>
+
+            <div class="dialog-actions">
+
+                <button type="button"
+                        id="cancelReopenCaseButton"
+                        class="button button-secondary">
+
+                    Cancel
+
+                </button>
+
+                <button type="submit"
+                        id="confirmReopenCaseButton"
+                        class="button button-primary">
+
+                    Reopen Case
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+
+    <!-- ==============================================
+         DIALOG 10 - ARCHIVE CASE
+    =============================================== -->
+
+    <dialog id="archiveDialog"
+            class="app-dialog"
+            aria-labelledby="archiveDialogTitle">
+
+        <form id="archiveForm"
+              class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="archiveDialogTitle">
+                    Archive Case
+                </h2>
+
+            </div>
+
+            <p>
+                Archived cases remain preserved in the database
+                but cannot be modified until reactivated.
+            </p>
+
+            <div class="form-group">
+
+                <label for="archiveReason">
+                    Reason for Archiving
+                    <span class="required">*</span>
+                </label>
+
+                <textarea id="archiveReason"
+                          rows="5"
+                          maxlength="2000"
+                          required></textarea>
+
+            </div>
+
+            <div class="warning-card">
+
+                <p>
+                    Archived matters are excluded from active hearing
+                    and deadline alerts. Do not archive a case with
+                    unresolved obligations without independent review.
+                </p>
+
+            </div>
+
+            <div class="dialog-actions">
+
+                <button type="button"
+                        id="cancelArchiveButton"
+                        class="button button-secondary">
+
+                    Cancel
+
+                </button>
+
+                <button type="submit"
+                        id="confirmArchiveButton"
+                        class="button button-danger">
+
+                    Archive Case
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+
+    <!-- ==============================================
+         DIALOG 11 - REACTIVATE CASE
+    =============================================== -->
+
+    <dialog id="reactivateDialog"
+            class="app-dialog"
+            aria-labelledby="reactivateDialogTitle">
+
+        <form id="reactivateForm"
+              class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="reactivateDialogTitle">
+                    Reactivate Archived Case
+                </h2>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="reactivateStatus">
+                    Restored Case Status
+                    <span class="required">*</span>
+                </label>
+
+                <select id="reactivateStatus" required>
+
+                    <option value="">Select Status</option>
+
+                    <option value="pre_litigation">Pre-Litigation</option>
+
+                    <option value="drafting">Drafting</option>
+
+                    <option value="ready_for_filing">Ready for Filing</option>
+
+                    <option value="filed">Filed</option>
+
+                    <option value="pending">Pending</option>
+
+                    <option value="stayed">Stayed</option>
+
+                    <option value="reserved_for_judgment">Reserved for Judgment</option>
+
+                    <option value="disposed">Disposed</option>
+
+                    <option value="settled">Settled</option>
+
+                    <option value="withdrawn">Withdrawn</option>
+
+                    <option value="closed">Closed</option>
+
+                </select>
+
+            </div>
+
+            <p class="field-help">
+                Previously closed matters must be restored to an
+                appropriate closed status before being reopened.
+            </p>
+
+            <div class="dialog-actions">
+
+                <button type="button"
+                        id="cancelReactivateButton"
+                        class="button button-secondary">
+
+                    Cancel
+
+                </button>
+
+                <button type="submit"
+                        id="confirmReactivateButton"
+                        class="button button-primary">
+
+                    Reactivate Case
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+</div>
+
+
+<!-- ==============================================
+     SECURE APPLICATION INITIALIZATION
+=============================================== -->
+
+<script type="module">
+
+    const content =
+        document.getElementById("protectedContent");
+
+    const loading =
+        document.getElementById("authLoading");
+
+    const loadingSpinner =
+        document.getElementById("loadingSpinner");
+
+    const loadingMessage =
+        document.getElementById("loadingMessage");
+
+    const logoutButton =
+        document.getElementById("logoutButton");
+
+
+    let applicationPromise = null;
+
+    let activeUser = null;
+
+    let logoutInProgress = false;
+
+    let applicationWasVisible = false;
+
+    let sessionInvalidated = false;
+
+
+    /*
+     * Native modal dialogs can remain in the browser's
+     * top layer even when their parent is hidden.
+     * Close them whenever protected content is hidden.
+     */
+
+    function closeProtectedDialogs() {
+
+        content.querySelectorAll("dialog[open]")
+            .forEach(dialog => {
+
+                dialog.close();
+
+            });
+
+    }
+
+
+    /*
+     * Once the application has been visible, a subsequent
+     * authorization-related hide invalidates this page.
+     * Reload on renewed authorization rather than reveal
+     * previously loaded confidential data.
+     */
+
+    const visibilityObserver = new MutationObserver(() => {
+
+        if (!content.hidden) {
+
+            if (sessionInvalidated) {
+
+                content.hidden = true;
+
+                window.location.reload();
+
+                return;
+
+            }
+
+            applicationWasVisible = true;
+
+            return;
+
+        }
+
+        closeProtectedDialogs();
+
+        if (applicationWasVisible) {
+
+            sessionInvalidated = true;
+
+        }
+
+    });
+
+
+    visibilityObserver.observe(content, {
+
+        attributes: true,
+
+        attributeFilter: ["hidden"]
+
+    });
+
+
+    function showInitializationError(message) {
+
+        closeProtectedDialogs();
+
+        content.hidden = true;
+
+        loading.hidden = false;
+
+        loadingSpinner.hidden = true;
+
+        loadingMessage.textContent = message;
+
+    }
+
+
+    async function initialiseCaseApplication() {
+
+        try {
+
+            const {
+
+                protectPage,
+
+                logoutUser,
+
+                verifyStaffAccess
+
+            } = await import("./auth.js");
+
+
+            logoutButton.addEventListener("click", async () => {
+
+                if (logoutInProgress) return;
+
+                logoutInProgress = true;
+
+                logoutButton.disabled = true;
+
+                closeProtectedDialogs();
+
+                try {
+
+                    const result = await logoutUser();
+
+                    if (result?.success === false) {
+
+                        window.alert(
+
+                            result.message ||
+
+                            "Unable to sign out."
+
+                        );
+
+                    } else {
+
+                        content.hidden = true;
+
+                        window.location.replace("/login.html");
+
+                    }
+
+                } catch {
+
+                    window.alert(
+
+                        "Unable to sign out. Please try again."
+
+                    );
+
+                } finally {
+
+                    logoutInProgress = false;
+
+                    logoutButton.disabled = false;
+
+                }
+
+            });
+
+
+            protectPage({
+
+                contentSelector: "#protectedContent",
+
+                loadingSelector: "#authLoading",
+
+                allowedRoles: ["admin"],
+
+                onAuthenticated: async (user, profile) => {
+
+                    if (
+
+                        !user?.uid ||
+
+                        !profile ||
+
+                        profile.uid !== user.uid ||
+
+                        profile.active !== true ||
+
+                        profile.role !== "admin"
+
+                    ) {
+
+                        throw new Error(
+
+                            "Administrator authorization required."
+
+                        );
+
+                    }
+
+
+                    if (
+
+                        sessionInvalidated ||
+
+                        (activeUser && activeUser !== user.uid)
+
+                    ) {
+
+                        content.hidden = true;
+
+                        closeProtectedDialogs();
+
+                        window.location.reload();
+
+                        throw new Error(
+
+                            "Authentication session changed."
+
+                        );
+
+                    }
+
+
+                    activeUser = user.uid;
+
+
+                    content.hidden = true;
+
+                    loading.hidden = false;
+
+                    loadingSpinner.hidden = false;
+
+                    loadingMessage.textContent =
+
+                        "Initialising authorized Case Management...";
+
+
+                    document.getElementById("staffName")
+                        .textContent =
+
+                        profile.name || "Administrator";
+
+
+                    document.getElementById("currentYear")
+                        .textContent =
+
+                        new Intl.DateTimeFormat("en-IN", {
+
+                            year: "numeric",
+
+                            timeZone: "Asia/Kolkata"
+
+                        }).format(new Date());
+
+
+                    if (!applicationPromise) {
+
+                        applicationPromise = (async () => {
+
+                            const {
+
+                                initialiseCaseSystem
+
+                            } = await import("./cases.js");
+
+                            await initialiseCaseSystem(user);
+
+                        })();
+
+                    }
+
+
+                    try {
+
+                        await applicationPromise;
+
+                    } catch (error) {
+
+                        console.error(
+
+                            "Case Management initialization failed:",
+
+                            error?.code || error?.name || "Unknown error"
+
+                        );
+
+                        showInitializationError(
+
+                            "Case Management could not be loaded. " +
+
+                            "Please refresh or return to the Dashboard."
+
+                        );
+
+                        throw error;
+
+                    }
+
+
+                    const verifiedProfile =
+
+                        await verifyStaffAccess(user);
+
+
+                    if (
+
+                        verifiedProfile.uid !== user.uid ||
+
+                        verifiedProfile.active !== true ||
+
+                        verifiedProfile.role !== "admin"
+
+                    ) {
+
+                        throw new Error(
+
+                            "Case Management access is no longer authorized."
+
+                        );
+
+                    }
+
+
+                    /*
+                     * Final application visibility is controlled
+                     * exclusively by protectPage() in auth.js.
+                     *
+                     * Never manually reveal protected content.
+                     */
+
+                }
+
+            });
+
+        } catch (error) {
+
+            console.error(
+
+                "Case authorization error:",
+
+                error?.code || error?.name || "Unknown error"
+
+            );
+
+            showInitializationError(
+
+                "Authorization service unavailable. " +
+
+                "Please refresh or return to Staff Login."
+
+            );
+
+        }
+
+    }
+
+
+    /*
+     * Revalidate authorization after browser back/forward
+     * cache restoration.
+     */
+
+    window.addEventListener("pageshow", event => {
+
+        if (event.persisted) {
+
+            closeProtectedDialogs();
+
+            content.hidden = true;
+
+            window.location.reload();
+
+        }
+
+    });
+
+
+    initialiseCaseApplication();
+
+</script>
+
+</body>
+
+</html>
