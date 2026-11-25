@@ -1,10 +1,9 @@
 
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
-   LEGAL PRACTICE MANAGEMENT SYSTEM
-
-   CASE MANAGEMENT - CLOUD ENGINE
-   Version 1.0
+   DOCUMENT MANAGEMENT CLOUD ENGINE
+   Version 3.0.0
 
    Justice, Integrity & Excellence
    ========================================================= */
@@ -19,203 +18,193 @@ import {
 } from "./auth.js";
 
 import {
+    DRIVE_CONFIG,
+    DOCUMENT_CATEGORIES,
+    ALLOWED_FILE_TYPES,
+    validateDriveConfiguration,
+    validateDocumentFile,
+    formatDocumentCode,
+    sanitizeFileName,
+    getIndianDate,
+    getRegistrationYear,
+    getDriveFileUrl
+} from "./drive-config.js";
+
+import {
     collection,
     doc,
     getDocFromServer,
     getDocsFromServer,
-    runTransaction,
-    serverTimestamp,
-    deleteField,
     query,
     where,
-    orderBy
+    runTransaction,
+    serverTimestamp,
+    deleteField
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
 
 /* =========================================================
-   01. MODULE CONFIGURATION
+   1. CONFIGURATION
    ========================================================= */
 
-export const CASE_CONFIG = Object.freeze({
+export const DMS_CONFIG = Object.freeze({
 
-    collection: "cases",
-    sequenceCollection: "caseSequences",
-    clientCollection: "clients",
-    proceedingCollection: "proceedings",
-    taskCollection: "tasks",
-    activityCollection: "activities",
-    linkedClientCollection: "linkedClients",
+    version: "3.0.0",
 
-    prefix: "MNM/CASE",
-    initialSequence: 1,
-    backupVersion: 1,
-    timeZone: "Asia/Kolkata"
+    documentStatuses: Object.freeze({
+        active: "Active",
+        archived: "Archived"
+    }),
 
-});
+    activityTypes: Object.freeze({
+        registration: "Document Registered",
+        metadata_update: "Metadata Updated",
+        version_added: "New Version Added",
+        archive: "Document Archived",
+        reactivate: "Document Restored",
+        note: "Note Added"
+    }),
 
+    maxTitleLength: 500,
 
-export const MATTER_TYPES = Object.freeze({
+    maxDescriptionLength: 10000,
 
-    litigation: "Litigation",
-    non_litigation: "Non-Litigation"
+    maxVersionNotesLength: 5000,
 
-});
-
-
-export const CASE_STATUSES = Object.freeze({
-
-    pre_litigation: "Pre-Litigation",
-    drafting: "Drafting",
-    ready_for_filing: "Ready for Filing",
-    filed: "Filed",
-    pending: "Pending",
-    stayed: "Stayed",
-    reserved_for_judgment: "Reserved for Judgment",
-    disposed: "Disposed",
-    settled: "Settled",
-    withdrawn: "Withdrawn",
-    closed: "Closed",
-    archived: "Archived"
+    maxArchiveReasonLength: 2000
 
 });
 
+const C = DRIVE_CONFIG.collections;
 
-export const CASE_PRIORITIES = Object.freeze({
+const DRIVE_FIELDS =
+    "id,name,mimeType,size,parents,trashed," +
+    "webViewLink,ownedByMe,shared," +
+    "capabilities(canAddChildren,canDownload)";
 
-    normal: "Normal",
-    high: "High",
-    urgent: "Urgent"
+let googleSession = null;
 
-});
+let authorizedRootId = null;
 
+let identityPromise = null;
 
-export const PRACTICE_AREAS = Object.freeze([
+let pickerPromise = null;
 
-    "Civil Litigation",
-    "Criminal Litigation",
-    "Family & Matrimonial",
-    "Property Disputes",
-    "Cheque Bounce",
-    "Consumer Disputes",
-    "Money Recovery",
-    "DRT / SARFAESI",
-    "RERA",
-    "Labour & Employment",
-    "Trademark",
-    "Copyright",
-    "Intellectual Property",
-    "Constitutional Matters",
-    "Arbitration",
-    "Commercial Disputes",
-    "Legal Notice",
-    "Legal Documentation",
-    "Corporate Advisory",
-    "Other"
+let authorizationPending = false;
 
-]);
+let pickerPending = false;
 
+let sessionGeneration = 0;
 
-export const CLIENT_CAPACITIES = Object.freeze([
-
-    "Petitioner",
-    "Respondent",
-    "Plaintiff",
-    "Defendant",
-    "Complainant",
-    "Accused",
-    "Applicant",
-    "Appellant",
-    "Opposite Party",
-    "Claimant",
-    "Decree Holder",
-    "Judgment Debtor",
-    "Informant",
-    "Intervenor",
-    "Notice Sender",
-    "Notice Recipient",
-    "Consultation Client",
-    "Other"
-
-]);
-
-
-export const TASK_TYPES = Object.freeze({
-
-    drafting: "Drafting",
-    filing: "Filing",
-    documentation: "Documentation",
-    evidence: "Evidence Collection",
-    research: "Legal Research",
-    compliance: "Compliance",
-    client_followup: "Client Follow-up",
-    court_appearance: "Court Appearance",
-    payment_followup: "Payment Follow-up",
-    other: "Other"
-
-});
-
-
-export const TASK_STATUSES = Object.freeze({
-
-    pending: "Pending",
-    in_progress: "In Progress",
-    completed: "Completed",
-    cancelled: "Cancelled"
-
-});
-
-
-export const CASE_ACTIVITY_TYPES = Object.freeze({
-
-    registration: "Case Registration",
-    profile_update: "Case Profile Updated",
-    status_change: "Case Status Changed",
-    hearing_update: "Hearing Updated",
-    proceeding_added: "Proceedings Recorded",
-    task_created: "Task Created",
-    task_updated: "Task Updated",
-    task_completed: "Task Completed",
-    task_cancelled: "Task Cancelled",
-    client_linked: "Additional Client Linked",
-    client_unlinked: "Client Association Deactivated",
-    consultation: "Consultation",
-    phone_call: "Phone Call",
-    email: "Email",
-    meeting: "Meeting",
-    whatsapp: "WhatsApp",
-    note: "Confidential Note",
-    closure: "Case Closed",
-    archive: "Case Archived",
-    reactivate: "Case Reactivated"
-
-});
-
-
-const CLOSED_STATUSES = Object.freeze([
-
-    "disposed",
-    "settled",
-    "withdrawn",
-    "closed"
-
-]);
-
-
-const MANUAL_ACTIVITY_TYPES = Object.freeze([
-
-    "consultation",
-    "phone_call",
-    "email",
-    "meeting",
-    "whatsapp",
-    "note"
-
-]);
+let observedUid = null;
+let rootPending = null;
+const ROOT_MARKER = "mnm-dms-root-v2";
 
 
 /* =========================================================
-   02. ADMINISTRATOR AUTHORIZATION
+   2. ERROR HANDLING
    ========================================================= */
+
+function dmsError(code, message, details = {}) {
+
+    const error = new Error(message);
+
+    error.code = code;
+
+    error.details = details;
+
+    return error;
+
+}
+
+
+export function getDocumentErrorMessage(error) {
+
+    switch (error?.code) {
+
+        case "permission-denied":
+
+            return "Access denied. Check Firestore rules.";
+
+        case "unavailable":
+
+            return "Cloud service unavailable. Please retry.";
+
+        case "dms/session-changed":
+
+            return "Your login session has changed.";
+
+        case "dms/google-required":
+
+            return "Connect your authorized Google Drive account.";
+
+        case "dms/root-required":
+
+            return "Authorize the designated root folder first.";
+
+        case "dms/revision-conflict":
+
+            return "This record has changed. Refresh before retrying.";
+
+        case "dms/registration-pending":
+
+            return "File uploaded, but document registration could not be confirmed. Retain the recovery details.";
+
+        default:
+
+            return error?.message ||
+                "Unable to complete the document operation.";
+
+    }
+
+}
+
+
+/* =========================================================
+   3. STAFF AUTHORIZATION
+   ========================================================= */
+
+function clearGoogleSession() {
+
+    sessionGeneration++;
+
+    googleSession = null;
+
+    authorizedRootId = null;
+
+}
+
+
+auth.onAuthStateChanged(user => {
+
+    const uid = user?.uid || null;
+
+    if (uid !== observedUid) {
+
+        observedUid = uid;
+
+        clearGoogleSession();
+
+    }
+
+});
+
+
+function assertSession(uid) {
+
+    if (!uid || auth.currentUser?.uid !== uid) {
+
+        clearGoogleSession();
+
+        throw dmsError(
+            "dms/session-changed",
+            "Your login session has changed."
+        );
+
+    }
+
+}
+
 
 async function requireAdministrator() {
 
@@ -225,185 +214,71 @@ async function requireAdministrator() {
 
     if (!user?.uid) {
 
-        throw new Error(
-            "Please sign in to access Case Management."
+        throw dmsError(
+            "dms/access-denied",
+            "Administrator authentication is required."
         );
 
     }
 
     const profile = await verifyStaffAccess(user);
 
-    if (
-        !profile ||
-        profile.active !== true ||
-        profile.role !== "admin"
-    ) {
-
-        throw new Error(
-            "Administrator authorization is required."
-        );
-
-    }
-
     assertSession(user.uid);
 
-    return {
-
-        ...profile,
-        uid: user.uid
-
-    };
-
-}
-
-
-function assertSession(uid) {
-
-    if (auth.currentUser?.uid !== uid) {
-
-        throw new Error(
-            "Your authentication session has changed."
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   03. DATE AND TIME UTILITIES
-   ========================================================= */
-
-export function getIndianDate(date = new Date()) {
-
-    const parts = new Intl.DateTimeFormat("en-GB", {
-
-        timeZone: CASE_CONFIG.timeZone,
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit"
-
-    }).formatToParts(date);
-
-    const year = parts.find(
-        item => item.type === "year"
-    ).value;
-
-    const month = parts.find(
-        item => item.type === "month"
-    ).value;
-
-    const day = parts.find(
-        item => item.type === "day"
-    ).value;
-
-    return `${year}-${month}-${day}`;
-
-}
-
-
-export function getRegistrationYear() {
-
-    return getIndianDate().slice(0, 4);
-
-}
-
-
-function addCalendarDays(date, days) {
-
-    const value = new Date(date + "T00:00:00Z");
-
-    value.setUTCDate(value.getUTCDate() + days);
-
-    return value.toISOString().slice(0, 10);
-
-}
-
-
-function timestampMillis(value) {
-
-    if (typeof value?.toMillis === "function") {
-
-        return value.toMillis();
-
-    }
-
-    return 0;
-
-}
-
-
-/* =========================================================
-   04. VALIDATION UTILITIES
-   ========================================================= */
-
-function cleanText(value, maxLength = 250, label = "Text") {
-
-    const text = String(value ?? "").trim();
-
-    if (text.length > maxLength) {
-
-        throw new Error(
-            `${label} cannot exceed ${maxLength} characters.`
-        );
-
-    }
-
-    return text;
-
-}
-
-
-function requiredText(value, maxLength, label) {
-
-    const text = cleanText(value, maxLength, label);
-
-    if (!text) {
-
-        throw new Error(`${label} is required.`);
-
-    }
-
-    return text;
-
-}
-
-
-function cleanDate(value, label = "Date") {
-
-    const date = cleanText(value, 10, label);
-
-    if (!date) return "";
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-
-        throw new Error(`Invalid ${label.toLowerCase()}.`);
-
-    }
-
-    const parsed = new Date(date + "T00:00:00Z");
-
     if (
-        !Number.isFinite(parsed.getTime()) ||
-        parsed.toISOString().slice(0, 10) !== date
+        profile.active !== true ||
+        profile.role !== "admin" ||
+        profile.uid !== user.uid
     ) {
 
-        throw new Error(`Invalid calendar date: ${label}.`);
+        clearGoogleSession();
+
+        throw dmsError(
+            "dms/access-denied",
+            "Administrator access is required."
+        );
 
     }
 
-    return date;
+    return profile;
 
 }
 
 
-function validateDocumentId(value) {
+/* =========================================================
+   4. COMMON VALIDATION
+   ========================================================= */
 
-    const id = String(value ?? "");
+function cleanText(value, maxLength, required = false) {
+
+    const result = String(value ?? "").trim();
+
+    if (required && !result) {
+
+        throw new Error("A required field is missing.");
+
+    }
+
+    if (result.length > maxLength) {
+
+        throw new Error(
+            `Maximum permitted length is ${maxLength} characters.`
+        );
+
+    }
+
+    return result;
+
+}
+
+
+function validateId(value) {
+
+    const id = String(value || "");
 
     if (!/^[a-zA-Z0-9_-]{1,128}$/.test(id)) {
 
-        throw new Error("Invalid document identifier.");
+        throw new Error("Invalid record ID.");
 
     }
 
@@ -412,76 +287,44 @@ function validateDocumentId(value) {
 }
 
 
-function validateRevision(value) {
+function cleanDate(value) {
 
-    if (!Number.isSafeInteger(value) || value < 1) {
+    const date = String(value || "");
 
-        throw new Error("Invalid record revision.");
+    if (!date) return "";
 
-    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
 
-    return value;
-
-}
-
-
-function validateYear(value) {
-
-    const year = String(value);
-
-    if (!/^\d{4}$/.test(year)) {
-
-        throw new Error("Invalid registration year.");
+        throw new Error("Invalid document date.");
 
     }
 
-    return year;
+    const parsed = new Date(date + "T00:00:00Z");
 
-}
+    if (
+        Number.isNaN(parsed.getTime()) ||
+        parsed.toISOString().slice(0, 10) !== date
+    ) {
 
-
-function validateEnum(value, options, label) {
-
-    if (!Object.prototype.hasOwnProperty.call(options, value)) {
-
-        throw new Error(`Invalid ${label.toLowerCase()}.`);
+        throw new Error("Invalid calendar date.");
 
     }
 
-    return value;
-
-}
-
-
-function cleanCNR(value) {
-
-    const cnr = String(value ?? "")
-        .trim()
-        .replace(/[\s-]/g, "")
-        .toUpperCase();
-
-    if (cnr && !/^[A-Z0-9]{16}$/.test(cnr)) {
-
-        throw new Error(
-            "CNR number must contain exactly 16 alphanumeric characters."
-        );
-
-    }
-
-    return cnr;
+    return date;
 
 }
 
 
 function ensureRevision(record, expectedRevision) {
 
-    validateRevision(expectedRevision);
+    if (
+        !Number.isSafeInteger(expectedRevision) ||
+        record.revision !== expectedRevision
+    ) {
 
-    if (record.revision !== expectedRevision) {
-
-        throw new Error(
-            "This record has been modified elsewhere. " +
-            "Refresh the record before continuing."
+        throw dmsError(
+            "dms/revision-conflict",
+            "Document changed. Refresh and retry."
         );
 
     }
@@ -489,12 +332,12 @@ function ensureRevision(record, expectedRevision) {
 }
 
 
-function ensureWritableCase(record) {
+function ensureActive(record) {
 
-    if (record.status === "archived") {
+    if (record.status !== "active") {
 
         throw new Error(
-            "Archived cases must be reactivated before modification."
+            "Restore the archived document before modifying it."
         );
 
     }
@@ -502,462 +345,550 @@ function ensureWritableCase(record) {
 }
 
 
-function isClosedCase(record) {
+function requireExisting(snapshot) {
 
-    return CLOSED_STATUSES.includes(record.status);
+    if (!snapshot.exists()) {
+
+        throw new Error("The requested record does not exist.");
+
+    }
+
+    return snapshot.data();
 
 }
 
 
-function snapshotRecord(snapshot) {
+export function generateDocumentId() {
+
+    return doc(collection(db, C.documents)).id;
+
+}
+
+
+function documentReference(id) {
+
+    return doc(db, C.documents, validateId(id));
+
+}
+
+
+function versionReference(id, version) {
+
+    if (!Number.isSafeInteger(version) || version < 1) {
+
+        throw new Error("Invalid version number.");
+
+    }
+
+    return doc(
+        documentReference(id),
+        C.versions,
+        String(version)
+    );
+
+}
+
+
+function activityReference(id) {
+
+    return doc(
+        collection(documentReference(id), C.activities)
+    );
+
+}
+
+
+function activityData(id, type, description, uid) {
+
+    if (!Object.hasOwn(DMS_CONFIG.activityTypes, type)) {
+
+        throw new Error("Invalid document activity type.");
+
+    }
 
     return {
 
-        ...snapshot.data(),
-        id: snapshot.id
-
-    };
-
-}
-
-
-function requireExisting(snapshot, label) {
-
-    if (!snapshot.exists()) {
-
-        throw new Error(`${label} was not found.`);
-
-    }
-
-    return snapshotRecord(snapshot);
-
-}
-
-
-/* =========================================================
-   05. FIRESTORE REFERENCES
-   ========================================================= */
-
-function casesCollection() {
-
-    return collection(db, CASE_CONFIG.collection);
-
-}
-
-
-function caseRef(caseId) {
-
-    return doc(
-
-        db,
-        CASE_CONFIG.collection,
-        validateDocumentId(caseId)
-
-    );
-
-}
-
-
-function clientRef(clientId) {
-
-    return doc(
-
-        db,
-        CASE_CONFIG.clientCollection,
-        validateDocumentId(clientId)
-
-    );
-
-}
-
-
-function sequenceRef(year) {
-
-    return doc(
-
-        db,
-        CASE_CONFIG.sequenceCollection,
-        validateYear(year)
-
-    );
-
-}
-
-
-function childCollection(caseId, name) {
-
-    return collection(caseRef(caseId), name);
-
-}
-
-
-function childRef(caseId, name, id) {
-
-    return doc(
-
-        childCollection(caseId, name),
-        validateDocumentId(id)
-
-    );
-
-}
-
-
-export function generateCaseId() {
-
-    return crypto.randomUUID();
-
-}
-
-
-export function generateRecordId() {
-
-    return crypto.randomUUID();
-
-}
-
-
-/* =========================================================
-   06. CASE NUMBER GENERATION
-   ========================================================= */
-
-export function formatCaseCode(sequence, year) {
-
-    if (!Number.isSafeInteger(sequence) || sequence < 1) {
-
-        throw new Error("Invalid case sequence number.");
-
-    }
-
-    return [
-
-        CASE_CONFIG.prefix,
-        String(sequence).padStart(3, "0"),
-        validateYear(year)
-
-    ].join("/");
-
-}
-
-
-function readSequence(snapshot) {
-
-    if (!snapshot.exists()) {
-
-        return CASE_CONFIG.initialSequence;
-
-    }
-
-    const sequence = snapshot.data().nextSequence;
-
-    if (!Number.isSafeInteger(sequence) || sequence < 2) {
-
-        throw new Error(
-            "Case numbering counter is invalid. Contact the administrator."
-        );
-
-    }
-
-    return sequence;
-
-}
-
-
-export async function getNextCaseSequence(
-
-    year = getRegistrationYear()
-
-) {
-
-    const admin = await requireAdministrator();
-
-    const snapshot = await getDocFromServer(
-
-        sequenceRef(year)
-
-    );
-
-    assertSession(admin.uid);
-
-    return readSequence(snapshot);
-
-}
-
-
-export async function getNextCaseCode(
-
-    year = getRegistrationYear()
-
-) {
-
-    const sequence = await getNextCaseSequence(year);
-
-    return formatCaseCode(sequence, year);
-
-}
-
-
-/* =========================================================
-   07. COMPLETE CASE DATA VALIDATION
-   ========================================================= */
-
-export function validateCaseData(input = {}) {
-
-    const data = {
-
-        clientId: validateDocumentId(input.clientId),
-
-        caseTitle: requiredText(
-            input.caseTitle, 500, "Case title"
-        ),
-
-        matterType: validateEnum(
-            input.matterType ?? "litigation",
-            MATTER_TYPES,
-            "Matter type"
-        ),
-
-        clientCapacity: requiredText(
-            input.clientCapacity, 100, "Client capacity"
-        ),
-
-        practiceArea: requiredText(
-            input.practiceArea, 150, "Practice area"
-        ),
-
-        natureOfProceedings: cleanText(
-            input.natureOfProceedings, 250
-        ),
-
-        applicableLaw: cleanText(
-            input.applicableLaw, 5000
-        ),
-
-        courtName: cleanText(input.courtName, 300),
-
-        courtCity: cleanText(input.courtCity, 150),
-
-        courtNumber: cleanText(input.courtNumber, 100),
-
-        caseNumber: cleanText(input.caseNumber, 150),
-
-        cnrNumber: cleanCNR(input.cnrNumber),
-
-        filingNumber: cleanText(input.filingNumber, 150),
-
-        filingDate: cleanDate(
-            input.filingDate, "Filing date"
-        ),
-
-        courtRegistrationDate: cleanDate(
-            input.courtRegistrationDate,
-            "Court registration date"
-        ),
-
-        presidingJudge: cleanText(
-            input.presidingJudge, 250
-        ),
-
-        oppositeParty: cleanText(
-            input.oppositeParty, 3000
-        ),
-
-        oppositePartyAdvocate: cleanText(
-            input.oppositePartyAdvocate, 500
-        ),
-
-        oppositePartyAddress: cleanText(
-            input.oppositePartyAddress, 5000
-        ),
-
-        assignedAdvocate: cleanText(
-            input.assignedAdvocate, 250
-        ),
-
-        engagementDate: cleanDate(
-            input.engagementDate, "Engagement date"
-        ),
-
-        status: validateEnum(
-            input.status ?? "drafting",
-            CASE_STATUSES,
-            "Case status"
-        ),
-
-        priority: validateEnum(
-            input.priority ?? "normal",
-            CASE_PRIORITIES,
-            "Priority"
-        ),
-
-        currentStage: cleanText(
-            input.currentStage, 500
-        ),
-
-        nextHearingDate: cleanDate(
-            input.nextHearingDate, "Next hearing date"
-        ),
-
-        nextHearingPurpose: cleanText(
-            input.nextHearingPurpose, 500
-        ),
-
-        limitationDate: cleanDate(
-            input.limitationDate, "Limitation date"
-        ),
-
-        briefFacts: cleanText(input.briefFacts, 30000),
-
-        reliefsSought: cleanText(
-            input.reliefsSought, 20000
-        ),
-
-        legalStrategy: cleanText(
-            input.legalStrategy, 30000
-        ),
-
-        pendingWork: cleanText(
-            input.pendingWork, 10000
-        ),
-
-        notes: cleanText(input.notes, 20000),
-
-        disposalDate: cleanDate(
-            input.disposalDate, "Disposal date"
-        ),
-
-        disposalOutcome: cleanText(
-            input.disposalOutcome, 10000
-        ),
-
-        closureReason: cleanText(
-            input.closureReason, 5000
-        )
-
-    };
-
-
-    if (
-        data.filingDate &&
-        data.courtRegistrationDate &&
-        data.courtRegistrationDate < data.filingDate
-    ) {
-
-        throw new Error(
-            "Court registration date cannot precede filing date."
-        );
-
-    }
-
-
-    if (
-        data.filingDate &&
-        data.disposalDate &&
-        data.disposalDate < data.filingDate
-    ) {
-
-        throw new Error(
-            "Disposal date cannot precede filing date."
-        );
-
-    }
-
-
-    if (CLOSED_STATUSES.includes(data.status)) {
-
-        if (!data.disposalDate) {
-
-            throw new Error(
-                "Disposal or closure date is required."
-            );
-
-        }
-
-        if (!data.closureReason && !data.disposalOutcome) {
-
-            throw new Error(
-                "Please record the closure reason or disposal outcome."
-            );
-
-        }
-
-        if (data.disposalDate > getIndianDate()) {
-
-            throw new Error(
-                "Disposal date cannot be in the future."
-            );
-
-        }
-
-        data.nextHearingDate = "";
-        data.nextHearingPurpose = "";
-
-    }
-
-    return data;
-
-}
-
-
-/* =========================================================
-   08. INTERNAL ACTIVITY WRITER
-   ========================================================= */
-
-function writeActivity(
-
-    transaction,
-    caseId,
-    uid,
-    type,
-    description,
-    activityId = generateRecordId()
-
-) {
-
-    validateEnum(
-        type,
-        CASE_ACTIVITY_TYPES,
-        "Activity type"
-    );
-
-    const reference = childRef(
-
-        caseId,
-        CASE_CONFIG.activityCollection,
-        activityId
-
-    );
-
-    transaction.set(reference, {
-
-        caseId,
+        documentId: id,
 
         type,
 
-        description: requiredText(
-            description, 10000, "Activity description"
-        ),
+        description: cleanText(description, 10000, true),
 
         createdAt: serverTimestamp(),
 
         createdBy: uid
 
-    });
-
-    return reference.id;
+    };
 
 }
 
 
-function updateMetadata(record, uid) {
+/* =========================================================
+   5. GOOGLE SCRIPT LOADER
+   ========================================================= */
+
+function loadScript(url, ready) {
+
+    if (ready()) return Promise.resolve();
+
+    return new Promise((resolve, reject) => {
+
+        const script = document.createElement("script");
+
+        script.src = url;
+
+        script.async = true;
+
+        const timeout = setTimeout(() => {
+
+            script.remove();
+
+            reject(new Error(
+                "Google service loading timed out."
+            ));
+
+        }, 30000);
+
+        script.onload = () => {
+
+            clearTimeout(timeout);
+
+            if (ready()) {
+
+                resolve();
+
+            } else {
+
+                reject(new Error(
+                    "Google service initialization failed."
+                ));
+
+            }
+
+        };
+
+        script.onerror = () => {
+
+            clearTimeout(timeout);
+
+            script.remove();
+
+            reject(new Error(
+                "Unable to load Google services."
+            ));
+
+        };
+
+        document.head.appendChild(script);
+
+    });
+
+}
+
+
+async function loadGoogleIdentity() {
+
+    if (!identityPromise) {
+
+        identityPromise = loadScript(
+
+            DRIVE_CONFIG.identityScriptUrl,
+
+            () => Boolean(
+                window.google?.accounts?.oauth2
+            )
+
+        ).catch(error => {
+
+            identityPromise = null;
+
+            throw error;
+
+        });
+
+    }
+
+    return identityPromise;
+
+}
+
+
+async function loadGooglePicker() {
+
+    if (!pickerPromise) {
+
+        pickerPromise = (async () => {
+
+            await loadScript(
+
+                DRIVE_CONFIG.pickerScriptUrl,
+
+                () => Boolean(window.gapi?.load)
+
+            );
+
+            await new Promise((resolve, reject) => {
+
+                window.gapi.load("picker", {
+
+                    callback: resolve,
+
+                    onerror: () => reject(
+                        new Error("Google Picker failed to load.")
+                    ),
+
+                    timeout: 30000,
+
+                    ontimeout: () => reject(
+                        new Error("Google Picker loading timed out.")
+                    )
+
+                });
+
+            });
+
+        })().catch(error => {
+
+            pickerPromise = null;
+
+            throw error;
+
+        });
+
+    }
+
+    return pickerPromise;
+
+}
+
+
+export async function initialiseGoogleDrive() {
+
+    await requireAdministrator();
+
+    const validation = validateDriveConfiguration();
+
+    const errors = validation.errors.filter(message => message !== "Google Picker API Key is not configured.");
+    if (errors.length) throw new Error(errors.join(" "));
+
+    await loadGoogleIdentity();
+
+    return true;
+
+}
+
+
+/* =========================================================
+   6. GOOGLE OAUTH CONNECTION
+   ========================================================= */
+
+function revokeToken(token) {
+
+    if (!token) return;
+
+    try {
+
+        window.google?.accounts?.oauth2?.revoke(
+            token,
+            () => {}
+        );
+
+    } catch {
+
+        // Local session is cleared independently.
+
+    }
+
+}
+
+
+export function isGoogleDriveConnected() {
+
+    return Boolean(
+
+        googleSession &&
+
+        googleSession.uid === auth.currentUser?.uid &&
+
+        googleSession.expiresAt > Date.now() + 30000
+
+    );
+
+}
+
+
+function requireGoogleSession() {
+
+    if (!isGoogleDriveConnected()) {
+
+        clearGoogleSession();
+
+        throw dmsError(
+
+            "dms/google-required",
+
+            "Connect or reconnect Google Drive."
+
+        );
+
+    }
+
+    return googleSession;
+
+}
+
+
+export async function connectGoogleDrive() {
+
+    if (authorizationPending) {
+
+        throw new Error(
+            "Google authorization is already in progress."
+        );
+
+    }
+
+    authorizationPending = true;
+
+    try {
+
+        const admin = await requireAdministrator();
+
+        await initialiseGoogleDrive();
+
+        clearGoogleSession();
+
+        const generation = sessionGeneration;
+
+        const response = await new Promise(
+            (resolve, reject) => {
+
+                let settled = false;
+
+                const finish = (error, result) => {
+
+                    if (settled) return;
+
+                    settled = true;
+
+                    clearTimeout(timeout);
+
+                    error ? reject(error) : resolve(result);
+
+                };
+
+                const timeout = setTimeout(() => {
+
+                    finish(new Error(
+                        "Google authorization timed out."
+                    ));
+
+                }, 120000);
+
+                const tokenClient =
+                    google.accounts.oauth2.initTokenClient({
+
+                        client_id: DRIVE_CONFIG.clientId,
+
+                        scope: DRIVE_CONFIG.scope,
+
+                        include_granted_scopes: false,
+
+                        hint: DRIVE_CONFIG.authorizedEmail,
+
+                        callback: result => {
+
+                            if (settled) {
+
+                                revokeToken(result?.access_token);
+
+                                return;
+
+                            }
+
+                            if (result.error) {
+
+                                finish(new Error(
+                                    "Google authorization was declined."
+                                ));
+
+                                return;
+
+                            }
+
+                            finish(null, result);
+
+                        },
+
+                        error_callback: () => {
+
+                            finish(new Error(
+                                "Google authorization window was closed or blocked."
+                            ));
+
+                        }
+
+                    });
+
+                try {
+
+                    tokenClient.requestAccessToken({
+
+                        prompt: ""
+
+                    });
+
+                } catch (error) {
+
+                    finish(error);
+
+                }
+
+            }
+        );
+
+        try {
+
+            assertSession(admin.uid);
+
+            if (generation !== sessionGeneration) {
+
+                throw new Error(
+                    "Google connection request was cancelled."
+                );
+
+            }
+
+            if (!response.access_token) {
+
+                throw new Error(
+                    "Google did not provide an access token."
+                );
+
+            }
+
+            if (!google.accounts.oauth2.hasGrantedAllScopes(
+                response,
+                DRIVE_CONFIG.scope
+            )) {
+
+                throw new Error(
+                    "Required Google Drive permission was not granted."
+                );
+
+            }
+
+            const expiresIn = Number(response.expires_in);
+
+            if (!Number.isFinite(expiresIn) || expiresIn <= 0) {
+
+                throw new Error("Invalid Google token lifetime.");
+
+            }
+
+            googleSession = {
+
+                uid: admin.uid,
+
+                token: response.access_token,
+
+                expiresAt: Date.now() + expiresIn * 1000,
+
+                email: ""
+
+            };
+
+            const about = await driveRequest(
+
+                "/about?fields=user(emailAddress,displayName)"
+
+            );
+
+            const email = String(
+                about.user?.emailAddress || ""
+            ).toLowerCase();
+
+            if (
+                email !==
+                DRIVE_CONFIG.authorizedEmail.toLowerCase()
+            ) {
+
+                throw new Error(
+                    "Please connect the authorized firm Google account."
+                );
+
+            }
+
+            await requireAdministrator();
+
+            assertSession(admin.uid);
+
+            if (generation !== sessionGeneration) {
+
+                throw new Error("Google session was cancelled.");
+
+            }
+
+            googleSession.email = email;
+
+            try { await checkRootFolderAccess(); } catch (error) {
+                if (!isGoogleDriveConnected()) throw error;
+            }
+            return getGoogleDriveConnection();
+
+        } catch (error) {
+
+            revokeToken(response.access_token);
+
+            clearGoogleSession();
+
+            throw error;
+
+        }
+
+    } finally {
+
+        authorizationPending = false;
+
+    }
+
+}
+
+
+export function disconnectGoogleDrive() {
+
+    const token = googleSession?.token;
+
+    clearGoogleSession();
+
+    revokeToken(token);
+
+    return true;
+
+}
+
+
+export function getGoogleDriveConnection() {
 
     return {
 
-        revision: record.revision + 1,
+        connected: isGoogleDriveConnected(),
 
-        updatedAt: serverTimestamp(),
+        email: isGoogleDriveConnected()
+            ? googleSession.email
+            : "",
 
-        updatedBy: uid
+        expiresAt: isGoogleDriveConnected()
+            ? googleSession.expiresAt
+            : null,
+
+        rootAuthorized: Boolean(
+
+            isGoogleDriveConnected() &&
+
+            authorizedRootId !== null
+
+        )
 
     };
 
@@ -965,20 +896,582 @@ function updateMetadata(record, uid) {
 
 
 /* =========================================================
-   09. FETCH REGISTERED CLIENTS
+   7. GOOGLE DRIVE REQUEST ENGINE
    ========================================================= */
 
-export async function fetchCaseClients({
+async function driveRequest(
+    path,
+    options = {},
+    upload = false,
+    binary = false
+) {
 
-    includeArchived = false
+    const admin = await requireAdministrator();
 
-} = {}) {
+    const session = requireGoogleSession();
+
+    const generation = sessionGeneration;
+
+    const base = upload
+
+        ? DRIVE_CONFIG.uploadApiUrl
+
+        : DRIVE_CONFIG.driveApiUrl;
+
+    const headers = new Headers(options.headers || {});
+
+    headers.set(
+        "Authorization",
+        `Bearer ${session.token}`
+    );
+
+    const response = await fetch(base + path, {
+
+        ...options,
+
+        signal: options.signal || AbortSignal.timeout(upload ? 180000 : 30000),
+
+        headers,
+
+        cache: "no-store",
+
+        credentials: "omit",
+
+        redirect: "error",
+
+        referrerPolicy: "no-referrer"
+
+    });
+
+    assertSession(admin.uid);
+
+    if (generation !== sessionGeneration) {
+
+        throw new Error("Google Drive session changed.");
+
+    }
+
+    if (response.status === 401) {
+
+        clearGoogleSession();
+
+        throw dmsError(
+            "dms/google-required",
+            "Google authorization expired. Reconnect Drive."
+        );
+
+    }
+
+    if (!response.ok) {
+
+        const data = await response.json().catch(() => ({}));
+
+        throw dmsError(
+
+            "dms/drive-error",
+
+            data.error?.message ||
+                `Google Drive request failed (${response.status}).`,
+
+            { httpStatus: response.status }
+
+        );
+
+    }
+
+    const result = binary
+
+        ? await response.blob()
+
+        : response.status === 204
+
+            ? null
+
+            : await response.json();
+
+    assertSession(admin.uid);
+
+    if (generation !== sessionGeneration) {
+
+        throw new Error("Google Drive session changed.");
+
+    }
+
+    return result;
+
+}
+
+
+async function getDriveFile(fileId) {
+
+    return driveRequest(
+
+        `/files/${encodeURIComponent(validateId(fileId))}` +
+
+        `?fields=${encodeURIComponent(DRIVE_FIELDS)}`
+
+    );
+
+}
+
+
+/* =========================================================
+   8. GOOGLE PICKER
+   ========================================================= */
+
+async function openGooglePicker(folderOnly = false) {
+
+    if (pickerPending) {
+
+        throw new Error("Google Picker is already open.");
+
+    }
+
+    pickerPending = true;
+
+    try {
+
+        const admin = await requireAdministrator();
+
+        const session = requireGoogleSession();
+
+        const generation = sessionGeneration;
+
+        if (!DRIVE_CONFIG.apiKey || !DRIVE_CONFIG.apiKey.startsWith("AIza")) throw new Error("Google Picker API key is not configured.");
+        await loadGooglePicker();
+
+        return await new Promise((resolve, reject) => {
+
+            let settled = false;
+
+            let picker = null;
+
+            const finish = (error, result) => {
+
+                if (settled) return;
+
+                settled = true;
+
+                clearTimeout(timeout);
+
+                try { picker?.setVisible(false); } catch {}
+                try { picker?.dispose?.(); } catch {}
+
+                error ? reject(error) : resolve(result);
+
+            };
+
+            const timeout = setTimeout(() => {
+
+                finish(new Error(
+                    "Google Picker session timed out."
+                ));
+
+            }, 45000);
+
+            try {
+
+                const view = new google.picker.DocsView(
+
+                    folderOnly
+
+                        ? google.picker.ViewId.FOLDERS
+
+                        : google.picker.ViewId.DOCS
+
+                );
+
+                view.setIncludeFolders(true);
+
+                view.setSelectFolderEnabled(folderOnly);
+
+                if (folderOnly) {
+
+                    view.setMimeTypes(
+                        DRIVE_CONFIG.folderMimeType
+                    );
+
+                } else {
+
+                    view.setMimeTypes(
+                        Object.keys(ALLOWED_FILE_TYPES).join(",")
+                    );
+
+                }
+
+                picker = new google.picker.PickerBuilder()
+
+                    .setAppId(DRIVE_CONFIG.projectNumber)
+
+                    .setDeveloperKey(DRIVE_CONFIG.apiKey)
+
+                    .setOAuthToken(session.token)
+
+                    .setOrigin(window.location.origin)
+
+                    .addView(view)
+
+                    .setTitle(
+
+                        folderOnly
+
+                            ? "Authorize MNM Legal Associates Folder"
+
+                            : "Select Document from Google Drive"
+
+                    )
+
+                    .setCallback(data => {
+
+                        try {
+
+                            assertSession(admin.uid);
+
+                            if (generation !== sessionGeneration) {
+
+                                throw new Error(
+                                    "Google session changed."
+                                );
+
+                            }
+
+                            const action =
+                                data[google.picker.Response.ACTION];
+
+                            if (action === "error") {
+                                finish(new Error("Google Picker failed. Check its API key and browser permissions."));
+                            }
+                            if (action === google.picker.Action.CANCEL) {
+
+                                finish(null, null);
+
+                            }
+
+                            if (action === google.picker.Action.PICKED) {
+
+                                const selected =
+                                    data[google.picker.Response.DOCUMENTS];
+
+                                finish(null, selected?.[0] || null);
+
+                            }
+
+                        } catch (error) {
+
+                            finish(error);
+
+                        }
+
+                    })
+
+                    .build();
+
+                picker.setVisible(true);
+
+            } catch (error) {
+
+                finish(error);
+
+            }
+
+        });
+
+    } finally {
+
+        pickerPending = false;
+
+    }
+
+}
+
+
+/* =========================================================
+   9. ROOT FOLDER AUTHORIZATION
+   ========================================================= */
+
+function ensurePrivateFile(file) {
+
+    if (
+        !file ||
+        file.trashed ||
+        file.ownedByMe !== true ||
+        file.shared !== false
+    ) {
+
+        throw new Error(
+
+            "Only private, firm-owned Google Drive files and folders are permitted."
+
+        );
+
+    }
+
+    return file;
+
+}
+
+
+function validateRoot(root) {
+    ensurePrivateFile(root);
+    if (root.mimeType !== DRIVE_CONFIG.folderMimeType ||
+        root.capabilities?.canAddChildren !== true) {
+        throw new Error("The DMS root folder is not writable.");
+    }
+    return root;
+}
+
+async function findManagedRoot() {
+    const roots = await listDriveFiles([
+        "trashed = false",
+        `mimeType = '${DRIVE_CONFIG.folderMimeType}'`,
+        `appProperties has { key='mnmDmsRoot' and value='${ROOT_MARKER}' }`
+    ].join(" and "));
+    if (roots.length > 1) throw new Error("Multiple DMS roots found. Manual review required.");
+    return roots.length ? validateRoot(roots[0]) : null;
+}
+
+async function verifyRootFolder() {
+    const session = requireGoogleSession();
+    const generation = sessionGeneration;
+    let root;
+    if (authorizedRootId) {
+        root = validateRoot(await getDriveFile(authorizedRootId));
+    } else {
+        root = await findManagedRoot();
+        if (!root) root = validateRoot(await getDriveFile(DRIVE_CONFIG.rootFolderId));
+    }
+    assertSession(session.uid);
+    if (generation !== sessionGeneration) throw new Error("Google session changed.");
+    authorizedRootId = root.id;
+    return root;
+}
+
+export async function authorizeRootFolder() {
+    await requireAdministrator();
+    const session = requireGoogleSession();
+    const generation = sessionGeneration;
+    if (rootPending) return rootPending;
+    const operation = (async () => {
+        try { return await verifyRootFolder(); }
+        catch (error) {
+            if (error.details?.httpStatus !== 404 || authorizedRootId) throw error;
+        }
+        // Explicit button action only; never create on page load.
+        // Do not switch storage roots when existing documents are registered.
+        const records = await fetchDocuments({includeArchived:true});
+        if (records.length) throw new Error("Existing documents detected. Restore access to the original root before creating a new one.");
+        const existing = await findManagedRoot();
+        const root = existing || validateRoot(await driveRequest(
+            `/files?fields=${encodeURIComponent(DRIVE_FIELDS)}`,
+            {method:"POST", headers:{"Content-Type":"application/json"},
+             body:JSON.stringify({name:"MNM Legal Associates - DMS Storage",mimeType:DRIVE_CONFIG.folderMimeType,appProperties:{mnmDmsRoot:ROOT_MARKER}})}
+        ));
+        assertSession(session.uid);
+        if (generation !== sessionGeneration) throw new Error("Google session changed.");
+        authorizedRootId = root.id;
+        return root;
+    })();
+    rootPending = operation;
+    try { return await operation; }
+    finally { if (rootPending === operation) rootPending = null; }
+}
+
+export async function checkRootFolderAccess() {
+    await requireAdministrator();
+    requireGoogleSession();
+    return verifyRootFolder();
+}
+
+async function requireRootFolder() {
+    requireGoogleSession();
+    return verifyRootFolder();
+}
+
+
+/* =========================================================
+   10. GOOGLE DRIVE FOLDER MANAGEMENT
+   ========================================================= */
+
+function escapeDriveQuery(value) {
+
+    return String(value)
+
+        .replace(/\\/g, "\\\\")
+
+        .replace(/'/g, "\\'");
+
+}
+
+
+async function listDriveFiles(filter) {
+
+    const results = [];
+
+    let pageToken = "";
+
+    do {
+
+        const parameters = new URLSearchParams({
+
+            q: filter,
+
+            fields: `nextPageToken,files(${DRIVE_FIELDS})`,
+
+            pageSize: "100",
+
+            spaces: "drive"
+
+        });
+
+        if (pageToken) {
+
+            parameters.set("pageToken", pageToken);
+
+        }
+
+        const response = await driveRequest(
+
+            `/files?${parameters.toString()}`
+
+        );
+
+        results.push(...(response.files || []));
+
+        pageToken = response.nextPageToken || "";
+
+    } while (pageToken);
+
+    return results;
+
+}
+
+
+async function ensureFolder(parentId, folderName) {
+
+    const parent = ensurePrivateFile(
+
+        await getDriveFile(parentId)
+
+    );
+
+    if (
+        parent.mimeType !== DRIVE_CONFIG.folderMimeType ||
+        parent.capabilities?.canAddChildren !== true
+    ) {
+
+        throw new Error("Destination folder is not writable.");
+
+    }
+
+    const name = sanitizeFileName(folderName);
+
+    const filter = [
+
+        `'${escapeDriveQuery(parentId)}' in parents`,
+
+        `name = '${escapeDriveQuery(name)}'`,
+
+        `mimeType = '${DRIVE_CONFIG.folderMimeType}'`,
+
+        "trashed = false"
+
+    ].join(" and ");
+
+    const existing = await listDriveFiles(filter);
+
+    if (existing.length > 1) {
+
+        throw new Error(
+
+            "Duplicate destination folders detected. Review Google Drive before continuing."
+
+        );
+
+    }
+
+    if (existing.length === 1) {
+
+        return ensurePrivateFile(existing[0]);
+
+    }
+
+    const created = await driveRequest(
+
+        `/files?fields=${encodeURIComponent(DRIVE_FIELDS)}`,
+
+        {
+
+            method: "POST",
+
+            headers: {
+
+                "Content-Type": "application/json"
+
+            },
+
+            body: JSON.stringify({
+
+                name,
+
+                mimeType: DRIVE_CONFIG.folderMimeType,
+
+                parents: [parentId]
+
+            })
+
+        }
+
+    );
+
+    return ensurePrivateFile(created);
+
+}
+
+
+export async function initialiseDriveFolders() {
+
+    const root = await requireRootFolder();
+
+    const clients = await ensureFolder(
+
+        root.id,
+
+        DRIVE_CONFIG.folders.clients
+
+    );
+
+    const cases = await ensureFolder(
+
+        root.id,
+
+        DRIVE_CONFIG.folders.cases
+
+    );
+
+    return {
+
+        rootFolderId: root.id,
+
+        clientsFolderId: clients.id,
+
+        casesFolderId: cases.id
+
+    };
+
+}
+
+
+/* =========================================================
+   11. CLIENT AND CASE INTEGRATION
+   ========================================================= */
+
+export async function fetchDocumentClients() {
 
     const admin = await requireAdministrator();
 
     const snapshot = await getDocsFromServer(
 
-        collection(db, CASE_CONFIG.clientCollection)
+        collection(db, C.clients)
 
     );
 
@@ -986,143 +1479,758 @@ export async function fetchCaseClients({
 
     return snapshot.docs
 
-        .map(snapshotRecord)
+        .map(item => ({
 
-        .filter(client =>
+            ...item.data(),
 
-            includeArchived ||
-            client.status !== "archived"
+            id: item.id
 
-        )
+        }))
 
-        .map(client => ({
+        .filter(item => item.status !== "archived")
 
-            id: client.id,
+        .map(item => ({
 
-            clientCode: client.clientCode,
+            id: item.id,
 
-            fullName: client.fullName,
+            clientCode: item.clientCode || "",
 
-            clientType: client.clientType,
+            fullName: item.fullName || "",
 
-            mobile: client.mobile || "",
-
-            email: client.email || "",
-
-            assignedAdvocate: client.assignedAdvocate || "",
-
-            status: client.status
+            status: item.status
 
         }))
 
         .sort((a, b) =>
 
-            String(a.fullName).localeCompare(
-                String(b.fullName)
-            )
+            a.fullName.localeCompare(b.fullName)
 
         );
 
 }
 
 
-/* =========================================================
-   10. CREATE NEW CASE
-   ATOMIC NUMBERING TRANSACTION
-   ========================================================= */
-
-export async function createCase(
-
-    input,
-    requestedId = generateCaseId()
-
-) {
+export async function fetchDocumentCases(clientId = "") {
 
     const admin = await requireAdministrator();
 
-    const data = validateCaseData(input);
+    if (clientId) validateId(clientId);
 
-    const caseId = validateDocumentId(requestedId);
+    const snapshot = await getDocsFromServer(
 
-    if (data.status === "archived") {
+        collection(db, C.cases)
+
+    );
+
+    const cases = [];
+
+    for (const item of snapshot.docs) {
+
+        assertSession(admin.uid);
+
+        const record = item.data();
+
+        if (record.status === "archived") continue;
+
+        let eligible = !clientId ||
+            record.clientId === clientId;
+
+        if (!eligible && clientId) {
+
+            const link = await getDocFromServer(
+
+                doc(
+                    db,
+                    C.cases,
+                    item.id,
+                    "linkedClients",
+                    clientId
+                )
+
+            );
+
+            eligible = link.exists() &&
+                link.data().active === true;
+
+        }
+
+        if (eligible) {
+
+            cases.push({
+
+                id: item.id,
+
+                caseCode: record.caseCode || "",
+
+                caseTitle: record.caseTitle || "",
+
+                clientId: record.clientId,
+
+                status: record.status
+
+            });
+
+        }
+
+    }
+
+    assertSession(admin.uid);
+
+    return cases.sort((a, b) =>
+
+        a.caseTitle.localeCompare(b.caseTitle)
+
+    );
+
+}
+
+
+async function validateAssociation(clientId, caseId = "") {
+
+    const admin = await requireAdministrator();
+
+    const client = requireExisting(
+
+        await getDocFromServer(
+
+            doc(db, C.clients, validateId(clientId))
+
+        )
+
+    );
+
+    if (client.status === "archived") {
 
         throw new Error(
-            "A new case cannot be registered as archived."
+            "Archived clients cannot register new documents."
         );
 
     }
 
+    let caseRecord = null;
+
+    if (caseId) {
+
+        caseRecord = requireExisting(
+
+            await getDocFromServer(
+
+                doc(db, C.cases, validateId(caseId))
+
+            )
+
+        );
+
+        if (caseRecord.status === "archived") {
+
+            throw new Error(
+                "Archived cases cannot register new documents."
+            );
+
+        }
+
+        if (caseRecord.clientId !== clientId) {
+
+            const link = await getDocFromServer(
+
+                doc(
+                    db,
+                    C.cases,
+                    caseId,
+                    "linkedClients",
+                    clientId
+                )
+
+            );
+
+            if (
+                !link.exists() ||
+                link.data().active !== true
+            ) {
+
+                throw new Error(
+                    "The selected client is not linked to this case."
+                );
+
+            }
+
+        }
+
+    }
+
+    assertSession(admin.uid);
+
+    return { client, caseRecord };
+
+}
+
+
+async function getDestinationFolder(clientId, caseId = "") {
+
+    const root = await requireRootFolder();
+
+    const association = await validateAssociation(
+        clientId,
+        caseId
+    );
+
+    const group = await ensureFolder(
+
+        root.id,
+
+        caseId
+
+            ? DRIVE_CONFIG.folders.cases
+
+            : DRIVE_CONFIG.folders.clients
+
+    );
+
+    // Stable internal IDs avoid duplicate folders
+    // when a client name or case title changes.
+
+    return ensureFolder(
+
+        group.id,
+
+        caseId
+
+            ? `CASE-${caseId}`
+
+            : `CLIENT-${clientId}`
+
+    );
+
+}
+
+
+/* =========================================================
+   12. FILE UPLOAD ENGINE
+   ========================================================= */
+
+async function createDriveFile(
+    file,
+    folderId,
+    operationId
+) {
+
+    const validation = validateDocumentFile(file);
+
+    if (!validation.valid) {
+
+        throw new Error(validation.errors.join(" "));
+
+    }
+
+    const parent = ensurePrivateFile(
+
+        await getDriveFile(folderId)
+
+    );
+
+    if (parent.capabilities?.canAddChildren !== true) {
+
+        throw new Error("Destination folder is not writable.");
+
+    }
+
+    const metadata = {
+
+        name: sanitizeFileName(file.name),
+
+        mimeType: file.type,
+
+        parents: [folderId],
+
+        appProperties: {
+
+            mnmOperationId: validateId(operationId)
+
+        }
+
+    };
+
+    // Reuse an already uploaded file when recovering
+    // an interrupted registration operation.
+
+    const previous = await listDriveFiles([
+
+        `'${escapeDriveQuery(folderId)}' in parents`,
+
+        "trashed = false",
+
+        "appProperties has { key='mnmOperationId' " +
+
+        `and value='${escapeDriveQuery(operationId)}' }`
+
+    ].join(" and "));
+
+    if (previous.length > 1) {
+
+        throw new Error(
+            "Duplicate upload operation detected."
+        );
+
+    }
+
+    if (previous.length === 1) {
+
+        const existing = ensurePrivateFile(previous[0]);
+
+        if (
+            existing.name !== metadata.name ||
+            existing.mimeType !== file.type ||
+            Number(existing.size) !== file.size
+        ) {
+
+            throw new Error(
+                "Recovery file does not match the selected upload."
+            );
+
+        }
+
+        return existing;
+
+    }
+
+    const boundary = "mnm_" +
+        crypto.randomUUID().replace(/-/g, "");
+
+    const body = new Blob([
+
+        `--${boundary}\r\n`,
+
+        "Content-Type: application/json; charset=UTF-8\r\n\r\n",
+
+        JSON.stringify(metadata),
+
+        `\r\n--${boundary}\r\n`,
+
+        `Content-Type: ${file.type}\r\n\r\n`,
+
+        file,
+
+        `\r\n--${boundary}--\r\n`
+
+    ]);
+
+    const result = await driveRequest(
+
+        "/files?uploadType=multipart&fields=" +
+
+        encodeURIComponent(DRIVE_FIELDS),
+
+        {
+
+            method: "POST",
+
+            headers: {
+
+                "Content-Type":
+
+                    `multipart/related; boundary=${boundary}`
+
+            },
+
+            body
+
+        },
+
+        true
+
+    );
+
+    return ensurePrivateFile(result);
+
+}
+
+
+/* =========================================================
+   13. IMPORT EXISTING GOOGLE DRIVE FILE
+   ========================================================= */
+
+export async function selectGoogleDriveDocument() {
+
+    await requireAdministrator();
+
+    requireGoogleSession();
+
+    const selected = await openGooglePicker(false);
+
+    if (!selected) return null;
+
+    const file = ensurePrivateFile(
+
+        await getDriveFile(selected.id)
+
+    );
+
+    validateDriveDocument(file);
+
+    return {
+
+        driveFileId: file.id,
+
+        fileName: file.name,
+
+        mimeType: file.mimeType,
+
+        sizeBytes: Number(file.size)
+
+    };
+
+}
+
+
+function validateDriveDocument(file) {
+
+    ensurePrivateFile(file);
+
+    if (!Object.hasOwn(ALLOWED_FILE_TYPES, file.mimeType)) {
+
+        throw new Error(
+            "The selected Google Drive file type is unsupported."
+        );
+
+    }
+
+    const size = Number(file.size);
+
+    if (
+        !Number.isSafeInteger(size) ||
+        size < 1 ||
+        size > DRIVE_CONFIG.maxFileSize
+    ) {
+
+        throw new Error(
+            "The document exceeds the permitted size or is empty."
+        );
+
+    }
+
+    return file;
+
+}
+
+
+async function copyDriveDocument(
+    fileId,
+    folderId,
+    operationId
+) {
+
+    const original = validateDriveDocument(
+
+        await getDriveFile(fileId)
+
+    );
+
+    const parent = ensurePrivateFile(
+
+        await getDriveFile(folderId)
+
+    );
+
+    if (parent.capabilities?.canAddChildren !== true) {
+
+        throw new Error("Destination folder is not writable.");
+
+    }
+
+    const previous = await listDriveFiles([
+
+        `'${escapeDriveQuery(folderId)}' in parents`,
+
+        "trashed = false",
+
+        "appProperties has { key='mnmOperationId' " +
+
+        `and value='${escapeDriveQuery(operationId)}' }`
+
+    ].join(" and "));
+
+    if (previous.length > 1) {
+
+        throw new Error(
+            "Duplicate import operation detected."
+        );
+
+    }
+
+    if (previous.length === 1) {
+
+        const existing = validateDriveDocument(previous[0]);
+
+        if (
+            existing.name !== sanitizeFileName(original.name) ||
+            existing.mimeType !== original.mimeType ||
+            Number(existing.size) !== Number(original.size)
+        ) {
+
+            throw new Error("Recovery import does not match.");
+
+        }
+
+        return existing;
+
+    }
+
+    const copy = await driveRequest(
+
+        `/files/${encodeURIComponent(original.id)}/copy` +
+
+        `?fields=${encodeURIComponent(DRIVE_FIELDS)}`,
+
+        {
+
+            method: "POST",
+
+            headers: {
+
+                "Content-Type": "application/json"
+
+            },
+
+            body: JSON.stringify({
+
+                name: sanitizeFileName(original.name),
+
+                parents: [folderId],
+
+                appProperties: {
+
+                    mnmOperationId: validateId(operationId)
+
+                }
+
+            })
+
+        }
+
+    );
+
+    return validateDriveDocument(copy);
+
+}
+
+
+/* =========================================================
+   14. DOCUMENT METADATA VALIDATION
+   ========================================================= */
+
+function validateMetadata(input) {
+
+    const category = cleanText(
+        input.category,
+        150,
+        true
+    );
+
+    if (!Object.hasOwn(DOCUMENT_CATEGORIES, category)) {
+
+        throw new Error("Select a valid document category.");
+
+    }
+
+    return {
+
+        title: cleanText(input.title, 500, true),
+
+        category,
+
+        description: cleanText(input.description, 10000),
+
+        documentDate: cleanDate(input.documentDate)
+
+    };
+
+}
+
+
+export function validateDocumentData(input) {
+
+    return {
+
+        clientId: validateId(input.clientId),
+
+        caseId: input.caseId
+
+            ? validateId(input.caseId)
+
+            : "",
+
+        ...validateMetadata(input)
+
+    };
+
+}
+
+
+function createVersionData(
+    documentId,
+    version,
+    file,
+    notes,
+    uid
+) {
+
+    validateDriveDocument(file);
+
+    return {
+
+        documentId,
+
+        version,
+
+        driveFileId: validateId(file.id),
+
+        fileName: cleanText(file.name, 500, true),
+
+        mimeType: cleanText(file.mimeType, 200, true),
+
+        sizeBytes: Number(file.size),
+
+        notes: cleanText(notes, 5000),
+
+        createdAt: serverTimestamp(),
+
+        createdBy: uid
+
+    };
+
+}
+
+
+/* =========================================================
+   15. ANNUAL DOCUMENT NUMBERING
+   ========================================================= */
+
+export async function getNextDocumentCode() {
+
+    const admin = await requireAdministrator();
+
     const year = getRegistrationYear();
 
-    const reference = caseRef(caseId);
+    const snapshot = await getDocFromServer(
 
-    const counterReference = sequenceRef(year);
+        doc(db, C.sequences, year)
 
-    const primaryClientReference = clientRef(data.clientId);
+    );
 
-    const activityId = generateRecordId();
+    assertSession(admin.uid);
 
+    const sequence = snapshot.exists()
+
+        ? snapshot.data().nextSequence
+
+        : 1;
+
+    return formatDocumentCode(sequence, year);
+
+}
+
+
+/* =========================================================
+   16. ATOMIC DOCUMENT REGISTRATION
+   ========================================================= */
+
+async function registerDocument(
+    input,
+    driveFile,
+    documentId,
+    notes = ""
+) {
+
+    const admin = await requireAdministrator();
+
+    const data = validateDocumentData(input);
+
+    const id = validateId(documentId);
+
+    const year = getRegistrationYear();
+
+    const reference = documentReference(id);
+
+    const counter = doc(db, C.sequences, year);
+
+    const activity = activityReference(id);
+
+    const version = createVersionData(
+
+        id,
+
+        1,
+
+        driveFile,
+
+        notes,
+
+        admin.uid
+
+    );
 
     await runTransaction(db, async transaction => {
 
         assertSession(admin.uid);
 
-
-        // All reads must precede writes.
-
         const existing = await transaction.get(reference);
-
-        const counter = await transaction.get(counterReference);
-
-        const client = await transaction.get(
-            primaryClientReference
-        );
-
 
         if (existing.exists()) {
 
+            const existingVersion = await transaction.get(
+
+                versionReference(id, 1)
+
+            );
+
+            if (
+                existingVersion.exists() &&
+                existingVersion.data().driveFileId === driveFile.id &&
+                existing.data().clientId === data.clientId &&
+                existing.data().caseId === data.caseId
+            ) {
+
+                return;
+
+            }
+
             throw new Error(
-                "This case ID already exists. " +
-                "Check the case directory before retrying."
+                "Document ID is already registered."
             );
 
         }
 
+        const counterSnapshot = await transaction.get(counter);
 
-        if (!client.exists()) {
+        const sequenceNumber = counterSnapshot.exists()
 
-            throw new Error(
-                "The selected client does not exist."
-            );
+            ? counterSnapshot.data().nextSequence
 
-        }
+            : 1;
 
+        const documentCode = formatDocumentCode(
 
-        if (client.data().status === "archived") {
+            sequenceNumber,
 
-            throw new Error(
-                "An archived client cannot register a new case."
-            );
+            year
 
-        }
+        );
 
+        const record = {
 
-        const sequence = readSequence(counter);
+            id,
 
-        const caseCode = formatCaseCode(sequence, year);
+            documentCode,
 
+            sequenceNumber,
 
-        transaction.set(reference, {
+            registrationYear: year,
 
             ...data,
 
-            id: caseId,
+            status: "active",
 
-            caseCode,
-
-            sequenceNumber: sequence,
-
-            registrationYear: year,
+            currentVersion: 1,
 
             createdAt: serverTimestamp(),
 
@@ -1134,18 +2242,29 @@ export async function createCase(
 
             revision: 1
 
-        });
+        };
 
+        assertSession(admin.uid);
 
-        transaction.set(counterReference, {
+        transaction.set(reference, record);
+
+        transaction.set(
+
+            versionReference(id, 1),
+
+            version
+
+        );
+
+        transaction.set(counter, {
 
             year,
 
-            nextSequence: sequence + 1,
+            nextSequence: sequenceNumber + 1,
 
-            lastCaseId: caseId,
+            lastDocumentId: id,
 
-            lastCaseCode: caseCode,
+            lastDocumentCode: documentCode,
 
             updatedAt: serverTimestamp(),
 
@@ -1153,85 +2272,356 @@ export async function createCase(
 
         });
 
+        transaction.set(
 
-        writeActivity(
+            activity,
 
-            transaction,
+            activityData(
 
-            caseId,
+                id,
 
-            admin.uid,
+                "registration",
 
-            "registration",
+                "Document registered with initial version.",
 
-            `Case registered successfully: ${caseCode}`,
+                admin.uid
 
-            activityId
+            )
 
         );
 
     });
 
+    assertSession(admin.uid);
 
-    return getCase(caseId);
+    return getDocument(id);
 
 }
 
 
 /* =========================================================
-   11. FETCH CASE RECORDS
+   17. CREATE NEW DOCUMENT
    ========================================================= */
 
-export async function getCase(caseId) {
+export async function createDocument(
+    input,
+    file,
+    requestedId = generateDocumentId()
+) {
+
+    await requireAdministrator();
+
+    const data = validateDocumentData(input);
+
+    const id = validateId(requestedId);
+
+    const notes = cleanText(input.versionNotes, 5000);
+
+    const validation = validateDocumentFile(file);
+
+    if (!validation.valid) {
+
+        throw new Error(validation.errors.join(" "));
+
+    }
+
+    const folder = await getDestinationFolder(
+
+        data.clientId,
+
+        data.caseId
+
+    );
+
+    const uploaded = await createDriveFile(
+
+        file,
+
+        folder.id,
+
+        id
+
+    );
+
+    try {
+
+        return await registerDocument(
+
+            data,
+
+            uploaded,
+
+            id,
+
+            notes
+
+        );
+
+    } catch (error) {
+
+        throw dmsError(
+
+            "dms/registration-pending",
+
+            "File uploaded but registration could not be confirmed.",
+
+            {
+
+                documentId: id,
+
+                driveFileId: uploaded.id,
+
+                cause: error.code || error.message
+
+            }
+
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   18. IMPORT DOCUMENT
+   ========================================================= */
+
+export async function importDocument(
+    input,
+    sourceDriveFileId,
+    requestedId = generateDocumentId()
+) {
+
+    await requireAdministrator();
+
+    const data = validateDocumentData(input);
+
+    const id = validateId(requestedId);
+
+    const notes = cleanText(input.versionNotes, 5000);
+
+    const folder = await getDestinationFolder(
+
+        data.clientId,
+
+        data.caseId
+
+    );
+
+    const copied = await copyDriveDocument(
+
+        sourceDriveFileId,
+
+        folder.id,
+
+        id
+
+    );
+
+    try {
+
+        return await registerDocument(
+
+            data,
+
+            copied,
+
+            id,
+
+            notes
+
+        );
+
+    } catch (error) {
+
+        throw dmsError(
+
+            "dms/registration-pending",
+
+            "Drive file copied but registration could not be confirmed.",
+
+            {
+
+                documentId: id,
+
+                driveFileId: copied.id,
+
+                cause: error.code || error.message
+
+            }
+
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   19. DOCUMENT REGISTRATION RECOVERY
+   ========================================================= */
+
+export async function recoverDocumentRegistration(
+    input,
+    documentId,
+    driveFileId
+) {
+
+    await requireAdministrator();
+
+    const data = validateDocumentData(input);
+
+    const id = validateId(documentId);
+
+    const folder = await getDestinationFolder(
+
+        data.clientId,
+
+        data.caseId
+
+    );
+
+    const file = validateDriveDocument(
+
+        await getDriveFile(driveFileId)
+
+    );
+
+    if (!file.parents?.includes(folder.id)) {
+
+        throw new Error(
+            "Recovery file is outside the expected destination."
+        );
+
+    }
+
+    const details = await driveRequest(
+
+        `/files/${encodeURIComponent(file.id)}` +
+
+        "?fields=appProperties"
+
+    );
+
+    if (details.appProperties?.mnmOperationId !== id) {
+
+        throw new Error(
+            "Recovery operation ID does not match."
+        );
+
+    }
+
+    return registerDocument(
+
+        data,
+
+        file,
+
+        id,
+
+        input.versionNotes
+
+    );
+
+}
+
+
+/* =========================================================
+   20. FETCH DOCUMENT RECORDS
+   ========================================================= */
+
+export async function getDocument(documentId) {
 
     const admin = await requireAdministrator();
 
     const snapshot = await getDocFromServer(
 
-        caseRef(caseId)
+        documentReference(documentId)
 
     );
 
     assertSession(admin.uid);
 
-    return requireExisting(snapshot, "Case record");
+    return {
+
+        ...requireExisting(snapshot),
+
+        id: snapshot.id
+
+    };
 
 }
 
 
-export async function fetchCases({
+export async function fetchDocuments({
 
-    includeArchived = false
+    includeArchived = false,
+
+    clientId = "",
+
+    caseId = ""
 
 } = {}) {
 
     const admin = await requireAdministrator();
 
-    const snapshot = await getDocsFromServer(
+    const constraints = [];
 
-        casesCollection()
+    if (clientId) {
 
-    );
+        constraints.push(
+
+            where("clientId", "==", validateId(clientId))
+
+        );
+
+    }
+
+    if (caseId) {
+
+        constraints.push(
+
+            where("caseId", "==", validateId(caseId))
+
+        );
+
+    }
+
+    const reference = collection(db, C.documents);
+
+    const source = constraints.length
+
+        ? query(reference, ...constraints)
+
+        : reference;
+
+    const snapshot = await getDocsFromServer(source);
 
     assertSession(admin.uid);
 
     return snapshot.docs
 
-        .map(snapshotRecord)
+        .map(item => ({
 
-        .filter(record =>
+            ...item.data(),
 
-            includeArchived ||
-            record.status !== "archived"
+            id: item.id
+
+        }))
+
+        .filter(item =>
+
+            includeArchived || item.status !== "archived"
 
         )
 
         .sort((a, b) =>
 
-            Number(b.registrationYear) -
-            Number(a.registrationYear)
+            b.registrationYear.localeCompare(
 
-            ||
+                a.registrationYear
+
+            ) ||
 
             b.sequenceNumber - a.sequenceNumber
 
@@ -1240,581 +2630,429 @@ export async function fetchCases({
 }
 
 
-/* =========================================================
-   12. FETCH CASES ASSOCIATED WITH A CLIENT
-
-   Includes primary and active additional associations.
-   ========================================================= */
-
-export async function fetchCasesByClient(
-
+export function fetchDocumentsByClient(
     clientId,
-
-    {
-
-        includeArchived = false,
-
-        includeAdditional = true
-
-    } = {}
-
+    options = {}
 ) {
 
-    const admin = await requireAdministrator();
+    return fetchDocuments({
 
-    const id = validateDocumentId(clientId);
+        ...options,
 
-    const primarySnapshot = await getDocsFromServer(
-
-        query(
-
-            casesCollection(),
-
-            where("clientId", "==", id)
-
-        )
-
-    );
-
-    const records = new Map();
-
-    primarySnapshot.docs.forEach(snapshot => {
-
-        const record = snapshotRecord(snapshot);
-
-        if (
-            includeArchived ||
-            record.status !== "archived"
-        ) {
-
-            records.set(record.id, {
-
-                ...record,
-
-                associationType: "primary",
-
-                associationCapacity: record.clientCapacity
-
-            });
-
-        }
+        clientId: validateId(clientId)
 
     });
 
-
-    if (includeAdditional) {
-
-        const allCases = await fetchCases({
-
-            includeArchived
-
-        });
-
-
-        // Sequential reads avoid unbounded parallel requests.
-
-        for (const record of allCases) {
-
-            if (records.has(record.id)) continue;
-
-            assertSession(admin.uid);
-
-            const association = await getDocFromServer(
-
-                childRef(
-
-                    record.id,
-
-                    CASE_CONFIG.linkedClientCollection,
-
-                    id
-
-                )
-
-            );
-
-            if (
-                association.exists() &&
-                association.data().active === true
-            ) {
-
-                records.set(record.id, {
-
-                    ...record,
-
-                    associationType: "additional",
-
-                    associationCapacity:
-                        association.data().capacity
-
-                });
-
-            }
-
-        }
-
-    }
-
-    assertSession(admin.uid);
-
-    return [...records.values()].sort((a, b) =>
-
-        Number(b.registrationYear) -
-        Number(a.registrationYear)
-
-        ||
-
-        b.sequenceNumber - a.sequenceNumber
-
-    );
-
 }
 
 
-/* =========================================================
-   13. DUPLICATE CASE DETECTION
-
-   Advisory warning, not a prohibition.
-   ========================================================= */
-
-function normalizedText(value) {
-
-    return String(value ?? "")
-
-        .normalize("NFKC")
-
-        .toLowerCase()
-
-        .replace(/\s+/g, " ")
-
-        .trim();
-
-}
-
-
-function normalizedNumber(value) {
-
-    return normalizedText(value).replace(/\s+/g, "");
-
-}
-
-
-export async function findDuplicateCases(
-
-    input,
-
-    excludeId = null
-
-) {
-
-    const data = validateCaseData(input);
-
-    const records = await fetchCases({
-
-        includeArchived: true
-
-    });
-
-    const matches = [];
-
-
-    for (const record of records) {
-
-        if (record.id === excludeId) continue;
-
-        const reasons = [];
-
-
-        if (
-
-            data.cnrNumber &&
-
-            data.cnrNumber === record.cnrNumber
-
-        ) {
-
-            reasons.push("Matching CNR number");
-
-        }
-
-
-        if (
-
-            data.caseNumber &&
-
-            data.courtName &&
-
-            normalizedNumber(data.caseNumber) ===
-
-                normalizedNumber(record.caseNumber) &&
-
-            normalizedText(data.courtName) ===
-
-                normalizedText(record.courtName)
-
-        ) {
-
-            reasons.push(
-                "Matching court and case number"
-            );
-
-        }
-
-
-        if (
-
-            data.clientId === record.clientId &&
-
-            normalizedText(data.caseTitle) ===
-
-                normalizedText(record.caseTitle)
-
-        ) {
-
-            reasons.push(
-                "Matching client and case title"
-            );
-
-        }
-
-
-        if (reasons.length) {
-
-            matches.push({
-
-                id: record.id,
-
-                caseCode: record.caseCode,
-
-                caseTitle: record.caseTitle,
-
-                caseNumber: record.caseNumber,
-
-                cnrNumber: record.cnrNumber,
-
-                status: record.status,
-
-                reasons
-
-            });
-
-        }
-
-    }
-
-    return matches;
-
-}
-
-
-/* =========================================================
-   14. UPDATE EXISTING CASE
-   ========================================================= */
-
-export async function updateCase(
-
+export function fetchDocumentsByCase(
     caseId,
+    options = {}
+) {
 
+    return fetchDocuments({
+
+        ...options,
+
+        caseId: validateId(caseId)
+
+    });
+
+}
+
+
+/* =========================================================
+   21. UPDATE DOCUMENT METADATA
+   ========================================================= */
+
+export async function updateDocument(
+    documentId,
     input,
-
     expectedRevision
-
 ) {
 
     const admin = await requireAdministrator();
 
-    const reference = caseRef(caseId);
+    const id = validateId(documentId);
 
-    const activityId = generateRecordId();
+    const reference = documentReference(id);
 
+    const activity = activityReference(id);
 
     await runTransaction(db, async transaction => {
 
         assertSession(admin.uid);
 
-        const snapshot = await transaction.get(reference);
+        const current = requireExisting(
 
-        const existing = requireExisting(
-
-            snapshot, "Case record"
+            await transaction.get(reference)
 
         );
 
-        ensureRevision(existing, expectedRevision);
+        ensureActive(current);
 
-        ensureWritableCase(existing);
+        ensureRevision(current, expectedRevision);
 
+        const changes = validateMetadata({
 
-        const data = validateCaseData({
-
-            ...existing,
+            ...current,
 
             ...input
 
         });
 
-
-        if (data.clientId !== existing.clientId) {
-
-            throw new Error(
-                "The primary client association cannot be changed."
-            );
-
-        }
-
-
-        if (data.status === "archived") {
-
-            throw new Error(
-                "Use the dedicated archive function."
-            );
-
-        }
-
-
-        if (
-
-            isClosedCase(existing) &&
-
-            !CLOSED_STATUSES.includes(data.status)
-
-        ) {
-
-            throw new Error(
-                "Use the dedicated reopen function."
-            );
-
-        }
-
-
-        const changedFields = Object.keys(data).filter(
-
-            key => data[key] !== existing[key]
-
-        );
-
-
-        if (!changedFields.length) return;
-
-
         transaction.update(reference, {
 
-            ...data,
+            ...changes,
 
-            ...updateMetadata(existing, admin.uid)
+            updatedAt: serverTimestamp(),
+
+            updatedBy: admin.uid,
+
+            revision: current.revision + 1
 
         });
 
+        transaction.set(
 
-        const statusChanged =
+            activity,
 
-            data.status !== existing.status;
+            activityData(
 
+                id,
 
-        const activityType =
+                "metadata_update",
 
-            statusChanged
+                "Document metadata updated.",
 
-                ? CLOSED_STATUSES.includes(data.status)
+                admin.uid
 
-                    ? "closure"
-
-                    : "status_change"
-
-                : "profile_update";
-
-
-        const description = statusChanged
-
-            ? `Case status changed from ${
-                CASE_STATUSES[existing.status]
-              } to ${
-                CASE_STATUSES[data.status]
-              }. Updated fields: ${
-                changedFields.join(", ")
-              }.`
-
-            : `Case profile updated. Modified fields: ${
-                changedFields.join(", ")
-              }.`;
-
-        writeActivity(
-
-            transaction,
-
-            caseId,
-
-            admin.uid,
-
-            activityType,
-
-            description,
-
-            activityId
+            )
 
         );
 
     });
 
-    return getCase(caseId);
+    assertSession(admin.uid);
+
+    return getDocument(id);
 
 }
 
 
 /* =========================================================
-   15. UPDATE NEXT HEARING
+   22. DOCUMENT VERSION HISTORY
    ========================================================= */
 
-export async function updateCaseHearing(
+export async function fetchDocumentVersions(documentId) {
 
-    caseId,
+    const admin = await requireAdministrator();
 
-    hearing,
+    const snapshot = await getDocsFromServer(
 
-    expectedRevision
+        collection(
 
+            documentReference(documentId),
+
+            C.versions
+
+        )
+
+    );
+
+    assertSession(admin.uid);
+
+    return snapshot.docs
+
+        .map(item => item.data())
+
+        .sort((a, b) => b.version - a.version);
+
+}
+
+
+export async function getDocumentVersion(
+    documentId,
+    version
 ) {
 
     const admin = await requireAdministrator();
 
-    const reference = caseRef(caseId);
+    const snapshot = await getDocFromServer(
 
-    const nextHearingDate = cleanDate(
-
-        hearing.nextHearingDate,
-
-        "Next hearing date"
+        versionReference(documentId, version)
 
     );
 
-    const nextHearingPurpose = cleanText(
+    assertSession(admin.uid);
 
-        hearing.nextHearingPurpose, 500
+    return requireExisting(snapshot);
 
-    );
+}
 
-    const currentStage = cleanText(
 
-        hearing.currentStage, 500
+async function commitNewVersion(
+    documentId,
+    file,
+    notes,
+    expectedRevision
+) {
 
-    );
+    const admin = await requireAdministrator();
 
-    const activityId = generateRecordId();
+    const id = validateId(documentId);
 
+    const reference = documentReference(id);
+
+    const activity = activityReference(id);
 
     await runTransaction(db, async transaction => {
 
         assertSession(admin.uid);
 
-        const snapshot = await transaction.get(reference);
+        const current = requireExisting(
 
-        const existing = requireExisting(
-
-            snapshot, "Case record"
+            await transaction.get(reference)
 
         );
 
-        ensureRevision(existing, expectedRevision);
+        ensureActive(current);
 
-        ensureWritableCase(existing);
+        ensureRevision(current, expectedRevision);
 
+        const nextVersion = current.currentVersion + 1;
 
-        if (isClosedCase(existing)) {
+        transaction.set(
 
-            throw new Error(
-                "Reopen the case before scheduling a new hearing."
-            );
+            versionReference(id, nextVersion),
 
-        }
+            createVersionData(
 
+                id,
+
+                nextVersion,
+
+                file,
+
+                notes,
+
+                admin.uid
+
+            )
+
+        );
 
         transaction.update(reference, {
 
-            nextHearingDate,
+            currentVersion: nextVersion,
 
-            nextHearingPurpose,
+            revision: current.revision + 1,
 
-            currentStage,
+            updatedAt: serverTimestamp(),
 
-            ...updateMetadata(existing, admin.uid)
+            updatedBy: admin.uid
 
         });
 
+        transaction.set(
 
-        writeActivity(
+            activity,
 
-            transaction,
+            activityData(
 
-            caseId,
+                id,
 
-            admin.uid,
+                "version_added",
 
-            "hearing_update",
+                `Document version ${nextVersion} added.`,
 
-            nextHearingDate
+                admin.uid
 
-                ? `Next hearing updated to ${
-                    nextHearingDate
-                  }. Purpose: ${
-                    nextHearingPurpose || "Not specified"
-                  }.`
-
-                : "Next hearing date cleared.",
-
-            activityId
+            )
 
         );
 
     });
 
-    return getCase(caseId);
+    assertSession(admin.uid);
+
+    return getDocument(id);
 
 }
 
 
-/* =========================================================
-   16. CLOSE CASE
-   ========================================================= */
-
-export async function closeCase(
-
-    caseId,
-
-    closure,
-
-    expectedRevision
-
+export async function addDocumentVersion(
+    documentId,
+    file,
+    notes,
+    expectedRevision,
+    operationId = generateDocumentId()
 ) {
 
-    const status = closure.status ?? "closed";
+    const current = await getDocument(documentId);
 
-    if (!CLOSED_STATUSES.includes(status)) {
+    ensureActive(current);
 
-        throw new Error("Invalid closure status.");
+    ensureRevision(current, expectedRevision);
+
+    const cleanNotes = cleanText(notes, 5000);
+
+    const validation = validateDocumentFile(file);
+
+    if (!validation.valid) {
+
+        throw new Error(validation.errors.join(" "));
 
     }
 
-    return updateCase(
+    const folder = await getDestinationFolder(
 
-        caseId,
+        current.clientId,
 
-        {
+        current.caseId
 
-            status,
+    );
 
-            disposalDate:
+    const uploaded = await createDriveFile(
 
-                closure.disposalDate || getIndianDate(),
+        file,
 
-            disposalOutcome: closure.disposalOutcome,
+        folder.id,
 
-            closureReason: closure.closureReason,
+        validateId(operationId)
 
-            nextHearingDate: "",
+    );
 
-            nextHearingPurpose: ""
+    try {
 
-        },
+        return await commitNewVersion(
+
+            current.id,
+
+            uploaded,
+
+            cleanNotes,
+
+            expectedRevision
+
+        );
+
+    } catch (error) {
+
+        throw dmsError(
+
+            "dms/version-pending",
+
+            "Version uploaded but registration could not be confirmed.",
+
+            {
+
+                documentId: current.id,
+
+                driveFileId: uploaded.id,
+
+                operationId,
+
+                expectedRevision,
+
+                intendedVersion: current.currentVersion + 1,
+
+                cause: error.code || error.message
+
+            }
+
+        );
+
+    }
+
+}
+
+
+export async function recoverDocumentVersion(
+    documentId,
+    driveFileId,
+    operationId,
+    notes,
+    expectedRevision,
+    intendedVersion
+) {
+
+    const current = await getDocument(documentId);
+
+    ensureActive(current);
+
+    if (current.currentVersion >= intendedVersion) {
+
+        const version = await getDocumentVersion(
+
+            documentId,
+
+            intendedVersion
+
+        );
+
+        if (version.driveFileId === driveFileId) {
+
+            return current;
+
+        }
+
+        throw new Error(
+            "The intended version is already occupied. Manual review required."
+        );
+
+    }
+
+    ensureRevision(current, expectedRevision);
+
+    if (intendedVersion !== current.currentVersion + 1) {
+
+        throw new Error("Invalid recovery version.");
+
+    }
+
+    const folder = await getDestinationFolder(
+
+        current.clientId,
+
+        current.caseId
+
+    );
+
+    const file = validateDriveDocument(
+
+        await getDriveFile(driveFileId)
+
+    );
+
+    if (!file.parents?.includes(folder.id)) {
+
+        throw new Error("Unexpected recovery file location.");
+
+    }
+
+    const details = await driveRequest(
+
+        `/files/${encodeURIComponent(file.id)}` +
+
+        "?fields=appProperties"
+
+    );
+
+    if (details.appProperties?.mnmOperationId !== operationId) {
+
+        throw new Error("Recovery operation ID mismatch.");
+
+    }
+
+    return commitNewVersion(
+
+        documentId,
+
+        file,
+
+        cleanText(notes, 5000),
 
         expectedRevision
 
@@ -1824,198 +3062,38 @@ export async function closeCase(
 
 
 /* =========================================================
-   17. REOPEN CLOSED CASE
+   23. ARCHIVE DOCUMENT
    ========================================================= */
 
-export async function reopenCase(
-
-    caseId,
-
+export async function archiveDocument(
+    documentId,
     reason,
-
-    expectedRevision,
-
-    newStatus = "pending"
-
-) {
-
-    const admin = await requireAdministrator();
-
-    const explanation = requiredText(
-
-        reason, 2000, "Reopening reason"
-
-    );
-
-    validateEnum(
-
-        newStatus, CASE_STATUSES, "Case status"
-
-    );
-
-    if (
-
-        CLOSED_STATUSES.includes(newStatus) ||
-
-        newStatus === "archived"
-
-    ) {
-
-        throw new Error("Invalid reopening status.");
-
-    }
-
-    const reference = caseRef(caseId);
-
-    const activityId = generateRecordId();
-
-
-    await runTransaction(db, async transaction => {
-
-        assertSession(admin.uid);
-
-        const snapshot = await transaction.get(reference);
-
-        const existing = requireExisting(
-
-            snapshot, "Case record"
-
-        );
-
-        ensureRevision(existing, expectedRevision);
-
-        ensureWritableCase(existing);
-
-
-        if (!isClosedCase(existing)) {
-
-            throw new Error(
-                "Only a closed case may be reopened."
-            );
-
-        }
-
-
-        const previousClosure = [
-
-            `Previous status: ${existing.status}`,
-
-            `Previous disposal date: ${existing.disposalDate || "—"}`,
-
-            `Previous outcome: ${existing.disposalOutcome || "—"}`,
-
-            `Previous closure reason: ${existing.closureReason || "—"}`
-
-        ].join("\n");
-
-
-        // Preserve previous closure information in the case notes.
-        // Reject the operation rather than silently truncate it.
-
-        const notes = cleanText(
-
-            [
-
-                existing.notes,
-
-                previousClosure,
-
-                `Reopened: ${getIndianDate()}`,
-
-                `Reason: ${explanation}`
-
-            ].filter(Boolean).join("\n\n"),
-
-            20000,
-
-            "Case notes"
-
-        );
-
-
-        transaction.update(reference, {
-
-            status: newStatus,
-
-            disposalDate: "",
-
-            disposalOutcome: "",
-
-            closureReason: "",
-
-            notes,
-
-            ...updateMetadata(existing, admin.uid)
-
-        });
-
-
-        writeActivity(
-
-            transaction,
-
-            caseId,
-
-            admin.uid,
-
-            "status_change",
-
-            `Case reopened. Reason: ${explanation}`,
-
-            activityId
-
-        );
-
-    });
-
-    return getCase(caseId);
-
-}
-
-
-/* =========================================================
-   18. ARCHIVE CASE
-   ========================================================= */
-
-export async function archiveCase(
-
-    caseId,
-
-    reason,
-
     expectedRevision
-
 ) {
 
     const admin = await requireAdministrator();
 
-    const explanation = requiredText(
+    const id = validateId(documentId);
 
-        reason, 2000, "Archive reason"
+    const reference = documentReference(id);
 
-    );
+    const activity = activityReference(id);
 
-    const reference = caseRef(caseId);
-
-    const activityId = generateRecordId();
-
+    const archiveReason = cleanText(reason, 2000, true);
 
     await runTransaction(db, async transaction => {
 
         assertSession(admin.uid);
 
-        const snapshot = await transaction.get(reference);
+        const current = requireExisting(
 
-        const existing = requireExisting(
-
-            snapshot, "Case record"
+            await transaction.get(reference)
 
         );
 
-        ensureRevision(existing, expectedRevision);
+        ensureActive(current);
 
-        ensureWritableCase(existing);
-
+        ensureRevision(current, expectedRevision);
 
         transaction.update(reference, {
 
@@ -2025,149 +3103,81 @@ export async function archiveCase(
 
             archivedBy: admin.uid,
 
-            archiveReason: explanation,
+            archiveReason,
 
-            ...updateMetadata(existing, admin.uid)
+            updatedAt: serverTimestamp(),
+
+            updatedBy: admin.uid,
+
+            revision: current.revision + 1
 
         });
 
+        transaction.set(
 
-        writeActivity(
+            activity,
 
-            transaction,
+            activityData(
 
-            caseId,
+                id,
 
-            admin.uid,
+                "archive",
 
-            "archive",
+                `Document archived: ${archiveReason}`,
 
-            `Case archived. Previous status: ${
-                existing.status
-            }. Reason: ${explanation}`,
+                admin.uid
 
-            activityId
+            )
 
         );
 
     });
 
-    return getCase(caseId);
+    assertSession(admin.uid);
+
+    return getDocument(id);
 
 }
 
 
 /* =========================================================
-   19. REACTIVATE ARCHIVED CASE
+   24. RESTORE ARCHIVED DOCUMENT
    ========================================================= */
 
-export async function reactivateCase(
-
-    caseId,
-
-    expectedRevision,
-
-    restoredStatus
-
+export async function reactivateDocument(
+    documentId,
+    expectedRevision
 ) {
 
     const admin = await requireAdministrator();
 
-    const status = validateEnum(
+    const id = validateId(documentId);
 
-        restoredStatus,
+    const reference = documentReference(id);
 
-        CASE_STATUSES,
-
-        "Restored case status"
-
-    );
-
-    if (status === "archived") {
-
-        throw new Error(
-            "Select a non-archived status."
-        );
-
-    }
-
-    const reference = caseRef(caseId);
-
-    const activityId = generateRecordId();
-
+    const activity = activityReference(id);
 
     await runTransaction(db, async transaction => {
 
         assertSession(admin.uid);
 
-        const snapshot = await transaction.get(reference);
+        const current = requireExisting(
 
-        const existing = requireExisting(
-
-            snapshot, "Case record"
+            await transaction.get(reference)
 
         );
 
-        ensureRevision(existing, expectedRevision);
+        ensureRevision(current, expectedRevision);
 
+        if (current.status !== "archived") {
 
-        if (existing.status !== "archived") {
-
-            throw new Error(
-                "Only archived cases may be reactivated."
-            );
+            throw new Error("Document is not archived.");
 
         }
-
-
-        // Preserve closure information.
-        // Previously closed matters must first restore
-        // to a closed status and then be reopened separately.
-
-        if (
-
-            existing.disposalDate &&
-
-            !CLOSED_STATUSES.includes(status)
-
-        ) {
-
-            throw new Error(
-                "Restore this matter to a closed status first, " +
-                "then use Reopen Case if necessary."
-            );
-
-        }
-
-
-        const validated = validateCaseData({
-
-            ...existing,
-
-            status
-
-        });
-
-
-        if (
-
-            validated.nextHearingDate !== existing.nextHearingDate ||
-
-            validated.nextHearingPurpose !== existing.nextHearingPurpose
-
-        ) {
-
-            throw new Error(
-                "Selected restoration status conflicts with " +
-                "the preserved hearing information."
-            );
-
-        }
-
 
         transaction.update(reference, {
 
-            status,
+            status: "active",
 
             archivedAt: deleteField(),
 
@@ -2175,1352 +3185,179 @@ export async function reactivateCase(
 
             archiveReason: deleteField(),
 
-            ...updateMetadata(existing, admin.uid)
-
-        });
-
-
-        writeActivity(
-
-            transaction,
-
-            caseId,
-
-            admin.uid,
-
-            "reactivate",
-
-            `Case reactivated as ${CASE_STATUSES[status]}.`,
-
-            activityId
-
-        );
-
-    });
-
-    return getCase(caseId);
-
-}
-
-
-/* =========================================================
-   20. COURT PROCEEDINGS VALIDATION
-   ========================================================= */
-
-export function validateProceedingData(input = {}) {
-
-    const data = {
-
-        hearingDate: cleanDate(
-
-            input.hearingDate, "Hearing date"
-
-        ),
-
-        courtName: cleanText(input.courtName, 300),
-
-        presidingJudge: cleanText(
-
-            input.presidingJudge, 250
-
-        ),
-
-        appearance: cleanText(input.appearance, 2000),
-
-        proceedings: requiredText(
-
-            input.proceedings, 20000, "Proceedings"
-
-        ),
-
-        orderSummary: cleanText(
-
-            input.orderSummary, 20000
-
-        ),
-
-        nextHearingDate: cleanDate(
-
-            input.nextHearingDate, "Next hearing date"
-
-        ),
-
-        nextHearingPurpose: cleanText(
-
-            input.nextHearingPurpose, 500
-
-        ),
-
-        confidentialNotes: cleanText(
-
-            input.confidentialNotes, 20000
-
-        )
-
-    };
-
-
-    if (!data.hearingDate) {
-
-        throw new Error("Hearing date is required.");
-
-    }
-
-
-    if (data.hearingDate > getIndianDate()) {
-
-        throw new Error(
-            "Historical proceedings cannot have a future hearing date."
-        );
-
-    }
-
-
-    if (
-
-        data.nextHearingDate &&
-
-        data.nextHearingDate < data.hearingDate
-
-    ) {
-
-        throw new Error(
-            "Next hearing date cannot precede the recorded hearing."
-        );
-
-    }
-
-    return data;
-
-}
-
-
-/* =========================================================
-   21. ADD COURT PROCEEDINGS
-
-   Optionally updates the main case hearing schedule
-   within the same transaction.
-   ========================================================= */
-
-export async function addProceeding(
-
-    caseId,
-
-    input,
-
-    expectedRevision,
-
-    {
-
-        updateHearing = true,
-
-        proceedingId = generateRecordId()
-
-    } = {}
-
-) {
-
-    const admin = await requireAdministrator();
-
-    const data = validateProceedingData(input);
-
-    const reference = caseRef(caseId);
-
-    const proceedingReference = childRef(
-
-        caseId,
-
-        CASE_CONFIG.proceedingCollection,
-
-        proceedingId
-
-    );
-
-    const activityId = generateRecordId();
-
-
-    await runTransaction(db, async transaction => {
-
-        assertSession(admin.uid);
-
-        const snapshot = await transaction.get(reference);
-
-        const previous = await transaction.get(
-
-            proceedingReference
-
-        );
-
-        const existing = requireExisting(
-
-            snapshot, "Case record"
-
-        );
-
-        ensureRevision(existing, expectedRevision);
-
-        ensureWritableCase(existing);
-
-
-        if (previous.exists()) {
-
-            throw new Error(
-                "This proceeding has already been recorded."
-            );
-
-        }
-
-
-        if (updateHearing && isClosedCase(existing)) {
-
-            throw new Error(
-                "Historical proceedings may be added to a closed case, " +
-                "but its hearing schedule cannot be updated."
-            );
-
-        }
-
-
-        transaction.set(proceedingReference, {
-
-            ...data,
-
-            id: proceedingReference.id,
-
-            caseId,
-
-            createdAt: serverTimestamp(),
-
-            createdBy: admin.uid
-
-        });
-
-
-        if (updateHearing) {
-
-            transaction.update(reference, {
-
-                nextHearingDate: data.nextHearingDate,
-
-                nextHearingPurpose: data.nextHearingPurpose,
-
-                ...updateMetadata(existing, admin.uid)
-
-            });
-
-        } else {
-
-            transaction.update(reference, {
-
-                ...updateMetadata(existing, admin.uid)
-
-            });
-
-        }
-
-
-        writeActivity(
-
-            transaction,
-
-            caseId,
-
-            admin.uid,
-
-            "proceeding_added",
-
-            `Court proceedings recorded for ${
-                data.hearingDate
-            }.${
-                updateHearing
-                    ? " Case hearing schedule updated."
-                    : ""
-            }`,
-
-            activityId
-
-        );
-
-    });
-
-
-    return getProceeding(caseId, proceedingReference.id);
-
-}
-
-
-export async function getProceeding(caseId, proceedingId) {
-
-    const admin = await requireAdministrator();
-
-    const snapshot = await getDocFromServer(
-
-        childRef(
-
-            caseId,
-
-            CASE_CONFIG.proceedingCollection,
-
-            proceedingId
-
-        )
-
-    );
-
-    assertSession(admin.uid);
-
-    return requireExisting(snapshot, "Proceeding");
-
-}
-
-
-export async function fetchProceedings(caseId) {
-
-    const admin = await requireAdministrator();
-
-    const snapshot = await getDocsFromServer(
-
-        query(
-
-            childCollection(
-
-                caseId,
-
-                CASE_CONFIG.proceedingCollection
-
-            ),
-
-            orderBy("hearingDate", "desc")
-
-        )
-
-    );
-
-    assertSession(admin.uid);
-
-    return snapshot.docs.map(snapshotRecord).sort((a, b) =>
-
-        b.hearingDate.localeCompare(a.hearingDate)
-
-        ||
-
-        timestampMillis(b.createdAt) -
-
-        timestampMillis(a.createdAt)
-
-    );
-
-}
-
-
-/* =========================================================
-   22. TASK VALIDATION
-   ========================================================= */
-
-export function validateTaskData(input = {}) {
-
-    return {
-
-        title: requiredText(
-
-            input.title, 300, "Task title"
-
-        ),
-
-        description: cleanText(
-
-            input.description, 10000
-
-        ),
-
-        taskType: validateEnum(
-
-            input.taskType ?? "other",
-
-            TASK_TYPES,
-
-            "Task type"
-
-        ),
-
-        assignedTo: cleanText(
-
-            input.assignedTo, 250
-
-        ),
-
-        dueDate: cleanDate(
-
-            input.dueDate, "Task due date"
-
-        ),
-
-        priority: validateEnum(
-
-            input.priority ?? "normal",
-
-            CASE_PRIORITIES,
-
-            "Task priority"
-
-        ),
-
-        status: validateEnum(
-
-            input.status ?? "pending",
-
-            TASK_STATUSES,
-
-            "Task status"
-
-        ),
-
-        completionNotes: cleanText(
-
-            input.completionNotes, 5000
-
-        )
-
-    };
-
-}
-
-
-/* =========================================================
-   23. CREATE CASE TASK
-   ========================================================= */
-
-export async function createCaseTask(
-
-    caseId,
-
-    input,
-
-    taskId = generateRecordId()
-
-) {
-
-    const admin = await requireAdministrator();
-
-    const data = validateTaskData(input);
-
-    if (!["pending", "in_progress"].includes(data.status)) {
-
-        throw new Error(
-            "A new task must be pending or in progress."
-        );
-
-    }
-
-    const reference = caseRef(caseId);
-
-    const taskReference = childRef(
-
-        caseId,
-
-        CASE_CONFIG.taskCollection,
-
-        taskId
-
-    );
-
-    const activityId = generateRecordId();
-
-
-    await runTransaction(db, async transaction => {
-
-        assertSession(admin.uid);
-
-        const snapshot = await transaction.get(reference);
-
-        const existingTask = await transaction.get(
-
-            taskReference
-
-        );
-
-        const record = requireExisting(
-
-            snapshot, "Case record"
-
-        );
-
-        ensureWritableCase(record);
-
-
-        if (existingTask.exists()) {
-
-            throw new Error(
-                "This task has already been registered."
-            );
-
-        }
-
-
-        transaction.set(taskReference, {
-
-            ...data,
-
-            id: taskReference.id,
-
-            caseId,
-
-            createdAt: serverTimestamp(),
-
-            createdBy: admin.uid,
-
             updatedAt: serverTimestamp(),
 
             updatedBy: admin.uid,
 
-            revision: 1
+            revision: current.revision + 1
 
         });
 
+        transaction.set(
 
-        writeActivity(
+            activity,
 
-            transaction,
+            activityData(
 
-            caseId,
+                id,
 
-            admin.uid,
+                "reactivate",
 
-            "task_created",
+                "Archived document restored.",
 
-            `Task created: ${data.title}`,
+                admin.uid
 
-            activityId
+            )
 
         );
 
     });
 
-    return getCaseTask(caseId, taskReference.id);
+    assertSession(admin.uid);
+
+    return getDocument(id);
 
 }
 
 
 /* =========================================================
-   24. FETCH CASE TASKS
+   25. DOCUMENT ACCESS AND DOWNLOAD
    ========================================================= */
 
-export async function getCaseTask(caseId, taskId) {
+async function resolveDocumentVersion(
+    documentId,
+    requestedVersion = null
+) {
+
+    const record = await getDocument(documentId);
+
+    const version = requestedVersion ??
+        record.currentVersion;
+
+    return getDocumentVersion(documentId, version);
+
+}
+
+
+export async function getDocumentOpenUrl(
+    documentId,
+    version = null
+) {
 
     const admin = await requireAdministrator();
 
-    const snapshot = await getDocFromServer(
+    const record = await resolveDocumentVersion(
 
-        childRef(
+        documentId,
 
-            caseId,
+        version
 
-            CASE_CONFIG.taskCollection,
+    );
 
-            taskId
+    validateDriveDocument(
 
-        )
+        await getDriveFile(record.driveFileId)
 
     );
 
     assertSession(admin.uid);
 
-    return requireExisting(snapshot, "Task");
+    return getDriveFileUrl(record.driveFileId);
 
 }
 
 
-export async function fetchCaseTasks(caseId) {
-
-    const admin = await requireAdministrator();
-
-    const snapshot = await getDocsFromServer(
-
-        childCollection(
-
-            caseId,
-
-            CASE_CONFIG.taskCollection
-
-        )
-
-    );
-
-    assertSession(admin.uid);
-
-    return snapshot.docs.map(snapshotRecord).sort((a, b) => {
-
-        const aClosed = ["completed", "cancelled"]
-
-            .includes(a.status);
-
-        const bClosed = ["completed", "cancelled"]
-
-            .includes(b.status);
-
-        return Number(aClosed) - Number(bClosed)
-
-            ||
-
-            (a.dueDate || "9999-12-31").localeCompare(
-
-                b.dueDate || "9999-12-31"
-
-            )
-
-            ||
-
-            timestampMillis(b.createdAt) -
-
-            timestampMillis(a.createdAt);
-
-    });
-
-}
-
-
-/* =========================================================
-   25. UPDATE CASE TASK
-   ========================================================= */
-
-export async function updateCaseTask(
-
-    caseId,
-
-    taskId,
-
-    input,
-
-    expectedRevision
-
+export async function downloadDocument(
+    documentId,
+    version = null
 ) {
 
     const admin = await requireAdministrator();
 
-    const reference = caseRef(caseId);
+    const record = await resolveDocumentVersion(
 
-    const taskReference = childRef(
+        documentId,
 
-        caseId,
-
-        CASE_CONFIG.taskCollection,
-
-        taskId
+        version
 
     );
 
-    const activityId = generateRecordId();
+    const file = validateDriveDocument(
 
-
-    await runTransaction(db, async transaction => {
-
-        assertSession(admin.uid);
-
-        const caseSnapshot = await transaction.get(reference);
-
-        const taskSnapshot = await transaction.get(
-
-            taskReference
-
-        );
-
-        const record = requireExisting(
-
-            caseSnapshot, "Case record"
-
-        );
-
-        const existing = requireExisting(
-
-            taskSnapshot, "Task"
-
-        );
-
-        ensureWritableCase(record);
-
-        ensureRevision(existing, expectedRevision);
-
-
-        const data = validateTaskData({
-
-            ...existing,
-
-            ...input
-
-        });
-
-
-        const changedFields = Object.keys(data).filter(
-
-            key => data[key] !== existing[key]
-
-        );
-
-        if (!changedFields.length) return;
-
-
-        const update = {
-
-            ...data,
-
-            ...updateMetadata(existing, admin.uid)
-
-        };
-
-
-        if (data.status === "completed") {
-
-            if (existing.status !== "completed") {
-
-                update.completedAt = serverTimestamp();
-
-                update.completedBy = admin.uid;
-
-            }
-
-        } else if (existing.status === "completed") {
-
-            update.completedAt = deleteField();
-
-            update.completedBy = deleteField();
-
-        }
-
-
-        transaction.update(taskReference, update);
-
-
-        const activityType =
-
-            data.status !== existing.status &&
-
-            data.status === "completed"
-
-                ? "task_completed"
-
-                : data.status !== existing.status &&
-
-                  data.status === "cancelled"
-
-                    ? "task_cancelled"
-
-                    : "task_updated";
-
-
-        writeActivity(
-
-            transaction,
-
-            caseId,
-
-            admin.uid,
-
-            activityType,
-
-            `Task updated: ${data.title}. Status: ${
-                TASK_STATUSES[data.status]
-            }. Modified fields: ${
-                changedFields.join(", ")
-            }.`,
-
-            activityId
-
-        );
-
-    });
-
-    return getCaseTask(caseId, taskId);
-
-}
-
-
-export async function completeCaseTask(
-
-    caseId,
-
-    taskId,
-
-    completionNotes,
-
-    expectedRevision
-
-) {
-
-    return updateCaseTask(
-
-        caseId,
-
-        taskId,
-
-        {
-
-            status: "completed",
-
-            completionNotes
-
-        },
-
-        expectedRevision
+        await getDriveFile(record.driveFileId)
 
     );
 
-}
+    if (file.capabilities?.canDownload !== true) {
 
-
-export async function cancelCaseTask(
-
-    caseId,
-
-    taskId,
-
-    reason,
-
-    expectedRevision
-
-) {
-
-    return updateCaseTask(
-
-        caseId,
-
-        taskId,
-
-        {
-
-            status: "cancelled",
-
-            completionNotes: requiredText(
-
-                reason, 5000, "Cancellation reason"
-
-            )
-
-        },
-
-        expectedRevision
-
-    );
-
-}
-
-
-export async function reopenCaseTask(
-
-    caseId,
-
-    taskId,
-
-    expectedRevision
-
-) {
-
-    return updateCaseTask(
-
-        caseId,
-
-        taskId,
-
-        {
-
-            status: "pending"
-
-        },
-
-        expectedRevision
-
-    );
-
-}
-
-
-/* =========================================================
-   26. MANUAL CASE ACTIVITY
-   ========================================================= */
-
-export async function addCaseActivity(
-
-    caseId,
-
-    type,
-
-    description,
-
-    activityId = generateRecordId()
-
-) {
-
-    const admin = await requireAdministrator();
-
-    if (!MANUAL_ACTIVITY_TYPES.includes(type)) {
-
-        throw new Error(
-            "Invalid manual activity type."
-        );
+        throw new Error("Document download is not permitted.");
 
     }
 
-    const content = requiredText(
+    const blob = await driveRequest(
 
-        description, 10000, "Activity description"
+        `/files/${encodeURIComponent(record.driveFileId)}` +
 
-    );
+        "?alt=media",
 
-    const reference = caseRef(caseId);
+        {},
 
-    const activityReference = childRef(
+        false,
 
-        caseId,
-
-        CASE_CONFIG.activityCollection,
-
-        activityId
-
-    );
-
-
-    await runTransaction(db, async transaction => {
-
-        assertSession(admin.uid);
-
-        const snapshot = await transaction.get(reference);
-
-        const previous = await transaction.get(
-
-            activityReference
-
-        );
-
-        const existing = requireExisting(
-
-            snapshot, "Case record"
-
-        );
-
-        ensureWritableCase(existing);
-
-
-        if (previous.exists()) {
-
-            throw new Error(
-                "This activity has already been recorded."
-            );
-
-        }
-
-
-        writeActivity(
-
-            transaction,
-
-            caseId,
-
-            admin.uid,
-
-            type,
-
-            content,
-
-            activityId
-
-        );
-
-    });
-
-    return getCaseActivity(caseId, activityId);
-
-}
-
-
-export async function getCaseActivity(caseId, activityId) {
-
-    const admin = await requireAdministrator();
-
-    const snapshot = await getDocFromServer(
-
-        childRef(
-
-            caseId,
-
-            CASE_CONFIG.activityCollection,
-
-            activityId
-
-        )
+        true
 
     );
 
     assertSession(admin.uid);
 
-    return requireExisting(snapshot, "Case activity");
-
-}
-
-
-export async function fetchCaseActivities(caseId) {
-
-    const admin = await requireAdministrator();
-
-    const snapshot = await getDocsFromServer(
-
-        query(
-
-            childCollection(
-
-                caseId,
-
-                CASE_CONFIG.activityCollection
-
-            ),
-
-            orderBy("createdAt", "desc")
-
-        )
-
-    );
+    await requireAdministrator();
 
     assertSession(admin.uid);
 
-    return snapshot.docs.map(snapshotRecord);
+    const url = URL.createObjectURL(blob);
+
+    const anchor = document.createElement("a");
+
+    anchor.href = url;
+
+    anchor.download = sanitizeFileName(record.fileName);
+
+    anchor.style.display = "none";
+
+    document.body.appendChild(anchor);
+
+    anchor.click();
+
+    anchor.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+
+    return {
+
+        success: true,
+
+        fileName: record.fileName
+
+    };
 
 }
 
 
 /* =========================================================
-   27. ADDITIONAL CLIENT ASSOCIATIONS
+   26. DOCUMENT ACTIVITY RECORDS
    ========================================================= */
 
-export async function linkAdditionalClient(
-
-    caseId,
-
-    clientId,
-
-    capacity
-
-) {
-
-    const admin = await requireAdministrator();
-
-    const id = validateDocumentId(clientId);
-
-    const role = requiredText(
-
-        capacity, 100, "Client capacity"
-
-    );
-
-    const reference = caseRef(caseId);
-
-    const associationReference = childRef(
-
-        caseId,
-
-        CASE_CONFIG.linkedClientCollection,
-
-        id
-
-    );
-
-    const activityId = generateRecordId();
-
-
-    await runTransaction(db, async transaction => {
-
-        assertSession(admin.uid);
-
-        const caseSnapshot = await transaction.get(reference);
-
-        const clientSnapshot = await transaction.get(
-
-            clientRef(id)
-
-        );
-
-        const associationSnapshot = await transaction.get(
-
-            associationReference
-
-        );
-
-
-        const record = requireExisting(
-
-            caseSnapshot, "Case record"
-
-        );
-
-        const client = requireExisting(
-
-            clientSnapshot, "Client record"
-
-        );
-
-        ensureWritableCase(record);
-
-
-        if (record.clientId === id) {
-
-            throw new Error(
-                "This client is already the primary client."
-            );
-
-        }
-
-
-        if (client.status === "archived") {
-
-            throw new Error(
-                "An archived client cannot be linked."
-            );
-
-        }
-
-
-        if (associationSnapshot.exists()) {
-
-            const association = associationSnapshot.data();
-
-            if (
-
-                association.active === true &&
-
-                association.capacity === role
-
-            ) {
-
-                return;
-
-            }
-
-
-            transaction.update(associationReference, {
-
-                capacity: role,
-
-                active: true,
-
-                updatedAt: serverTimestamp(),
-
-                updatedBy: admin.uid
-
-            });
-
-        } else {
-
-            transaction.set(associationReference, {
-
-                clientId: id,
-
-                caseId,
-
-                capacity: role,
-
-                active: true,
-
-                createdAt: serverTimestamp(),
-
-                createdBy: admin.uid,
-
-                updatedAt: serverTimestamp(),
-
-                updatedBy: admin.uid
-
-            });
-
-        }
-
-
-        writeActivity(
-
-            transaction,
-
-            caseId,
-
-            admin.uid,
-
-            "client_linked",
-
-            `Client linked: ${
-                client.clientCode
-            } — ${
-                client.fullName
-            }. Capacity: ${role}.`,
-
-            activityId
-
-        );
-
-    });
-
-    return getLinkedClient(caseId, id);
-
-}
-
-
-/* =========================================================
-   28. DEACTIVATE CLIENT ASSOCIATION
-   ========================================================= */
-
-export async function unlinkAdditionalClient(
-
-    caseId,
-
-    clientId,
-
-    reason
-
-) {
-
-    const admin = await requireAdministrator();
-
-    const id = validateDocumentId(clientId);
-
-    const explanation = requiredText(
-
-        reason, 2000, "Unlinking reason"
-
-    );
-
-    const reference = caseRef(caseId);
-
-    const associationReference = childRef(
-
-        caseId,
-
-        CASE_CONFIG.linkedClientCollection,
-
-        id
-
-    );
-
-    const activityId = generateRecordId();
-
-
-    await runTransaction(db, async transaction => {
-
-        assertSession(admin.uid);
-
-        const caseSnapshot = await transaction.get(reference);
-
-        const associationSnapshot = await transaction.get(
-
-            associationReference
-
-        );
-
-        const record = requireExisting(
-
-            caseSnapshot, "Case record"
-
-        );
-
-        ensureWritableCase(record);
-
-
-        if (record.clientId === id) {
-
-            throw new Error(
-                "The primary client cannot be unlinked."
-            );
-
-        }
-
-
-        const association = requireExisting(
-
-            associationSnapshot, "Client association"
-
-        );
-
-        if (association.active === false) return;
-
-
-        transaction.update(associationReference, {
-
-            active: false,
-
-            updatedAt: serverTimestamp(),
-
-            updatedBy: admin.uid
-
-        });
-
-
-        writeActivity(
-
-            transaction,
-
-            caseId,
-
-            admin.uid,
-
-            "client_unlinked",
-
-            `Additional client association deactivated. ` +
-
-            `Client ID: ${id}. Reason: ${explanation}`,
-
-            activityId
-
-        );
-
-    });
-
-    return getLinkedClient(caseId, id);
-
-}
-
-
-export async function getLinkedClient(caseId, clientId) {
-
-    const admin = await requireAdministrator();
-
-    const snapshot = await getDocFromServer(
-
-        childRef(
-
-            caseId,
-
-            CASE_CONFIG.linkedClientCollection,
-
-            clientId
-
-        )
-
-    );
-
-    assertSession(admin.uid);
-
-    return requireExisting(
-
-        snapshot, "Client association"
-
-    );
-
-}
-
-
-export async function fetchLinkedClients(
-
-    caseId,
-
-    {
-
-        includeInactive = false
-
-    } = {}
-
-) {
+export async function fetchDocumentActivities(documentId) {
 
     const admin = await requireAdministrator();
 
     const snapshot = await getDocsFromServer(
 
-        childCollection(
+        collection(
 
-            caseId,
+            documentReference(documentId),
 
-            CASE_CONFIG.linkedClientCollection
+            C.activities
 
         )
 
@@ -3530,102 +3367,150 @@ export async function fetchLinkedClients(
 
     return snapshot.docs
 
-        .map(snapshotRecord)
+        .map(item => ({
 
-        .filter(record =>
+            ...item.data(),
 
-            includeInactive || record.active === true
+            id: item.id
+
+        }))
+
+        .sort((a, b) =>
+
+            (b.createdAt?.toMillis?.() || 0) -
+
+            (a.createdAt?.toMillis?.() || 0)
 
         );
 
 }
 
 
-/* =========================================================
-   29. COMPLETE CASE PROFILE
-   ========================================================= */
-
-export async function fetchCaseProfile(caseId) {
+export async function addDocumentNote(
+    documentId,
+    description
+) {
 
     const admin = await requireAdministrator();
 
-    const record = await getCase(caseId);
+    const id = validateId(documentId);
 
+    const reference = documentReference(id);
 
-    const [
+    const activity = activityReference(id);
 
-        clients,
+    const data = activityData(
 
-        proceedings,
+        id,
 
-        tasks,
+        "note",
 
-        activities,
+        description,
 
-        linkedClients
-
-    ] = await Promise.all([
-
-        fetchCaseClients({
-
-            includeArchived: true
-
-        }),
-
-        fetchProceedings(caseId),
-
-        fetchCaseTasks(caseId),
-
-        fetchCaseActivities(caseId),
-
-        fetchLinkedClients(caseId, {
-
-            includeInactive: true
-
-        })
-
-    ]);
-
-
-    assertSession(admin.uid);
-
-
-    const clientMap = new Map(
-
-        clients.map(client => [
-
-            client.id,
-
-            client
-
-        ])
+        admin.uid
 
     );
 
+    await runTransaction(db, async transaction => {
+
+        assertSession(admin.uid);
+
+        requireExisting(
+
+            await transaction.get(reference)
+
+        );
+
+        transaction.set(activity, data);
+
+    });
+
+    assertSession(admin.uid);
+
+    return { success: true };
+
+}
+
+
+/* =========================================================
+   27. COMPLETE DOCUMENT PROFILE
+   ========================================================= */
+
+export async function fetchDocumentProfile(documentId) {
+
+    const admin = await requireAdministrator();
+
+    const record = await getDocument(documentId);
+
+    const [versions, activities, client, caseSnapshot] =
+
+        await Promise.all([
+
+            fetchDocumentVersions(documentId),
+
+            fetchDocumentActivities(documentId),
+
+            getDocFromServer(
+
+                doc(db, C.clients, record.clientId)
+
+            ),
+
+            record.caseId
+
+                ? getDocFromServer(
+
+                    doc(db, C.cases, record.caseId)
+
+                )
+
+                : Promise.resolve(null)
+
+        ]);
+
+    assertSession(admin.uid);
 
     return {
 
-        case: record,
+        document: record,
 
-        primaryClient:
+        versions,
 
-            clientMap.get(record.clientId) || null,
+        activities,
 
-        additionalClients: linkedClients.map(link => ({
+        currentVersion: versions.find(
 
-            ...link,
+            item => item.version === record.currentVersion
 
-            client:
+        ) || null,
 
-                clientMap.get(link.clientId) || null
+        client: client.exists()
 
-        })),
+            ? {
 
-        proceedings,
+                id: client.id,
 
-        tasks,
+                fullName: client.data().fullName,
 
-        activities
+                clientCode: client.data().clientCode
+
+            }
+
+            : null,
+
+        case: caseSnapshot?.exists()
+
+            ? {
+
+                id: caseSnapshot.id,
+
+                caseTitle: caseSnapshot.data().caseTitle,
+
+                caseCode: caseSnapshot.data().caseCode
+
+            }
+
+            : null
 
     };
 
@@ -3633,738 +3518,361 @@ export async function fetchCaseProfile(caseId) {
 
 
 /* =========================================================
-   30. UPCOMING HEARINGS
+   28. DOCUMENT SEARCH AND FILTERS
    ========================================================= */
 
-export async function fetchUpcomingHearings(
-
-    days = 30
-
+export function filterDocuments(
+    records = [],
+    filters = {}
 ) {
 
-    if (
+    const search = String(
 
-        !Number.isSafeInteger(days) ||
+        filters.search || ""
 
-        days < 1 ||
+    ).trim().toLowerCase();
 
-        days > 366
+    return records.filter(record => {
 
-    ) {
+        if (
+            filters.status &&
+            filters.status !== "all" &&
+            record.status !== filters.status
+        ) return false;
 
-        throw new Error("Invalid hearing date range.");
+        if (
+            filters.category &&
+            filters.category !== "all" &&
+            record.category !== filters.category
+        ) return false;
 
-    }
+        if (
+            filters.clientId &&
+            record.clientId !== filters.clientId
+        ) return false;
 
-    const today = getIndianDate();
+        if (
+            filters.caseId &&
+            record.caseId !== filters.caseId
+        ) return false;
 
-    const endDate = addCalendarDays(today, days - 1);
+        if (
+            filters.year &&
+            filters.year !== "all" &&
+            record.registrationYear !== filters.year
+        ) return false;
 
-    const records = await fetchCases();
+        if (!search) return true;
 
+        return [
 
-    return records
+            record.documentCode,
 
-        .filter(record =>
+            record.title,
 
-            !isClosedCase(record) &&
+            record.category,
 
-            record.nextHearingDate &&
+            record.description,
 
-            record.nextHearingDate >= today &&
+            record.clientId,
 
-            record.nextHearingDate <= endDate
+            record.caseId,
 
-        )
+            record.clientName,
 
-        .sort((a, b) =>
+            record.caseTitle,
 
-            a.nextHearingDate.localeCompare(
+            record.fileName
 
-                b.nextHearingDate
+        ].some(value =>
 
-            )
+            String(value || "")
 
-            ||
+                .toLowerCase()
 
-            a.caseTitle.localeCompare(b.caseTitle)
+                .includes(search)
 
-        )
+        );
 
-        .map(record => ({
-
-            caseId: record.id,
-
-            caseCode: record.caseCode,
-
-            caseTitle: record.caseTitle,
-
-            clientId: record.clientId,
-
-            courtName: record.courtName,
-
-            courtNumber: record.courtNumber,
-
-            caseNumber: record.caseNumber,
-
-            assignedAdvocate: record.assignedAdvocate,
-
-            hearingDate: record.nextHearingDate,
-
-            hearingPurpose: record.nextHearingPurpose,
-
-            priority: record.priority,
-
-            status: record.status
-
-        }));
+    });
 
 }
 
 
 /* =========================================================
-   31. LIMITATION AND FILING DEADLINES
-
-   Uses manually entered dates.
-   Does not calculate statutory limitation.
+   29. DOCUMENT STATISTICS
    ========================================================= */
 
-export async function fetchCaseDeadlines(days = 30) {
-
-    if (
-
-        !Number.isSafeInteger(days) ||
-
-        days < 1 ||
-
-        days > 366
-
-    ) {
-
-        throw new Error("Invalid deadline range.");
-
-    }
-
-    const today = getIndianDate();
-
-    const endDate = addCalendarDays(today, days - 1);
-
-    const records = await fetchCases();
-
-
-    return records
-
-        .filter(record =>
-
-            !isClosedCase(record) &&
-
-            record.limitationDate &&
-
-            record.limitationDate <= endDate
-
-        )
-
-        .sort((a, b) =>
-
-            a.limitationDate.localeCompare(
-
-                b.limitationDate
-
-            )
-
-        )
-
-        .map(record => ({
-
-            caseId: record.id,
-
-            caseCode: record.caseCode,
-
-            caseTitle: record.caseTitle,
-
-            assignedAdvocate: record.assignedAdvocate,
-
-            deadline: record.limitationDate,
-
-            overdue: record.limitationDate < today,
-
-            dueToday: record.limitationDate === today,
-
-            priority: record.priority
-
-        }));
-
-}
-
-
-/* =========================================================
-   32. DASHBOARD STATISTICS
-   ========================================================= */
-
-export function calculateCaseStatistics(records = []) {
+export function calculateDocumentStatistics(records = []) {
 
     const today = getIndianDate();
 
     const month = today.slice(0, 7);
 
-    const nextSevenDays = addCalendarDays(today, 6);
+    const active = records.filter(
 
-    const nextThirtyDays = addCalendarDays(today, 29);
+        record => record.status === "active"
 
+    );
 
-    const statistics = {
+    const archived = records.filter(
 
-        total: records.length,
+        record => record.status === "archived"
 
-        active: 0,
+    );
 
-        pending: 0,
+    const categoryCounts = {};
 
-        preFiling: 0,
+    for (const record of active) {
 
-        filed: 0,
+        const category = record.category;
 
-        stayed: 0,
+        categoryCounts[category] =
 
-        reservedForJudgment: 0,
-
-        closed: 0,
-
-        disposed: 0,
-
-        settled: 0,
-
-        withdrawn: 0,
-
-        archived: 0,
-
-        urgent: 0,
-
-        highPriority: 0,
-
-        newThisMonth: 0,
-
-        hearingsToday: 0,
-
-        hearingsNextSevenDays: 0,
-
-        upcomingHearings: 0,
-
-        overdueHearings: 0,
-
-        upcomingDeadlines: 0,
-
-        overdueDeadlines: 0,
-
-        litigation: 0,
-
-        nonLitigation: 0
-
-    };
-
-
-    for (const record of records) {
-
-        if (record.createdAt?.toDate) {
-
-            const registrationDate = getIndianDate(
-
-                record.createdAt.toDate()
-
-            );
-
-            if (registrationDate.startsWith(month)) {
-
-                statistics.newThisMonth++;
-
-            }
-
-        }
-
-
-        if (record.status === "archived") {
-
-            statistics.archived++;
-
-            continue;
-
-        }
-
-
-        if (record.matterType === "litigation") {
-
-            statistics.litigation++;
-
-        } else {
-
-            statistics.nonLitigation++;
-
-        }
-
-
-        if (isClosedCase(record)) {
-
-            statistics.closed++;
-
-            if (record.status === "disposed") {
-
-                statistics.disposed++;
-
-            }
-
-            if (record.status === "settled") {
-
-                statistics.settled++;
-
-            }
-
-            if (record.status === "withdrawn") {
-
-                statistics.withdrawn++;
-
-            }
-
-            continue;
-
-        }
-
-
-        statistics.active++;
-
-
-        if (record.status === "pending") {
-
-            statistics.pending++;
-
-        }
-
-
-        if ([
-
-            "pre_litigation",
-
-            "drafting",
-
-            "ready_for_filing"
-
-        ].includes(record.status)) {
-
-            statistics.preFiling++;
-
-        }
-
-
-        if (record.status === "filed") {
-
-            statistics.filed++;
-
-        }
-
-
-        if (record.status === "stayed") {
-
-            statistics.stayed++;
-
-        }
-
-
-        if (record.status === "reserved_for_judgment") {
-
-            statistics.reservedForJudgment++;
-
-        }
-
-
-        if (record.priority === "urgent") {
-
-            statistics.urgent++;
-
-        }
-
-
-        if (record.priority === "high") {
-
-            statistics.highPriority++;
-
-        }
-
-
-        const hearing = record.nextHearingDate;
-
-
-        if (hearing) {
-
-            if (hearing < today) {
-
-                statistics.overdueHearings++;
-
-            }
-
-            if (hearing === today) {
-
-                statistics.hearingsToday++;
-
-            }
-
-            if (
-
-                hearing >= today &&
-
-                hearing <= nextSevenDays
-
-            ) {
-
-                statistics.hearingsNextSevenDays++;
-
-            }
-
-            if (
-
-                hearing >= today &&
-
-                hearing <= nextThirtyDays
-
-            ) {
-
-                statistics.upcomingHearings++;
-
-            }
-
-        }
-
-
-        const deadline = record.limitationDate;
-
-
-        if (deadline) {
-
-            if (deadline < today) {
-
-                statistics.overdueDeadlines++;
-
-            } else if (deadline <= nextThirtyDays) {
-
-                statistics.upcomingDeadlines++;
-
-            }
-
-        }
+            (categoryCounts[category] || 0) + 1;
 
     }
 
-    return statistics;
+    return {
+
+        totalDocuments: records.length,
+
+        activeDocuments: active.length,
+
+        archivedDocuments: archived.length,
+
+        caseDocuments: active.filter(
+
+            record => Boolean(record.caseId)
+
+        ).length,
+
+        clientDocuments: active.filter(
+
+            record => !record.caseId
+
+        ).length,
+
+        documentsThisMonth: records.filter(record => {
+
+            const date = record.createdAt?.toDate?.();
+
+            return date &&
+
+                getIndianDate(date).startsWith(month);
+
+        }).length,
+
+        totalVersions: records.reduce(
+
+            (sum, record) =>
+
+                sum + Number(record.currentVersion || 0),
+
+            0
+
+        ),
+
+        categoryCounts
+
+    };
 
 }
 
 
-export async function getCaseStatistics() {
+export async function getDocumentStatistics() {
 
-    const records = await fetchCases({
+    const records = await fetchDocuments({
 
         includeArchived: true
 
     });
 
-    return calculateCaseStatistics(records);
+    return calculateDocumentStatistics(records);
 
 }
 
 
 /* =========================================================
-   33. CASE TASK STATISTICS
+   30. CONFIDENTIAL CSV EXPORT
    ========================================================= */
 
-export function calculateTaskStatistics(tasks = []) {
+function csvCell(value) {
 
-    const today = getIndianDate();
+    let result = String(value ?? "");
 
-    const statistics = {
+    // Prevent spreadsheet formula injection.
 
-        total: tasks.length,
+    if (/^[\s]*[=+\-@]/.test(result)) {
 
-        pending: 0,
-
-        inProgress: 0,
-
-        completed: 0,
-
-        cancelled: 0,
-
-        overdue: 0,
-
-        dueToday: 0,
-
-        urgent: 0
-
-    };
-
-
-    for (const task of tasks) {
-
-        if (task.status === "completed") {
-
-            statistics.completed++;
-
-            continue;
-
-        }
-
-        if (task.status === "cancelled") {
-
-            statistics.cancelled++;
-
-            continue;
-
-        }
-
-        if (task.status === "pending") {
-
-            statistics.pending++;
-
-        }
-
-        if (task.status === "in_progress") {
-
-            statistics.inProgress++;
-
-        }
-
-        if (task.priority === "urgent") {
-
-            statistics.urgent++;
-
-        }
-
-        if (task.dueDate && task.dueDate < today) {
-
-            statistics.overdue++;
-
-        }
-
-        if (task.dueDate === today) {
-
-            statistics.dueToday++;
-
-        }
+        result = "'" + result;
 
     }
 
-    return statistics;
+    return `"${result.replace(/"/g, '""')}"`;
+
+}
+
+
+export function generateDocumentCSV(records = []) {
+
+    const headers = [
+
+        "Document Code",
+
+        "Title",
+
+        "Category",
+
+        "Document Date",
+
+        "Client ID",
+
+        "Case ID",
+
+        "Status",
+
+        "Current Version",
+
+        "Registration Year"
+
+    ];
+
+    const rows = records.map(record => [
+
+        record.documentCode,
+
+        record.title,
+
+        DOCUMENT_CATEGORIES[record.category] ||
+
+            record.category,
+
+        record.documentDate,
+
+        record.clientId,
+
+        record.caseId,
+
+        record.status,
+
+        record.currentVersion,
+
+        record.registrationYear
+
+    ]);
+
+    return "\uFEFF" +
+
+        [headers, ...rows]
+
+            .map(row => row.map(csvCell).join(","))
+
+            .join("\r\n");
 
 }
 
 
 /* =========================================================
-   34. FETCH YEARLY CASE SEQUENCES
+   31. METADATA BACKUP
    ========================================================= */
 
-export async function fetchCaseSequences() {
+export async function createDocumentBackup() {
+
+    const admin = await requireAdministrator();
+
+    const records = await fetchDocuments({
+
+        includeArchived: true
+
+    });
+
+    const documents = [];
+
+    for (const record of records) {
+
+        assertSession(admin.uid);
+
+        const [versions, activities] = await Promise.all([
+
+            fetchDocumentVersions(record.id),
+
+            fetchDocumentActivities(record.id)
+
+        ]);
+
+        documents.push({
+
+            document: record,
+
+            versions,
+
+            activities
+
+        });
+
+    }
+
+    const sequenceSnapshot = await getDocsFromServer(
+
+        collection(db, C.sequences)
+
+    );
+
+    assertSession(admin.uid);
+
+    return {
+
+        application: "MNM Legal Associates DMS",
+
+        version: DMS_CONFIG.version,
+
+        backupType: "metadata-only",
+
+        classification: "Confidential",
+
+        generatedAt: new Date().toISOString(),
+
+        generatedBy: admin.uid,
+
+        totalDocuments: documents.length,
+
+        documents,
+
+        sequences: sequenceSnapshot.docs.map(item => ({
+
+            ...item.data(),
+
+            id: item.id
+
+        }))
+
+    };
+
+}
+
+
+/* =========================================================
+   32. CLOUD CONNECTION STATUS
+   ========================================================= */
+
+export async function checkDocumentCloudConnection() {
 
     const admin = await requireAdministrator();
 
     const snapshot = await getDocsFromServer(
 
-        collection(
+        query(
 
-            db,
+            collection(db, C.sequences),
 
-            CASE_CONFIG.sequenceCollection
+            where("year", "==", getRegistrationYear())
 
         )
 
     );
 
     assertSession(admin.uid);
-
-    return snapshot.docs.map(item => ({
-
-        ...item.data(),
-
-        yearId: item.id
-
-    }));
-
-}
-
-
-/* =========================================================
-   35. CONFIDENTIAL CASE BACKUP
-
-   Read-only export.
-   Includes archived cases and inactive associations.
-   ========================================================= */
-
-export async function createCaseBackup() {
-
-    const admin = await requireAdministrator();
-
-    const startedAt = new Date().toISOString();
-
-
-    const [
-
-        cases,
-
-        sequences
-
-    ] = await Promise.all([
-
-        fetchCases({
-
-            includeArchived: true
-
-        }),
-
-        fetchCaseSequences()
-
-    ]);
-
-
-    const proceedings = {};
-
-    const tasks = {};
-
-    const activities = {};
-
-    const linkedClients = {};
-
-
-    for (const record of cases) {
-
-        assertSession(admin.uid);
-
-
-        const [
-
-            caseProceedings,
-
-            caseTasks,
-
-            caseActivities,
-
-            associations
-
-        ] = await Promise.all([
-
-            fetchProceedings(record.id),
-
-            fetchCaseTasks(record.id),
-
-            fetchCaseActivities(record.id),
-
-            fetchLinkedClients(record.id, {
-
-                includeInactive: true
-
-            })
-
-        ]);
-
-
-        proceedings[record.id] = caseProceedings;
-
-        tasks[record.id] = caseTasks;
-
-        activities[record.id] = caseActivities;
-
-        linkedClients[record.id] = associations;
-
-    }
-
-
-    assertSession(admin.uid);
-
-
-    return {
-
-        firm: "MNM Legal Associates",
-
-        module: "Case Management",
-
-        classification: "Confidential",
-
-        backupVersion: CASE_CONFIG.backupVersion,
-
-        backupStartedAt: startedAt,
-
-        backupDate: new Date().toISOString(),
-
-        exportedBy: admin.uid,
-
-        storage: "Firebase Cloud Firestore",
-
-        caseCount: cases.length,
-
-        snapshotType: "Non-atomic application export",
-
-        encrypted: false,
-
-        data: {
-
-            cases,
-
-            sequences,
-
-            proceedings,
-
-            tasks,
-
-            activities,
-
-            linkedClients
-
-        }
-
-    };
-
-}
-
-
-/* =========================================================
-   36. DATABASE CONNECTION VERIFICATION
-   ========================================================= */
-
-export async function checkCaseCloudConnection() {
-
-    const admin = await requireAdministrator();
-
-    const year = getRegistrationYear();
-
-
-    const [
-
-        records,
-
-        counter,
-
-        clients
-
-    ] = await Promise.all([
-
-        getDocsFromServer(casesCollection()),
-
-        getDocFromServer(sequenceRef(year)),
-
-        getDocsFromServer(
-
-            collection(
-
-                db,
-
-                CASE_CONFIG.clientCollection
-
-            )
-
-        )
-
-    ]);
-
-
-    assertSession(admin.uid);
-
-
-    const nextSequence = readSequence(counter);
-
 
     return {
 
@@ -4372,23 +3880,13 @@ export async function checkCaseCloudConnection() {
 
         authorized: true,
 
-        administrator: admin.name || "",
+        administrator: admin.name,
 
         role: admin.role,
 
-        caseCount: records.size,
+        documentSequenceAvailable: snapshot.size > 0,
 
-        clientCount: clients.size,
-
-        registrationYear: year,
-
-        nextCaseCode: formatCaseCode(
-
-            nextSequence,
-
-            year
-
-        ),
+        googleDrive: getGoogleDriveConnection(),
 
         checkedAt: new Date().toISOString()
 
@@ -4398,8 +3896,66 @@ export async function checkCaseCloudConnection() {
 
 
 /* =========================================================
-   END OF CASE MANAGEMENT CLOUD ENGINE
+   END OF DOCUMENT MANAGEMENT CLOUD ENGINE
 
    MNM LEGAL ASSOCIATES
    Justice, Integrity & Excellence
    ========================================================= */
+
+/* Permanent deletion: administrator only, explicit UI confirmation required. */
+export async function deleteDocument(documentId, expectedRevision) {
+    const admin = await requireAdministrator();
+    requireGoogleSession();
+    const ref = documentReference(documentId);
+    const record = await getDocument(documentId);
+    ensureRevision(record, expectedRevision);
+    const [versions, activities] = await Promise.all([
+        getDocsFromServer(collection(ref, C.versions)),
+        getDocsFromServer(collection(ref, C.activities))
+    ]);
+    assertSession(admin.uid);
+    // Conservative limit for security-rule access calls and atomic metadata cleanup.
+    if (versions.size + activities.size > 18) {
+        throw new Error("This document has too much history for safe browser deletion. No files were deleted.");
+    }
+    if (versions.size !== record.currentVersion || versions.docs.some(v =>
+        v.data().documentId !== documentId || v.id !== String(v.data().version))) {
+        throw new Error("Version history is inconsistent. No files were deleted.");
+    }
+    const ids = [...new Set(versions.docs.map(v => validateId(v.data().driveFileId)))];
+    // Preflight all files before any irreversible operation. A 404 can also mean lost access.
+    for (const id of ids) {
+        const file = await driveRequest(`/files/${encodeURIComponent(id)}?fields=id,mimeType,ownedByMe,shared,trashed,appProperties,capabilities(canDelete)`);
+        ensurePrivateFile(file);
+        if (file.mimeType === DRIVE_CONFIG.folderMimeType || !file.appProperties?.mnmOperationId || file.capabilities?.canDelete !== true) {
+            throw new Error("A registered file is not eligible for permanent deletion. No files were deleted.");
+        }
+    }
+    ensureRevision(await getDocument(documentId), expectedRevision);
+    const deletedDriveFileIds = [];
+    try {
+        for (const id of ids) {
+            assertSession(admin.uid);
+            await driveRequest(`/files/${encodeURIComponent(id)}`, {method: "DELETE"});
+            deletedDriveFileIds.push(id);
+        }
+        await requireAdministrator();
+        assertSession(admin.uid);
+        await runTransaction(db, async tx => {
+            const current = requireExisting(await tx.get(ref));
+            ensureRevision(current, expectedRevision);
+            assertSession(admin.uid);
+            for (const item of versions.docs) tx.delete(item.ref);
+            for (const item of activities.docs) tx.delete(item.ref);
+            tx.delete(ref);
+        });
+        assertSession(admin.uid);
+        return {success: true, documentId, deletedDriveFileIds};
+    } catch (cause) {
+        throw dmsError("dms/deletion-pending", "Deletion could not be fully confirmed. Some files may already be permanently deleted. Do not retry blindly; reconcile Google Drive and Firestore first.", {documentId, deletedDriveFileIds, cause: cause?.message});
+    }
+}
+
+
+
+
