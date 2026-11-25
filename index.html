@@ -1568,6 +1568,105 @@
 }
 
 /* END OF ADVOCATE PROFILE CORRECTION */
+        /* =========================================
+   NAVIGATION & STAFF LOGIN OPTIMIZATION
+========================================= */
+
+.menu-toggle {
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    z-index: 10;
+}
+
+.menu-toggle i {
+    pointer-events: none;
+}
+
+.nav-links .staff-login-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 15px;
+    border: 1px solid var(--gold);
+    border-radius: 5px;
+    color: var(--gold);
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background-color .2s ease,
+                color .2s ease;
+}
+
+.nav-links .staff-login-link:hover {
+    background: var(--gold);
+    color: var(--navy);
+}
+
+.menu-toggle:focus-visible,
+.staff-login-link:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 4px;
+}
+
+/* TABLET AND MOBILE NAVIGATION */
+
+@media (max-width: 1250px) {
+
+    .menu-toggle {
+        display: inline-grid;
+        place-items: center;
+    }
+
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        padding: 12px 20px 20px;
+        background: var(--navy);
+        border: 1px solid #455064;
+        max-height: 70vh;
+        max-height: 70dvh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        box-shadow: var(--shadow);
+    }
+
+    .nav-links.open {
+        display: flex;
+    }
+
+    .nav-links a {
+        padding: 14px 8px;
+        border-bottom: 1px solid
+            rgba(255, 255, 255, .1);
+    }
+
+    .nav-links .staff-login-item {
+        margin-top: 16px;
+    }
+
+    .nav-links .staff-login-link {
+        display: flex;
+        width: 100%;
+        min-height: 48px;
+        padding: 14px 18px;
+        border: 1px solid var(--gold);
+        background: rgba(195, 161, 107, .08);
+        font-size: 15px;
+    }
+
+    .nav-links li:last-child a.staff-login-link {
+        border-bottom: 1px solid var(--gold);
+    }
+
+}
     </style>
 
 </head>
