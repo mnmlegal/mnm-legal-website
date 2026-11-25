@@ -2,10 +2,12 @@
 
 
 
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    DOCUMENT MANAGEMENT CLOUD ENGINE
-   Version 2.0.0
+   Version 3.0.0
 
    Justice, Integrity & Excellence
    ========================================================= */
@@ -51,7 +53,7 @@ import {
 
 export const DMS_CONFIG = Object.freeze({
 
-    version: "2.0.0",
+    version: "3.0.0",
 
     documentStatuses: Object.freeze({
         active: "Active",
@@ -3903,6 +3905,60 @@ export async function checkDocumentCloudConnection() {
    MNM LEGAL ASSOCIATES
    Justice, Integrity & Excellence
    ========================================================= */
+
+/* Permanent deletion: administrator only, explicit UI confirmation required. */
+export async function deleteDocument(documentId, expectedRevision) {
+    const admin = await requireAdministrator();
+    requireGoogleSession();
+    const ref = documentReference(documentId);
+    const record = await getDocument(documentId);
+    ensureRevision(record, expectedRevision);
+    const [versions, activities] = await Promise.all([
+        getDocsFromServer(collection(ref, C.versions)),
+        getDocsFromServer(collection(ref, C.activities))
+    ]);
+    assertSession(admin.uid);
+    // Conservative limit for security-rule access calls and atomic metadata cleanup.
+    if (versions.size + activities.size > 18) {
+        throw new Error("This document has too much history for safe browser deletion. No files were deleted.");
+    }
+    if (versions.size !== record.currentVersion || versions.docs.some(v =>
+        v.data().documentId !== documentId || v.id !== String(v.data().version))) {
+        throw new Error("Version history is inconsistent. No files were deleted.");
+    }
+    const ids = [...new Set(versions.docs.map(v => validateId(v.data().driveFileId)))];
+    // Preflight all files before any irreversible operation. A 404 can also mean lost access.
+    for (const id of ids) {
+        const file = await driveRequest(`/files/${encodeURIComponent(id)}?fields=id,mimeType,ownedByMe,shared,trashed,appProperties,capabilities(canDelete)`);
+        ensurePrivateFile(file);
+        if (file.mimeType === DRIVE_CONFIG.folderMimeType || !file.appProperties?.mnmOperationId || file.capabilities?.canDelete !== true) {
+            throw new Error("A registered file is not eligible for permanent deletion. No files were deleted.");
+        }
+    }
+    ensureRevision(await getDocument(documentId), expectedRevision);
+    const deletedDriveFileIds = [];
+    try {
+        for (const id of ids) {
+            assertSession(admin.uid);
+            await driveRequest(`/files/${encodeURIComponent(id)}`, {method: "DELETE"});
+            deletedDriveFileIds.push(id);
+        }
+        await requireAdministrator();
+        assertSession(admin.uid);
+        await runTransaction(db, async tx => {
+            const current = requireExisting(await tx.get(ref));
+            ensureRevision(current, expectedRevision);
+            assertSession(admin.uid);
+            for (const item of versions.docs) tx.delete(item.ref);
+            for (const item of activities.docs) tx.delete(item.ref);
+            tx.delete(ref);
+        });
+        assertSession(admin.uid);
+        return {success: true, documentId, deletedDriveFileIds};
+    } catch (cause) {
+        throw dmsError("dms/deletion-pending", "Deletion could not be fully confirmed. Some files may already be permanently deleted. Do not retry blindly; reconcile Google Drive and Firestore first.", {documentId, deletedDriveFileIds, cause: cause?.message});
+    }
+}
 
 
 
