@@ -1,12 +1,15 @@
 
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    FINANCIAL MANAGEMENT SYSTEM
-   Application Engine V1.0
+   Application Engine V1.1 — Invoice Reconciliation
    Justice, Integrity & Excellence
    ========================================================= */
 
 import * as Cloud from "./finance-cloud.js";
+import { calculateInvoiceReconciliation } from "./invoice-cloud.js";
 import { auth } from "./firebase-config.js";
 import { verifyStaffAccess } from "./auth.js";
 
@@ -962,7 +965,7 @@ function renderTransactions() {
             <td>${esc(displayDate(record.transactionDate))}</td>
             <td>${esc(typeName(record.transactionType))}</td>
             <td>${esc(clientName(record.clientId))}</td>
-            <td>${esc(record.category)}</td>
+            <td>${esc(record.category)}${record.invoiceId ? `<small>${esc(invoiceNumber(state.invoices.find(i => i.id === record.invoiceId) || {id:record.invoiceId}))}</small>` : ""}${record.id === "invoice_initial_" + record.invoiceId && record.invoiceId ? "<small>Automatic invoice receipt</small>" : ""}</td>
             <td class="amount">${esc(money(record.amountPaise))}</td>
             <td>${esc(modeName(record.paymentMode))}</td>
             <td>${badge(record.status)}</td>
@@ -1622,14 +1625,21 @@ function renderInvoices() {
                 state.transactions
             );
 
+            let reconciliation = null;
+            try { reconciliation = calculateInvoiceReconciliation(record, state.transactions, link); }
+            catch (error) { console.warn("Invoice reconciliation unavailable", error); }
+            const cancelled = record.recordStatus === "cancelled" || record.status === "cancelled";
+            const canRecord = link && !cancelled && reconciliation && reconciliation.differencePaise === 0 && reconciliation.ledgerOutstandingPaise > 0;
             return `<tr>
                 <td>
                     <strong>${esc(invoiceNumber(record))}</strong>
-                    ${record.status ? `<small>${esc(record.status)}</small>` : ""}
+                    ${cancelled ? "<small>Cancelled</small>" : ""}
                 </td>
                 <td>${esc(displayDate(invoiceDate(record)))}</td>
                 <td>${esc(invoiceName(record))}</td>
-                <td class="amount">${esc(money(received))}</td>
+                <td class="amount">${esc(money(received))}
+                    ${reconciliation ? `<small>Invoice received: ${esc(money(reconciliation.snapshotReceivedPaise))}</small><small>Difference: ${esc(money(reconciliation.differencePaise))}</small><small>${reconciliation.differencePaise === 0 ? "Amounts match" : "Review required"}</small>` : "<small>Review required</small>"}
+                </td>
                 <td>
                     ${
                         link
@@ -1642,9 +1652,9 @@ function renderInvoices() {
                     ${
                         !link
                         ? actionButton("link-invoice", record.id, "Link Invoice")
-                        : record.status !== "cancelled"
-                            ? actionButton("invoice-payment", record.id, "Record Payment")
-                            : "Cancelled"
+                        : cancelled ? "Cancelled"
+                            : canRecord ? "Additional payment: synchronization pending"
+                            : reconciliation && reconciliation.differencePaise === 0 ? "No outstanding payment" : "Reconcile before posting"
                     }
                 </td>
             </tr>`;
@@ -2023,8 +2033,16 @@ function handleClick(event) {
         case "invoice-payment": {
             const invoice = state.invoices.find(record => record.id === id);
 
-            if (invoice && invoice.status !== "cancelled") {
-                newTransaction("income", null, invoice);
+            if (invoice && invoice.recordStatus !== "cancelled" && invoice.status !== "cancelled") {
+                try {
+                    const link = getInvoiceLink(id);
+                    const r = calculateInvoiceReconciliation(invoice, state.transactions, link);
+                    if (!link || r.differencePaise !== 0 || r.ledgerOutstandingPaise <= 0) {
+                        message("Review invoice reconciliation before recording another payment.", "warning");
+                        break;
+                    }
+                    newTransaction("income", null, invoice);
+                } catch (error) { message(errorMessage(error), "error"); }
             }
 
             break;
@@ -2279,6 +2297,12 @@ function bindEvents() {
         $("connectionStatus").className = "disconnected";
     });
 
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && state.initialized && !state.busy && !state.invalidated && !state.dirty && !$("protectedContent").hidden && !document.querySelector("dialog[open]") && ["overview", "transactions", "invoices"].includes(state.tab)) {
+            perform(async () => synchronize());
+        }
+    });
+
     window.addEventListener("online", () => {
         if (!state.busy && !state.invalidated && !state.dirty) {
             perform(async () => synchronize());
@@ -2404,3 +2428,7 @@ export async function initialiseFinanceSystem(user) {
 /* =========================================================
    END OF FINANCIAL MANAGEMENT APPLICATION ENGINE
    ========================================================= */
+
+
+
+
