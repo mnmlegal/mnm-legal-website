@@ -5,13 +5,10 @@
 
 
 
-
-
-
 /* =========================================================
    MNM LEGAL ASSOCIATES
    DOCUMENT MANAGEMENT APPLICATION ENGINE
-   Version 3.0.0
+   Version 3.1.0
    Justice, Integrity & Excellence
    ========================================================= */
 
@@ -28,7 +25,7 @@ import {
     getIndianDate
 } from "./drive-config.js";
 
-import * as Cloud from "./documents-cloud.js";
+import * as Cloud from "./documents-cloud.js?v=3.1.0";
 
 
 /* =========================================================
@@ -219,6 +216,7 @@ function invalidateSession() {
     state.selectedDriveFile = null;
     state.recovery = null;
 
+    rememberReconnect(false);
     Cloud.disconnectGoogleDrive();
 
     closeDialogs();
@@ -390,10 +388,34 @@ function renderDriveConnection() {
    04. GOOGLE DRIVE OPERATIONS
    ========================================================= */
 
+// Store only an opt-in preference, never a Google token or account identifier.
+const reconnectPreference = "mnm-dms-auto-reconnect";
+let autoReconnectAttempted = false;
+function rememberReconnect(enabled) {
+    try { if (enabled) sessionStorage.setItem(reconnectPreference, "1");
+          else sessionStorage.removeItem(reconnectPreference); } catch {}
+}
+async function attemptAutoReconnect() {
+    if (autoReconnectAttempted || state.invalidated || state.busy ||
+        $("protectedContent").hidden || Cloud.isGoogleDriveConnected()) return;
+    try { if (sessionStorage.getItem(reconnectPreference) !== "1") return; }
+    catch { return; }
+    autoReconnectAttempted = true;
+    await perform(async () => {
+        try {
+            await Cloud.connectGoogleDrive({automatic:true});
+            message(driveReady() ? "Google Drive reconnected. Existing storage is ready." :
+                "Google Drive reconnected. Verify root folder access.");
+        } catch {
+            if (!state.invalidated) message("Automatic Google reconnection was unavailable. Click Connect Google Drive.", "warning");
+        }
+    }, null, true);
+}
 async function connectDrive() {
     await perform(async () => {
         message("Connecting to Google Drive. Complete the Google window if prompted.", "warning");
         await Cloud.connectGoogleDrive();
+        rememberReconnect(true);
         renderDriveConnection();
         message(driveReady()
             ? "Google Drive connected. Existing storage is ready."
@@ -422,6 +444,7 @@ async function checkDrive() {
 async function disconnectDrive() {
     if (state.busy) return;
 
+    rememberReconnect(false);
     Cloud.disconnectGoogleDrive();
 
     state.selectedDriveFile = null;
@@ -2681,6 +2704,7 @@ export async function initialiseDocumentSystem(user) {
         } else if (!state.invalidated) {
             renderDriveConnection();
             updateSaveAvailability();
+            void attemptAutoReconnect();
         }
     });
 
@@ -2689,6 +2713,7 @@ export async function initialiseDocumentSystem(user) {
         attributeFilter: ["hidden"]
     });
 
+    if (!$("protectedContent").hidden) void attemptAutoReconnect();
     return true;
 }
 
