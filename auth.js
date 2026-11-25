@@ -1,4 +1,8 @@
 
+
+
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    AUTHENTICATION & STAFF AUTHORIZATION
@@ -646,6 +650,33 @@ function protectPage(options = {}) {
 
     }
 
+    function showTechnicalError(error) {
+        hideContent();
+        stopStaffListener();
+        console.error("MNM protected page error:", error);
+        if (!loading) return;
+        const panel = document.createElement("div");
+        panel.setAttribute("role", "alert");
+        const message = document.createElement("p");
+        message.textContent = "Module unavailable: " + (error?.code || error?.message || "Unknown error");
+        const retry = document.createElement("button");
+        retry.textContent = "Retry";
+        retry.onclick = () => window.location.reload();
+        const back = document.createElement("a");
+        back.href = AUTH_CONFIG.dashboardPage;
+        back.textContent = " Return to Dashboard";
+        panel.append(message, retry, back);
+        loading.replaceChildren(panel);
+    }
+
+    function handleFailure(error, user) {
+        const denied = ["staff/access-denied", "staff/inactive", "staff/invalid-role", "staff/session-changed", "auth/user-disabled", "auth/user-token-expired", "auth/invalid-user-token"];
+        if (!user || auth.currentUser?.uid !== user.uid || denied.includes(error?.code)) {
+            return denyAccess(user);
+        }
+        showTechnicalError(error);
+    }
+
     hideContent();
 
     const unsubscribeAuth = onAuthStateChanged(
@@ -768,30 +799,30 @@ function protectPage(options = {}) {
 
                             showContent();
 
-                        } catch {
+                        } catch (error) {
 
-                            void denyAccess(user);
+                            void handleFailure(error, user);
 
                         }
 
                     },
 
-                    () => {
+                    error => {
 
-                        void denyAccess(user);
+                        void handleFailure(error, user);
 
                     }
 
                 );
 
-            } catch {
+            } catch (error) {
 
                 if (
                     !stopped &&
                     attempt === generation
                 ) {
 
-                    await denyAccess(user);
+                    await handleFailure(error, user);
 
                 }
 
@@ -799,9 +830,9 @@ function protectPage(options = {}) {
 
         },
 
-        () => {
+        error => {
 
-            void denyAccess(auth.currentUser);
+            void handleFailure(error, auth.currentUser);
 
         }
 
@@ -998,3 +1029,4 @@ export {
    MNM LEGAL ASSOCIATES
    Justice, Integrity & Excellence
    ========================================================= */
+
