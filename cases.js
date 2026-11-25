@@ -1,4 +1,7 @@
 
+
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    LEGAL PRACTICE MANAGEMENT SYSTEM
@@ -1073,6 +1076,8 @@ function filterCases() {
             clientName(record.clientId)
         ].join(" "));
 
+        if (record.status === "archived" && filters.status !== "archived") return false;
+
         if (search && !searchable.includes(search)) {
             return false;
         }
@@ -1161,7 +1166,11 @@ function renderDirectory() {
                 record.status !== "archived" &&
                 !CLOSED.has(record.status)
                     ? actionButton("Edit", () => openEditor(record.id))
-                    : null
+                    : null,
+
+                record.status === "archived"
+                    ? actionButton("Restore", () => openCaseDeletionAction(record.id, true))
+                    : actionButton("Delete", () => openCaseDeletionAction(record.id, false), true)
             )
         ]);
     }
@@ -2531,6 +2540,13 @@ async function saveReopening(event) {
    20. ARCHIVE AND REACTIVATE
    ========================================================= */
 
+async function openCaseDeletionAction(id, restore) {
+    await openProfile(id);
+    if (state.invalidated || state.busy || state.dirty || state.profile?.case?.id !== id) return;
+    if (restore) openReactivateDialog();
+    else openArchiveDialog();
+}
+
 function openArchiveDialog() {
     if (currentCase().status === "archived") return;
 
@@ -2553,7 +2569,7 @@ async function saveArchive(event) {
 
         await finishMutation(
             "archiveDialog",
-            "Case archived. No records have been permanently deleted.",
+            "Case removed from the active directory. Restore it using the Archived / Deleted filter.",
             "summary"
         );
 
@@ -2596,7 +2612,7 @@ async function saveReactivation(event) {
 
         await finishMutation(
             "reactivateDialog",
-            "Case reactivated successfully.",
+            "Case restored successfully.",
             "summary"
         );
 
@@ -2826,6 +2842,21 @@ async function refreshApplication(buttonId = "refreshCasesButton") {
    ========================================================= */
 
 function bindEvents() {
+    const rename = (id, label) => { const node = $(id); if (node) node.textContent = label; };
+    rename("archiveCaseButton", "Delete Case");
+    rename("reactivateCaseButton", "Restore Case");
+    rename("archiveDialogTitle", "Delete Case (Recoverable)");
+    rename("confirmArchiveButton", "Delete Case");
+    const reasonLabel = document.querySelector('label[for="archiveReason"]');
+    if (reasonLabel) reasonLabel.textContent = "Reason for deletion (required)";
+    const filter = $("caseStatusFilter");
+    if (filter) {
+        const all = [...filter.options].find(o => o.value === "all");
+        const archived = [...filter.options].find(o => o.value === "archived");
+        if (all) all.textContent = "All Non-Deleted Cases";
+        if (archived) archived.textContent = "Archived / Deleted";
+    }
+
     document.querySelectorAll("[data-tab]")
         .forEach(button => {
             button.addEventListener("click", () => {
@@ -3402,3 +3433,7 @@ export async function initialiseCaseSystem(user) {
 
    Justice, Integrity & Excellence
    ========================================================= */
+
+
+
+
