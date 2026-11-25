@@ -1,4 +1,11 @@
 
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -47,7 +54,7 @@
 <!-- ======================================================
      MNM LEGAL ASSOCIATES
      LEGAL PRACTICE MANAGEMENT SYSTEM
-     CASE MANAGEMENT MODULE - VERSION 1.0
+     CASE MANAGEMENT MODULE - VERSION 1.1
 
      Justice, Integrity & Excellence
 ======================================================= -->
@@ -5235,12 +5242,7 @@
 
     let logoutInProgress = false;
 
-    let applicationWasVisible = false;
-
-    let sessionInvalidated = false;
-
-
-    /*
+/*
      * Native modal dialogs can remain in the browser's
      * top layer even when their parent is hidden.
      * Close them whenever protected content is hidden.
@@ -5258,43 +5260,10 @@
     }
 
 
-    /*
-     * Once the application has been visible, a subsequent
-     * authorization-related hide invalidates this page.
-     * Reload on renewed authorization rather than reveal
-     * previously loaded confidential data.
-     */
-
+    // Temporary authorization checks are not session changes.
     const visibilityObserver = new MutationObserver(() => {
-
-        if (!content.hidden) {
-
-            if (sessionInvalidated) {
-
-                content.hidden = true;
-
-                window.location.reload();
-
-                return;
-
-            }
-
-            applicationWasVisible = true;
-
-            return;
-
-        }
-
-        closeProtectedDialogs();
-
-        if (applicationWasVisible) {
-
-            sessionInvalidated = true;
-
-        }
-
+        if (content.hidden) closeProtectedDialogs();
     });
-
 
     visibilityObserver.observe(content, {
 
@@ -5421,9 +5390,7 @@
 
                     if (
 
-                        sessionInvalidated ||
-
-                        (activeUser && activeUser !== user.uid)
+                        activeUser && activeUser !== user.uid
 
                     ) {
 
@@ -5431,7 +5398,7 @@
 
                         closeProtectedDialogs();
 
-                        window.location.reload();
+                        window.location.replace("/login.html");
 
                         throw new Error(
 
@@ -5603,3 +5570,7 @@
 </body>
 
 </html>
+
+
+
+
