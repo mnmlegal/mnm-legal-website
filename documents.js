@@ -2,10 +2,16 @@
 
 
 
+
+
+
+
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    DOCUMENT MANAGEMENT APPLICATION ENGINE
-   Version 2.0.0
+   Version 3.0.0
    Justice, Integrity & Excellence
    ========================================================= */
 
@@ -439,6 +445,14 @@ async function initialiseFolders() {
    05. NAVIGATION
    ========================================================= */
 
+function scrollToPanel(id) {
+    requestAnimationFrame(() => {
+        const panel = $(id);
+        if (!panel || panel.hidden || state.invalidated || $("protectedContent").hidden) return;
+        panel.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    });
+}
+
 function activateTab(tab) {
     if (!tabs.includes(tab)) return;
 
@@ -870,7 +884,18 @@ function renderRows(bodyId, records) {
             dateLabel(record.documentDate)
         );
 
-        const actions = openButton(record.id);
+        const actionButton = (action, label, icon) => `
+        <button type="button" class="button button-secondary button-small"
+            data-action="${action}" data-id="${escapeHTML(record.id)}">
+            <i class="fa-solid ${icon}" aria-hidden="true"></i> ${label}
+        </button>`;
+    const actions = `<div class="table-actions" style="display:flex;flex-wrap:wrap;gap:6px">
+        ${openButton(record.id)}
+        ${actionButton("open-file", "Open", "fa-arrow-up-right-from-square")}
+        ${actionButton("download-file", "Download", "fa-download")}
+        ${record.status === "active" ? actionButton("edit-file", "Edit", "fa-pen") + actionButton("archive-file", "Archive", "fa-box-archive") : actionButton("restore-file", "Restore", "fa-rotate-left")}
+        ${actionButton("delete-file", "Delete", "fa-trash")}
+    </div>`;
 
         const table = body.closest("table");
 
@@ -1373,6 +1398,7 @@ async function editDocument() {
         updateAssociationSummary();
 
         activateTab("registration");
+        scrollToPanel("registrationPanel");
 
         updateSaveAvailability();
     });
@@ -1609,6 +1635,45 @@ async function saveVersion(event) {
 /* =========================================================
    16. ARCHIVE AND RESTORE
    ========================================================= */
+
+async function deleteRegisteredDocument(id) {
+    await perform(async () => {
+        if (typeof Cloud.deleteDocument !== "function") {
+            throw new Error("Install documents-cloud.js V3.0 before deleting documents.");
+        }
+        if (!driveReady()) throw new Error("Connect and authorize Google Drive first.");
+        const record = state.records.find(item => item.id === id);
+        if (!record) throw new Error("Refresh the document directory first.");
+        const confirmed = await confirmAction(
+            "Permanently Delete Document?",
+            `Are you sure you want to permanently delete ${record.documentCode} — ${record.title}? All registered file versions and document records will be deleted. This cannot be undone.`
+        );
+        if (!confirmed) return;
+        await requireSession();
+        requireVisibleApplication();
+        try {
+            const result = await Cloud.deleteDocument(id, record.revision);
+            if (result?.success !== true) throw new Error("Deletion was not confirmed. Verify storage before retrying.");
+        } catch (error) {
+            if (error.code === "dms/deletion-pending") {
+                message("Deletion incomplete or unconfirmed. Some files may already be deleted. Do not retry blindly; reconcile Google Drive and Firestore first.", "error");
+                scrollToPanel("appMessage");
+                return;
+            }
+            throw error;
+        }
+        state.records = state.records.filter(item => item.id !== id);
+        if (state.profile?.document?.id === id) state.profile = null;
+        if (value("editingDocumentId") === id) resetDocumentForm();
+        activateTab(record.status === "archived" ? "archived" : "directory");
+        renderOverview();
+        renderDirectory();
+        renderArchived();
+        message("Document permanently deleted.");
+        await refreshAfterCommit();
+        scrollToPanel("appMessage");
+    });
+}
 
 function openArchiveDialog() {
     const record = state.profile?.document;
@@ -2398,6 +2463,7 @@ function handleDelegatedClick(event) {
 
     if (button.dataset.openTab) {
         activateTab(button.dataset.openTab);
+        scrollToPanel(`${button.dataset.openTab}Panel`);
         return;
     }
 
@@ -2418,6 +2484,7 @@ function handleDelegatedClick(event) {
         $("sourceDrive").checked = !upload;
 
         updateSource();
+        scrollToPanel("registrationPanel");
 
         return;
     }
@@ -2427,7 +2494,25 @@ function handleDelegatedClick(event) {
     if (action === "profile") {
         perform(async () => {
             await loadProfile(button.dataset.id);
+            scrollToPanel("documentProfilePanel");
         });
+        return;
+    }
+    if (action === "open-file") return openDocumentFile(button.dataset.id);
+    if (action === "download-file") return downloadFile(button.dataset.id);
+    if (action === "delete-file") return deleteRegisteredDocument(button.dataset.id);
+    if (["edit-file", "archive-file", "restore-file"].includes(action)) {
+        let loaded = false;
+        perform(async () => {
+            await loadProfile(button.dataset.id);
+            loaded = state.profile?.document?.id === button.dataset.id;
+        }).then(() => {
+            if (!loaded || state.invalidated || $("protectedContent").hidden) return;
+            if (action === "edit-file") editDocument();
+            else if (action === "archive-file") openArchiveDialog();
+            else openRestoreDialog();
+        });
+        return;
     }
 
     if (action === "open-version" && state.profile) {
