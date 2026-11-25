@@ -1,0 +1,4268 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <meta name="robots"
+          content="noindex, nofollow, noarchive">
+
+    <meta name="referrer"
+          content="strict-origin-when-cross-origin">
+
+    <meta name="theme-color" content="#101d30">
+
+    <title>Document Management | MNM Legal Associates</title>
+
+    <link rel="icon" href="/images/logo.png">
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <link rel="stylesheet" href="/documents.css">
+
+    <style>
+
+        [hidden] {
+            display: none !important;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<!-- =====================================================
+     AUTHENTICATION LOADING
+     ===================================================== -->
+
+<div id="authLoading" class="auth-loading">
+
+    <div class="auth-loading-content">
+
+        <img src="/images/logo.png"
+             class="auth-logo"
+             alt="MNM Legal Associates">
+
+        <h1>MNM Legal Associates</h1>
+
+        <p>Secure Document Management System</p>
+
+        <div id="loadingSpinner"
+             class="loading-spinner"
+             aria-hidden="true"></div>
+
+        <p id="loadingMessage" role="status">
+
+            Verifying administrator authorization...
+
+        </p>
+
+        <a href="/dashboard.html">
+
+            Return to Dashboard
+
+        </a>
+
+        <noscript>
+
+            JavaScript is required to access this application.
+
+        </noscript>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     PROTECTED APPLICATION
+     ===================================================== -->
+
+<div id="protectedContent" hidden>
+
+    <!-- HEADER -->
+
+    <header class="app-header">
+
+        <div class="header-brand">
+
+            <a href="/dashboard.html"
+               class="brand-logo-link">
+
+                <img src="/images/logo.png"
+                     class="header-logo"
+                     alt="MNM Legal Associates">
+
+            </a>
+
+            <div class="header-brand-text">
+
+                <strong>MNM Legal Associates</strong>
+
+                <span>Justice, Integrity &amp; Excellence</span>
+
+            </div>
+
+        </div>
+
+        <div class="header-actions">
+
+            <a href="/dashboard.html"
+               class="button button-outline">
+
+                <i class="fa-solid fa-table-columns"></i>
+
+                Dashboard
+
+            </a>
+
+            <a href="/clients.html"
+               class="button button-outline">
+
+                <i class="fa-solid fa-users"></i>
+
+                Clients
+
+            </a>
+
+            <a href="/cases.html"
+               class="button button-outline">
+
+                <i class="fa-solid fa-briefcase"></i>
+
+                Cases
+
+            </a>
+
+            <div class="staff-profile">
+
+                <i class="fa-solid fa-circle-user"></i>
+
+                <div>
+
+                    <strong id="staffName">
+
+                        Administrator
+
+                    </strong>
+
+                    <span>Authorized Administrator</span>
+
+                </div>
+
+            </div>
+
+            <button id="logoutButton"
+                    type="button"
+                    class="button button-danger-outline">
+
+                <i class="fa-solid fa-right-from-bracket"></i>
+
+                Logout
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN APPLICATION -->
+
+    <main class="app-container">
+
+        <!-- PAGE HEADING -->
+
+        <section class="page-heading">
+
+            <div>
+
+                <div class="breadcrumb">
+
+                    <a href="/dashboard.html">Dashboard</a>
+
+                    <i class="fa-solid fa-chevron-right"></i>
+
+                    <span>Document Management</span>
+
+                </div>
+
+                <h1>Document Management</h1>
+
+                <p>
+
+                    Securely organize legal documents,
+                    client records, pleadings, evidence
+                    and case-related files.
+
+                </p>
+
+            </div>
+
+            <div class="page-heading-actions">
+
+                <button id="refreshDocumentsButton"
+                        type="button"
+                        class="button button-secondary">
+
+                    <i class="fa-solid fa-arrows-rotate"></i>
+
+                    Refresh
+
+                </button>
+
+                <button type="button"
+                        class="button button-primary"
+                        data-open-tab="registration">
+
+                    <i class="fa-solid fa-plus"></i>
+
+                    New Document
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- CLOUD STATUS -->
+
+        <section class="cloud-status-bar">
+
+            <div class="cloud-status-info">
+
+                <span id="cloudStatusIndicator"
+                      class="connection-indicator syncing">
+                </span>
+
+                <i class="fa-solid fa-database"></i>
+
+                <span id="cloudStatus">
+
+                    Connecting to Firestore...
+
+                </span>
+
+            </div>
+
+            <div class="cloud-status-details">
+
+                <span id="lastSynced">
+
+                    Not synchronized
+
+                </span>
+
+                <span class="confidential-label">
+
+                    <i class="fa-solid fa-lock"></i>
+
+                    Confidential System
+
+                </span>
+
+            </div>
+
+        </section>
+
+        <div id="appMessage"
+             class="app-message"
+             role="status"
+             aria-live="polite"
+             hidden>
+        </div>
+
+
+        <!-- GOOGLE DRIVE CONNECTION -->
+
+        <section class="content-card drive-connection-card">
+
+            <div class="drive-connection-heading">
+
+                <div class="drive-icon">
+
+                    <i class="fa-brands fa-google-drive"></i>
+
+                </div>
+
+                <div class="drive-connection-title">
+
+                    <h2>Google Drive Storage</h2>
+
+                    <p>
+
+                        Private storage for original legal documents.
+
+                    </p>
+
+                </div>
+
+                <span id="driveConnectionBadge"
+                      class="connection-badge disconnected">
+
+                    Not Connected
+
+                </span>
+
+            </div>
+
+            <div class="drive-details-grid">
+
+                <div class="drive-detail">
+
+                    <span>Google Account</span>
+
+                    <strong id="driveAccountEmail">
+
+                        Not connected
+
+                    </strong>
+
+                </div>
+
+                <div class="drive-detail">
+
+                    <span>Root Folder</span>
+
+                    <strong id="driveRootStatus">
+
+                        Authorization required
+
+                    </strong>
+
+                </div>
+
+                <div class="drive-detail">
+
+                    <span>Storage Provider</span>
+
+                    <strong>Google Drive</strong>
+
+                </div>
+
+                <div class="drive-detail">
+
+                    <span>Access Token</span>
+
+                    <strong id="driveTokenStatus">
+
+                        No active session
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+            <div id="driveConfigurationWarning"
+                 class="warning-note"
+                 role="alert"
+                 hidden>
+            </div>
+
+            <div id="driveConnectionMessage"
+                 class="information-note">
+
+                <i class="fa-solid fa-circle-info"></i>
+
+                <p>
+
+                    Connect the authorized firm Google account
+                    and authorize the designated private root
+                    folder before uploading documents.
+
+                </p>
+
+            </div>
+
+            <div class="drive-actions">
+
+                <button id="connectDriveButton"
+                        type="button"
+                        class="button button-primary">
+
+                    <i class="fa-brands fa-google"></i>
+
+                    Connect Google Drive
+
+                </button>
+
+                <button id="authorizeRootButton"
+                        type="button"
+                        class="button button-secondary"
+                        disabled>
+
+                    <i class="fa-solid fa-folder-tree"></i>
+
+                    Authorize Root Folder
+
+                </button>
+
+                <button id="checkDriveButton"
+                        type="button"
+                        class="button button-secondary"
+                        disabled>
+
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                    Verify Connection
+
+                </button>
+
+                <button id="disconnectDriveButton"
+                        type="button"
+                        class="button button-danger-outline"
+                        disabled>
+
+                    <i class="fa-solid fa-link-slash"></i>
+
+                    Disconnect
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- MODULE NAVIGATION -->
+
+        <nav class="module-navigation"
+             aria-label="Document management navigation">
+
+            <div class="module-tabs"
+                 role="tablist">
+
+                <button id="overviewTab"
+                        class="module-tab active"
+                        type="button"
+                        role="tab"
+                        data-tab="overview"
+                        aria-selected="true"
+                        aria-controls="overviewPanel">
+
+                    <i class="fa-solid fa-chart-pie"></i>
+
+                    Overview
+
+                </button>
+
+                <button id="directoryTab"
+                        class="module-tab"
+                        type="button"
+                        role="tab"
+                        data-tab="directory"
+                        aria-selected="false"
+                        aria-controls="directoryPanel"
+                        tabindex="-1">
+
+                    <i class="fa-solid fa-folder-open"></i>
+
+                    Document Directory
+
+                </button>
+
+                <button id="registrationTab"
+                        class="module-tab"
+                        type="button"
+                        role="tab"
+                        data-tab="registration"
+                        aria-selected="false"
+                        aria-controls="registrationPanel"
+                        tabindex="-1">
+
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+
+                    Register Document
+
+                </button>
+
+                <button id="archivedTab"
+                        class="module-tab"
+                        type="button"
+                        role="tab"
+                        data-tab="archived"
+                        aria-selected="false"
+                        aria-controls="archivedPanel"
+                        tabindex="-1">
+
+                    <i class="fa-solid fa-box-archive"></i>
+
+                    Archived
+
+                </button>
+
+                <button id="settingsTab"
+                        class="module-tab"
+                        type="button"
+                        role="tab"
+                        data-tab="settings"
+                        aria-selected="false"
+                        aria-controls="settingsPanel"
+                        tabindex="-1">
+
+                    <i class="fa-solid fa-gear"></i>
+
+                    Settings
+
+                </button>
+
+            </div>
+
+        </nav>
+
+
+        <!-- =================================================
+             OVERVIEW PANEL
+             ================================================= -->
+
+        <section id="overviewPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="overviewTab">
+
+            <div class="statistics-grid">
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-total">
+
+                        <i class="fa-solid fa-folder-open"></i>
+
+                    </div>
+
+                    <span>Total Documents</span>
+
+                    <strong id="totalDocuments">0</strong>
+
+                    <small>All registered records</small>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-active">
+
+                        <i class="fa-solid fa-file-circle-check"></i>
+
+                    </div>
+
+                    <span>Active Documents</span>
+
+                    <strong id="activeDocuments">0</strong>
+
+                    <small>Available document records</small>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-case">
+
+                        <i class="fa-solid fa-briefcase"></i>
+
+                    </div>
+
+                    <span>Case Documents</span>
+
+                    <strong id="caseDocuments">0</strong>
+
+                    <small>Active case-linked documents</small>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-client">
+
+                        <i class="fa-solid fa-users"></i>
+
+                    </div>
+
+                    <span>Client Documents</span>
+
+                    <strong id="clientDocuments">0</strong>
+
+                    <small>Active client-only documents</small>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-new">
+
+                        <i class="fa-solid fa-calendar-plus"></i>
+
+                    </div>
+
+                    <span>This Month</span>
+
+                    <strong id="documentsThisMonth">0</strong>
+
+                    <small>New document registrations</small>
+
+                </article>
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-archive">
+
+                        <i class="fa-solid fa-box-archive"></i>
+
+                    </div>
+
+                    <span>Archived Documents</span>
+
+                    <strong id="archivedDocuments">0</strong>
+
+                    <small>Retained historical records</small>
+
+                </article>
+
+            </div>
+
+
+            <!-- QUICK ACTIONS -->
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Quick Actions</h2>
+
+                        <p>Frequently used document operations.</p>
+
+                    </div>
+
+                </div>
+
+                <div class="quick-actions-grid">
+
+                    <button type="button"
+                            class="quick-action"
+                            data-quick-action="upload">
+
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+
+                        <strong>Upload Document</strong>
+
+                        <span>Register a file from your device</span>
+
+                    </button>
+
+                    <button type="button"
+                            class="quick-action"
+                            data-quick-action="import">
+
+                        <i class="fa-brands fa-google-drive"></i>
+
+                        <strong>Import from Drive</strong>
+
+                        <span>Copy an existing private document</span>
+
+                    </button>
+
+                    <button type="button"
+                            class="quick-action"
+                            data-open-tab="directory">
+
+                        <i class="fa-solid fa-magnifying-glass"></i>
+
+                        <strong>Find Document</strong>
+
+                        <span>Search registered documents</span>
+
+                    </button>
+
+                    <button type="button"
+                            class="quick-action"
+                            data-open-tab="archived">
+
+                        <i class="fa-solid fa-box-archive"></i>
+
+                        <strong>Archived Records</strong>
+
+                        <span>Review and restore documents</span>
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- CATEGORY SUMMARY -->
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Document Categories</h2>
+
+                        <p>Distribution of active documents.</p>
+
+                    </div>
+
+                    <span class="summary-label">
+
+                        <strong id="totalVersions">0</strong>
+
+                        Registered Versions
+
+                    </span>
+
+                </div>
+
+                <div id="categorySummary"
+                     class="category-summary-grid">
+                </div>
+
+                <div id="emptyCategorySummary"
+                     class="empty-state">
+
+                    <i class="fa-solid fa-chart-simple"></i>
+
+                    <h3>No category data</h3>
+
+                    <p>
+
+                        Document categories will appear
+                        after registration.
+
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- RECENT DOCUMENTS -->
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Recent Documents</h2>
+
+                        <p>Recently registered active documents.</p>
+
+                    </div>
+
+                    <button type="button"
+                            class="button button-secondary"
+                            data-open-tab="directory">
+
+                        View All
+
+                        <i class="fa-solid fa-arrow-right"></i>
+
+                    </button>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table class="data-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th scope="col">Document ID</th>
+
+                                <th scope="col">Document Title</th>
+
+                                <th scope="col">Category</th>
+
+                                <th scope="col">Client</th>
+
+                                <th scope="col">Version</th>
+
+                                <th scope="col">Action</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="recentDocumentsBody"></tbody>
+
+                    </table>
+
+                </div>
+
+                <div id="emptyRecentDocuments"
+                     class="empty-state">
+
+                    <i class="fa-solid fa-folder-open"></i>
+
+                    <h3>No documents registered</h3>
+
+                    <p>
+
+                        Register your first legal document
+                        to get started.
+
+                    </p>
+
+                    <button type="button"
+                            class="button button-primary"
+                            data-open-tab="registration">
+
+                        <i class="fa-solid fa-plus"></i>
+
+                        Register Document
+
+                    </button>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- =================================================
+             DOCUMENT DIRECTORY
+             ================================================= -->
+
+        <section id="directoryPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="directoryTab"
+                 hidden>
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Document Directory</h2>
+
+                        <p>
+
+                            Search and manage active
+                            registered documents.
+
+                        </p>
+
+                    </div>
+
+                    <div class="card-actions">
+
+                        <button id="exportDocumentsButton"
+                                type="button"
+                                class="button button-secondary">
+
+                            <i class="fa-solid fa-file-csv"></i>
+
+                            Export CSV
+
+                        </button>
+
+                        <button type="button"
+                                class="button button-primary"
+                                data-open-tab="registration">
+
+                            <i class="fa-solid fa-plus"></i>
+
+                            New Document
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- FILTERS -->
+
+                <div class="directory-toolbar">
+
+                    <div class="form-group search-field">
+
+                        <label for="documentSearch">
+
+                            Search Documents
+
+                        </label>
+
+                        <div class="search-input-wrapper">
+
+                            <i class="fa-solid fa-magnifying-glass"></i>
+
+                            <input id="documentSearch"
+                                   type="search"
+                                   autocomplete="off"
+                                   placeholder="Document ID, title or description">
+
+                        </div>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="categoryFilter">
+
+                            Category
+
+                        </label>
+
+                        <select id="categoryFilter">
+
+                            <option value="all">
+
+                                All Categories
+
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="clientFilter">Client</label>
+
+                        <select id="clientFilter">
+
+                            <option value="">All Clients</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="caseFilter">Case</label>
+
+                        <select id="caseFilter">
+
+                            <option value="">All Cases</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="yearFilter">Year</label>
+
+                        <select id="yearFilter">
+
+                            <option value="all">All Years</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="filter-actions">
+
+                        <button id="clearFiltersButton"
+                                type="button"
+                                class="button button-secondary">
+
+                            <i class="fa-solid fa-filter-circle-xmark"></i>
+
+                            Clear Filters
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="directory-result-bar">
+
+                    <span id="documentResultCount">
+
+                        Showing 0 documents
+
+                    </span>
+
+                    <span class="confidential-label">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        Confidential Records
+
+                    </span>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table class="data-table document-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th scope="col">Document ID</th>
+
+                                <th scope="col">Title / Category</th>
+
+                                <th scope="col">Client</th>
+
+                                <th scope="col">Linked Case</th>
+
+                                <th scope="col">Document Date</th>
+
+                                <th scope="col">Version</th>
+
+                                <th scope="col">Status</th>
+
+                                <th scope="col">Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="documentsTableBody"></tbody>
+
+                    </table>
+
+                </div>
+
+                <div id="emptyDocumentDirectory"
+                     class="empty-state">
+
+                    <i class="fa-solid fa-folder-open"></i>
+
+                    <h3>No documents found</h3>
+
+                    <p>
+
+                        Register a new document or
+                        adjust your search filters.
+
+                    </p>
+
+                </div>
+
+                <div class="pagination-bar">
+
+                    <span id="paginationInfo">Page 1 of 1</span>
+
+                    <div class="pagination-actions">
+
+                        <button id="previousPageButton"
+                                type="button"
+                                class="button button-secondary"
+                                disabled>
+
+                            <i class="fa-solid fa-chevron-left"></i>
+
+                            Previous
+
+                        </button>
+
+                        <button id="nextPageButton"
+                                type="button"
+                                class="button button-secondary"
+                                disabled>
+
+                            Next
+
+                            <i class="fa-solid fa-chevron-right"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- =================================================
+             DOCUMENT REGISTRATION
+             ================================================= -->
+
+        <section id="registrationPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="registrationTab"
+                 hidden>
+
+            <form id="documentForm"
+                  autocomplete="off">
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2 id="documentFormHeading">
+
+                                Register New Document
+
+                            </h2>
+
+                            <p>
+
+                                Enter document details and
+                                associate the relevant client.
+
+                            </p>
+
+                        </div>
+
+                        <span class="required-fields-note">
+
+                            * Required fields
+
+                        </span>
+
+                    </div>
+
+                    <input id="editingDocumentId"
+                           type="hidden">
+
+                    <input id="editingDocumentRevision"
+                           type="hidden">
+
+                    <div id="documentFormError"
+                         class="form-error"
+                         role="alert"
+                         hidden>
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label for="documentCode">
+
+                                Document Registration ID
+
+                            </label>
+
+                            <input id="documentCode"
+                                   type="text"
+                                   value="Assigned on registration"
+                                   readonly>
+
+                            <small class="field-help">
+
+                                Final number is assigned
+                                automatically on successful registration.
+
+                            </small>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="documentDate">
+
+                                Document Date
+
+                            </label>
+
+                            <input id="documentDate"
+                                   type="date">
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="documentTitle">
+
+                                Document Title
+
+                                <span class="required">*</span>
+
+                            </label>
+
+                            <input id="documentTitle"
+                                   type="text"
+                                   maxlength="500"
+                                   placeholder="e.g. Petition under Section 9 of the Hindu Marriage Act"
+                                   required>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="documentCategory">
+
+                                Document Category
+
+                                <span class="required">*</span>
+
+                            </label>
+
+                            <select id="documentCategory"
+                                    required>
+
+                                <option value="">
+
+                                    Select Category
+
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="documentClient">
+
+                                Associated Client
+
+                                <span class="required">*</span>
+
+                            </label>
+
+                            <select id="documentClient"
+                                    required>
+
+                                <option value="">
+
+                                    Select Client
+
+                                </option>
+
+                            </select>
+
+                            <small class="field-help">
+
+                                Client must be registered
+                                in Client Management.
+
+                            </small>
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="documentCase">
+
+                                Associated Case
+
+                            </label>
+
+                            <select id="documentCase"
+                                    disabled>
+
+                                <option value="">
+
+                                    No Case Association
+
+                                </option>
+
+                            </select>
+
+                            <small class="field-help">
+
+                                Optional. Only eligible cases
+                                linked to the selected client
+                                may be selected.
+
+                            </small>
+
+                        </div>
+
+                        <div id="selectedClientSummary"
+                             class="association-summary full-width"
+                             hidden>
+                        </div>
+
+                        <div id="selectedCaseSummary"
+                             class="association-summary full-width"
+                             hidden>
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label for="documentDescription">
+
+                                Document Description
+
+                            </label>
+
+                            <textarea id="documentDescription"
+                                      rows="5"
+                                      maxlength="10000"
+                                      placeholder="Relevant description, document context or identification details"></textarea>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- FILE SOURCE -->
+
+                <section id="fileSourceSection"
+                         class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Document File</h2>
+
+                            <p>
+
+                                Upload a file or import an
+                                existing Google Drive document.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="source-options">
+
+                        <label class="source-option">
+
+                            <input type="radio"
+                                   name="documentSource"
+                                   id="sourceUpload"
+                                   value="upload"
+                                   checked>
+
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+
+                            <span>
+
+                                <strong>Upload from Device</strong>
+
+                                <small>
+
+                                    Select a file from your
+                                    computer or mobile.
+
+                                </small>
+
+                            </span>
+
+                        </label>
+
+                        <label class="source-option">
+
+                            <input type="radio"
+                                   name="documentSource"
+                                   id="sourceDrive"
+                                   value="drive">
+
+                            <i class="fa-brands fa-google-drive"></i>
+
+                            <span>
+
+                                <strong>Import from Google Drive</strong>
+
+                                <small>
+
+                                    Create a managed copy
+                                    of an existing file.
+
+                                </small>
+
+                            </span>
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- LOCAL UPLOAD -->
+
+                    <div id="uploadSourcePanel">
+
+                        <label id="documentDropZone"
+                               for="documentFile"
+                               class="upload-drop-zone">
+
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+
+                            <strong>Choose Document File</strong>
+
+                            <span>
+
+                                Click to browse or drag
+                                and drop a file here.
+
+                            </span>
+
+                            <small>
+
+                                PDF, DOC, DOCX, XLS, XLSX,
+                                JPG, PNG, WEBP, TXT, CSV,
+                                MP3, WAV and MP4.
+
+                            </small>
+
+                            <small>
+
+                                Maximum file size: 25 MB
+
+                            </small>
+
+                        </label>
+
+                        <input id="documentFile"
+                               class="file-input"
+                               type="file"
+                               accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.txt,.csv,.mp3,.wav,.mp4">
+
+                    </div>
+
+
+                    <!-- GOOGLE DRIVE IMPORT -->
+
+                    <div id="driveSourcePanel" hidden>
+
+                        <div class="drive-picker-box">
+
+                            <i class="fa-brands fa-google-drive"></i>
+
+                            <h3>Select Google Drive Document</h3>
+
+                            <p>
+
+                                Only supported private files
+                                owned by the authorized
+                                Google account may be imported.
+
+                            </p>
+
+                            <button id="selectDriveFileButton"
+                                    type="button"
+                                    class="button button-primary"
+                                    disabled>
+
+                                <i class="fa-solid fa-folder-open"></i>
+
+                                Browse Google Drive
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SELECTED FILE -->
+
+                    <div id="selectedFileCard"
+                         class="selected-file-card"
+                         hidden>
+
+                        <div class="selected-file-icon">
+
+                            <i id="selectedFileIcon"
+                               class="fa-solid fa-file"></i>
+
+                        </div>
+
+                        <div class="selected-file-details">
+
+                            <strong id="selectedFileName"></strong>
+
+                            <span id="selectedFileSize"></span>
+
+                            <span id="selectedFileType"></span>
+
+                        </div>
+
+                        <button id="removeSelectedFileButton"
+                                type="button"
+                                class="icon-button"
+                                aria-label="Remove selected file">
+
+                            <i class="fa-solid fa-xmark"></i>
+
+                        </button>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="documentVersionNotes">
+
+                            Initial Version Notes
+
+                        </label>
+
+                        <textarea id="documentVersionNotes"
+                                  rows="3"
+                                  maxlength="5000"
+                                  placeholder="Original document, signed copy, initial draft or other relevant notes"></textarea>
+
+                    </div>
+
+                </section>
+
+
+                <!-- CONFIDENTIALITY CONFIRMATION -->
+
+                <section class="content-card confidential-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="fa-solid fa-shield-halved"></i>
+
+                                Confidentiality Confirmation
+
+                            </h2>
+
+                            <p>
+
+                                Verify the document before registration.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <label class="checkbox-field">
+
+                        <input id="documentAuthorizationConfirmed"
+                               type="checkbox"
+                               required>
+
+                        <span>
+
+                            I confirm that the document is
+                            authorized for storage in the
+                            firm's document management system.
+
+                        </span>
+
+                    </label>
+
+                    <label class="checkbox-field">
+
+                        <input id="documentAssociationConfirmed"
+                               type="checkbox"
+                               required>
+
+                        <span>
+
+                            I have verified the client and
+                            case association and confirm
+                            that the document belongs to
+                            the selected record.
+
+                        </span>
+
+                    </label>
+
+                    <div class="information-note">
+
+                        <i class="fa-solid fa-circle-info"></i>
+
+                        <p>
+
+                            Original files are stored in
+                            Google Drive. Registration details
+                            and version history are maintained
+                            in Firestore.
+
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+                <!-- UPLOAD PROGRESS -->
+
+                <section id="uploadProgressCard"
+                         class="content-card upload-progress-card"
+                         aria-live="polite"
+                         hidden>
+
+                    <div class="upload-progress-heading">
+
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+
+                        <div>
+
+                            <strong id="uploadProgressTitle">
+
+                                Processing Document
+
+                            </strong>
+
+                            <p id="uploadProgressMessage">
+
+                                Preparing document...
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <progress id="uploadProgress"
+                              max="100"
+                              aria-label="Document processing progress">
+                    </progress>
+
+                    <small>
+
+                        Do not close or refresh this page
+                        while the operation is in progress.
+
+                    </small>
+
+                </section>
+
+
+                <!-- FORM ACTIONS -->
+
+                <div class="form-action-bar">
+
+                    <div class="form-action-note">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        Authorized private document storage.
+
+                    </div>
+
+                    <div class="form-actions">
+
+                        <button id="resetDocumentFormButton"
+                                type="button"
+                                class="button button-secondary">
+
+                            <i class="fa-solid fa-rotate-left"></i>
+
+                            Reset Form
+
+                        </button>
+
+                        <button id="cancelDocumentEditButton"
+                                type="button"
+                                class="button button-secondary"
+                                hidden>
+
+                            Cancel Editing
+
+                        </button>
+
+                        <button id="saveDocumentButton"
+                                type="submit"
+                                class="button button-primary"
+                                disabled>
+
+                            <i class="fa-solid fa-floppy-disk"></i>
+
+                            <span id="saveDocumentButtonText">
+
+                                Register Document
+
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+        <!-- =================================================
+             ARCHIVED DOCUMENTS
+             ================================================= -->
+
+        <section id="archivedPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="archivedTab"
+                 hidden>
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Archived Documents</h2>
+
+                        <p>
+
+                            Review retained and inactive
+                            document records.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="information-note">
+
+                    <i class="fa-solid fa-box-archive"></i>
+
+                    <p>
+
+                        Archived documents remain in
+                        Google Drive with their registration
+                        details and version history preserved.
+                        Restore a record before editing it.
+
+                    </p>
+
+                </div>
+
+                <div class="directory-toolbar">
+
+                    <div class="form-group search-field">
+
+                        <label for="archivedDocumentSearch">
+
+                            Search Archived Documents
+
+                        </label>
+
+                        <div class="search-input-wrapper">
+
+                            <i class="fa-solid fa-magnifying-glass"></i>
+
+                            <input id="archivedDocumentSearch"
+                                   type="search"
+                                   placeholder="Search archived records"
+                                   autocomplete="off">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="directory-result-bar">
+
+                    <span id="archivedResultCount">
+
+                        Showing 0 archived documents
+
+                    </span>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table class="data-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th scope="col">Document ID</th>
+
+                                <th scope="col">Document Title</th>
+
+                                <th scope="col">Client</th>
+
+                                <th scope="col">Archived Date</th>
+
+                                <th scope="col">Reason</th>
+
+                                <th scope="col">Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="archivedDocumentsBody"></tbody>
+
+                    </table>
+
+                </div>
+
+                <div id="emptyArchivedDocuments"
+                     class="empty-state">
+
+                    <i class="fa-solid fa-box-archive"></i>
+
+                    <h3>No archived documents</h3>
+
+                    <p>
+
+                        Archived records will appear here.
+
+                    </p>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- =================================================
+             SETTINGS PANEL
+             ================================================= -->
+
+        <section id="settingsPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="settingsTab"
+                 hidden>
+
+            <!-- STORAGE CONFIGURATION -->
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Storage Configuration</h2>
+
+                        <p>
+
+                            Document management
+                            storage and connection settings.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <dl class="details-grid">
+
+                    <div>
+
+                        <dt>Storage Provider</dt>
+
+                        <dd>Google Drive</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>Metadata Database</dt>
+
+                        <dd>Firebase Firestore</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>Maximum File Size</dt>
+
+                        <dd>25 MB per file</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>Document Numbering</dt>
+
+                        <dd>MNM/DOC/001/YYYY</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>Access Level</dt>
+
+                        <dd>Administrator Only</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>Google Authorization Scope</dt>
+
+                        <dd>Per-file Drive Access</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>Permanent Deletion via DMS</dt>
+
+                        <dd>Disabled</dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>System Version</dt>
+
+                        <dd>1.0.0</dd>
+
+                    </div>
+
+                </dl>
+
+                <div class="card-actions">
+
+                    <button id="initialiseFoldersButton"
+                            type="button"
+                            class="button button-primary"
+                            disabled>
+
+                        <i class="fa-solid fa-folder-tree"></i>
+
+                        Initialize Drive Folders
+
+                    </button>
+
+                    <button id="testCloudConnectionButton"
+                            type="button"
+                            class="button button-secondary">
+
+                        <i class="fa-solid fa-plug-circle-check"></i>
+
+                        Test Cloud Connection
+
+                    </button>
+
+                </div>
+
+                <div id="settingsConnectionResult"
+                     class="connection-result"
+                     role="status"
+                     hidden>
+                </div>
+
+            </section>
+
+
+            <!-- NUMBERING -->
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Document Numbering</h2>
+
+                        <p>Automatic annual registration sequence.</p>
+
+                    </div>
+
+                </div>
+
+                <div class="numbering-preview">
+
+                    <span>Next Estimated Document ID</span>
+
+                    <strong id="nextDocumentCode">
+
+                        Loading...
+
+                    </strong>
+
+                    <small>
+
+                        The final number is allocated
+                        during registration.
+
+                    </small>
+
+                </div>
+
+                <div class="information-note">
+
+                    <i class="fa-solid fa-circle-info"></i>
+
+                    <p>
+
+                        Document numbers restart annually.
+                        Existing document numbers remain
+                        permanent and are not reassigned
+                        after archival.
+
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- BACKUP -->
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Backup and Export</h2>
+
+                        <p>
+
+                            Export document metadata
+                            for administrative recordkeeping.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="backup-options-grid">
+
+                    <article class="backup-option">
+
+                        <i class="fa-solid fa-file-csv"></i>
+
+                        <h3>Document Register</h3>
+
+                        <p>
+
+                            Export registered document
+                            metadata in CSV format.
+
+                        </p>
+
+                        <button id="exportAllDocumentsButton"
+                                type="button"
+                                class="button button-secondary">
+
+                            Export All Records
+
+                        </button>
+
+                    </article>
+
+                    <article class="backup-option">
+
+                        <i class="fa-solid fa-database"></i>
+
+                        <h3>Metadata Backup</h3>
+
+                        <p>
+
+                            Export document records,
+                            version history, activities
+                            and numbering sequences.
+
+                        </p>
+
+                        <button id="backupDocumentsButton"
+                                type="button"
+                                class="button button-primary">
+
+                            Create JSON Backup
+
+                        </button>
+
+                    </article>
+
+                </div>
+
+                <div class="warning-note">
+
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+
+                    <p>
+
+                        Exports contain confidential information
+                        and are not encrypted by this application.
+                        Store them securely. Metadata backups
+                        do not include original Google Drive files
+                        and are not an automatic restore mechanism.
+
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- RECOVERY -->
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Interrupted Operation Recovery</h2>
+
+                        <p>
+
+                            Recover files uploaded before
+                            a registration failure.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="warning-note">
+
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+
+                    <p>
+
+                        Use recovery only when a previous
+                        upload succeeded but its Firestore
+                        registration could not be confirmed.
+                        Verify the operation and file IDs
+                        before proceeding.
+
+                    </p>
+
+                </div>
+
+                <div class="card-actions">
+
+                    <button id="openRegistrationRecoveryButton"
+                            type="button"
+                            class="button button-secondary"
+                            disabled>
+
+                        <i class="fa-solid fa-file-circle-check"></i>
+
+                        Recover Document Registration
+
+                    </button>
+
+                    <button id="openVersionRecoveryButton"
+                            type="button"
+                            class="button button-secondary"
+                            disabled>
+
+                        <i class="fa-solid fa-code-branch"></i>
+
+                        Recover Document Version
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- SECURITY -->
+
+            <section class="content-card confidential-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Security and Confidentiality</h2>
+
+                        <p>Document handling safeguards.</p>
+
+                    </div>
+
+                </div>
+
+                <ul class="security-list">
+
+                    <li>
+
+                        <i class="fa-solid fa-shield-halved"></i>
+
+                        Firebase authenticated administrator access.
+
+                    </li>
+
+                    <li>
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        Firestore security rules restrict metadata access.
+
+                    </li>
+
+                    <li>
+
+                        <i class="fa-brands fa-google-drive"></i>
+
+                        Google Drive authorization is required
+                        for original file operations.
+
+                    </li>
+
+                    <li>
+
+                        <i class="fa-solid fa-key"></i>
+
+                        Google access tokens are not stored
+                        in browser persistent storage.
+
+                    </li>
+
+                    <li>
+
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+
+                        Document version history is retained
+                        within the application.
+
+                    </li>
+
+                    <li>
+
+                        <i class="fa-solid fa-box-archive"></i>
+
+                        Archival replaces permanent deletion
+                        through this interface.
+
+                    </li>
+
+                </ul>
+
+                <div class="warning-note">
+
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+
+                    <p>
+
+                        Google Drive sharing permissions must
+                        remain private. Files may still be
+                        modified or deleted outside this
+                        application by authorized Drive users.
+                        This system is not a tamper-proof
+                        forensic evidence repository.
+
+                    </p>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- =================================================
+             DOCUMENT PROFILE
+             ================================================= -->
+
+        <section id="documentProfilePanel"
+                 class="module-panel document-profile-panel"
+                 aria-label="Document profile"
+                 hidden>
+
+            <div class="profile-toolbar">
+
+                <button id="backToDirectoryButton"
+                        type="button"
+                        class="button button-secondary">
+
+                    <i class="fa-solid fa-arrow-left"></i>
+
+                    Back to Directory
+
+                </button>
+
+                <div class="profile-actions">
+
+                    <button id="openCurrentFileButton"
+                            type="button"
+                            class="button button-secondary"
+                            disabled>
+
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+
+                        Open File
+
+                    </button>
+
+                    <button id="downloadCurrentFileButton"
+                            type="button"
+                            class="button button-secondary"
+                            disabled>
+
+                        <i class="fa-solid fa-download"></i>
+
+                        Download
+
+                    </button>
+
+                    <button id="editDocumentButton"
+                            type="button"
+                            class="button button-primary">
+
+                        <i class="fa-solid fa-pen-to-square"></i>
+
+                        Edit Details
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <section class="content-card profile-header">
+
+                <div class="profile-avatar">
+
+                    <i id="profileDocumentIcon"
+                       class="fa-solid fa-file-lines"></i>
+
+                </div>
+
+                <div class="profile-heading">
+
+                    <span id="profileDocumentCode"
+                          class="profile-code"></span>
+
+                    <h2 id="profileDocumentTitle"></h2>
+
+                    <div class="profile-meta">
+
+                        <span id="profileDocumentCategory"></span>
+
+                        <span id="profileDocumentVersion"></span>
+
+                        <span id="profileDocumentStatus"
+                              class="status-badge"></span>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <nav class="profile-navigation"
+                 aria-label="Document profile navigation">
+
+                <div class="profile-tabs"
+                     role="tablist">
+
+                    <button id="profileSummaryTab"
+                            type="button"
+                            class="profile-tab active"
+                            role="tab"
+                            data-profile-tab="summary"
+                            aria-selected="true"
+                            aria-controls="profileSummaryPanel">
+
+                        <i class="fa-solid fa-file-lines"></i>
+
+                        Summary
+
+                    </button>
+
+                    <button id="profileVersionsTab"
+                            type="button"
+                            class="profile-tab"
+                            role="tab"
+                            data-profile-tab="versions"
+                            aria-selected="false"
+                            aria-controls="profileVersionsPanel"
+                            tabindex="-1">
+
+                        <i class="fa-solid fa-code-branch"></i>
+
+                        Version History
+
+                    </button>
+
+                    <button id="profileActivityTab"
+                            type="button"
+                            class="profile-tab"
+                            role="tab"
+                            data-profile-tab="activity"
+                            aria-selected="false"
+                            aria-controls="profileActivityPanel"
+                            tabindex="-1">
+
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+
+                        Activity History
+
+                    </button>
+
+                </div>
+
+            </nav>
+
+
+            <!-- PROFILE SUMMARY -->
+
+            <div id="profileSummaryPanel"
+                 class="profile-panel"
+                 role="tabpanel"
+                 aria-labelledby="profileSummaryTab">
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Document Information</h2>
+
+                            <p>Registered metadata and association.</p>
+
+                        </div>
+
+                    </div>
+
+                    <dl class="details-grid">
+
+                        <div>
+
+                            <dt>Document ID</dt>
+
+                            <dd id="profileDetailsCode"></dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Document Date</dt>
+
+                            <dd id="profileDetailsDate"></dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Category</dt>
+
+                            <dd id="profileDetailsCategory"></dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Current Version</dt>
+
+                            <dd id="profileDetailsVersion"></dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Associated Client</dt>
+
+                            <dd id="profileDetailsClient"></dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Associated Case</dt>
+
+                            <dd id="profileDetailsCase"></dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Registration Date</dt>
+
+                            <dd id="profileCreatedAt"></dd>
+
+                        </div>
+
+                        <div>
+
+                            <dt>Last Updated</dt>
+
+                            <dd id="profileUpdatedAt"></dd>
+
+                        </div>
+
+                        <div class="full-width">
+
+                            <dt>Description</dt>
+
+                            <dd id="profileDescription"
+                                class="preserve-text"></dd>
+
+                        </div>
+
+                    </dl>
+
+                </section>
+
+
+                <!-- CURRENT FILE -->
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Current Document File</h2>
+
+                            <p>Latest registered file version.</p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="current-file-card">
+
+                        <div class="current-file-icon">
+
+                            <i id="currentFileIcon"
+                               class="fa-solid fa-file"></i>
+
+                        </div>
+
+                        <div class="current-file-details">
+
+                            <strong id="currentFileName"></strong>
+
+                            <span id="currentFileSize"></span>
+
+                            <span id="currentFileMimeType"></span>
+
+                        </div>
+
+                        <span id="currentFileVersion"
+                              class="version-badge"></span>
+
+                    </div>
+
+                    <dl class="details-grid">
+
+                        <div>
+
+                            <dt>Version Created</dt>
+
+                            <dd id="currentVersionCreatedAt"></dd>
+
+                        </div>
+
+                        <div class="full-width">
+
+                            <dt>Version Notes</dt>
+
+                            <dd id="currentVersionNotes"
+                                class="preserve-text"></dd>
+
+                        </div>
+
+                    </dl>
+
+                </section>
+
+
+                <!-- CLIENT AND CASE INTEGRATION -->
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Linked Records</h2>
+
+                            <p>Associated client and case details.</p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="integration-grid">
+
+                        <article class="integration-card">
+
+                            <i class="fa-solid fa-user-tie"></i>
+
+                            <div>
+
+                                <h3 id="linkedClientName">
+
+                                    Client
+
+                                </h3>
+
+                                <p id="linkedClientCode"></p>
+
+                            </div>
+
+                            <button id="openLinkedClientButton"
+                                    type="button"
+                                    class="button button-secondary">
+
+                                Client Management
+
+                            </button>
+
+                        </article>
+
+                        <article class="integration-card">
+
+                            <i class="fa-solid fa-briefcase"></i>
+
+                            <div>
+
+                                <h3 id="linkedCaseTitle">
+
+                                    No Linked Case
+
+                                </h3>
+
+                                <p id="linkedCaseCode"></p>
+
+                            </div>
+
+                            <button id="openLinkedCaseButton"
+                                    type="button"
+                                    class="button button-secondary"
+                                    disabled>
+
+                                Case Management
+
+                            </button>
+
+                        </article>
+
+                    </div>
+
+                </section>
+
+
+                <!-- ARCHIVE ACTIONS -->
+
+                <section class="content-card warning-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Document Record Status</h2>
+
+                            <p>
+
+                                Manage document availability
+                                without deleting original files.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div id="archiveDetails"
+                         class="archive-details"
+                         hidden>
+
+                        <dl class="details-grid">
+
+                            <div>
+
+                                <dt>Archived On</dt>
+
+                                <dd id="profileArchivedAt"></dd>
+
+                            </div>
+
+                            <div class="full-width">
+
+                                <dt>Archive Reason</dt>
+
+                                <dd id="profileArchiveReason"
+                                    class="preserve-text"></dd>
+
+                            </div>
+
+                        </dl>
+
+                    </div>
+
+                    <div class="card-actions">
+
+                        <button id="archiveDocumentButton"
+                                type="button"
+                                class="button button-danger-outline">
+
+                            <i class="fa-solid fa-box-archive"></i>
+
+                            Archive Document
+
+                        </button>
+
+                        <button id="restoreDocumentButton"
+                                type="button"
+                                class="button button-primary"
+                                hidden>
+
+                            <i class="fa-solid fa-box-open"></i>
+
+                            Restore Document
+
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            <!-- VERSION HISTORY -->
+
+            <div id="profileVersionsPanel"
+                 class="profile-panel"
+                 role="tabpanel"
+                 aria-labelledby="profileVersionsTab"
+                 hidden>
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Document Version History</h2>
+
+                            <p>
+
+                                Previous registered file
+                                versions are retained.
+
+                            </p>
+
+                        </div>
+
+                        <button id="addVersionButton"
+                                type="button"
+                                class="button button-primary"
+                                disabled>
+
+                            <i class="fa-solid fa-plus"></i>
+
+                            Add New Version
+
+                        </button>
+
+                    </div>
+
+                    <div class="information-note">
+
+                        <i class="fa-solid fa-circle-info"></i>
+
+                        <p>
+
+                            Adding a version creates a new
+                            file in Google Drive rather than
+                            overwriting the previously
+                            registered file.
+
+                        </p>
+
+                    </div>
+
+                    <div class="table-wrapper">
+
+                        <table class="data-table version-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th scope="col">Version</th>
+
+                                    <th scope="col">File Name</th>
+
+                                    <th scope="col">Size</th>
+
+                                    <th scope="col">Created On</th>
+
+                                    <th scope="col">Notes</th>
+
+                                    <th scope="col">Actions</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="documentVersionsBody"></tbody>
+
+                        </table>
+
+                    </div>
+
+                    <div id="emptyVersionHistory"
+                         class="empty-state"
+                         hidden>
+
+                        <i class="fa-solid fa-code-branch"></i>
+
+                        <h3>No versions available</h3>
+
+                        <p>
+
+                            Refresh or review the
+                            document registration.
+
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            <!-- ACTIVITY HISTORY -->
+
+            <div id="profileActivityPanel"
+                 class="profile-panel"
+                 role="tabpanel"
+                 aria-labelledby="profileActivityTab"
+                 hidden>
+
+                <section class="content-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <h2>Document Activity History</h2>
+
+                            <p>
+
+                                Registered changes and
+                                administrative notes.
+
+                            </p>
+
+                        </div>
+
+                        <button id="addDocumentNoteButton"
+                                type="button"
+                                class="button button-primary">
+
+                            <i class="fa-solid fa-plus"></i>
+
+                            Add Note
+
+                        </button>
+
+                    </div>
+
+                    <div id="documentActivityTimeline"
+                         class="activity-timeline">
+                    </div>
+
+                    <div id="emptyDocumentActivities"
+                         class="empty-state"
+                         hidden>
+
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+
+                        <h3>No activity records</h3>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =====================================================
+         ADD DOCUMENT VERSION DIALOG
+         ===================================================== -->
+
+    <dialog id="versionDialog"
+            class="app-dialog dialog-wide"
+            aria-labelledby="versionDialogHeading">
+
+        <div class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <div>
+
+                    <h2 id="versionDialogHeading">
+
+                        Add Document Version
+
+                    </h2>
+
+                    <p>
+
+                        Register a new file without
+                        overwriting previous versions.
+
+                    </p>
+
+                </div>
+
+                <button type="button"
+                        class="dialog-close"
+                        data-close-dialog="versionDialog"
+                        aria-label="Close">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+            <form id="versionForm"
+                  autocomplete="off">
+
+                <input id="versionDocumentId"
+                       type="hidden">
+
+                <input id="versionExpectedRevision"
+                       type="hidden">
+
+                <div class="case-summary-box">
+
+                    <strong id="versionDocumentTitle"></strong>
+
+                    <span id="versionDocumentCode"></span>
+
+                    <span id="versionNumberPreview"></span>
+
+                </div>
+
+                <div id="versionFormError"
+                     class="form-error"
+                     role="alert"
+                     hidden>
+                </div>
+
+                <div class="form-group">
+
+                    <label for="versionFile">
+
+                        New Version File
+
+                        <span class="required">*</span>
+
+                    </label>
+
+                    <input id="versionFile"
+                           type="file"
+                           accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.txt,.csv,.mp3,.wav,.mp4"
+                           required>
+
+                    <small class="field-help">
+
+                        Maximum file size: 25 MB.
+
+                    </small>
+
+                </div>
+
+                <div id="versionSelectedFile"
+                     class="selected-file-card"
+                     hidden>
+                </div>
+
+                <div class="form-group">
+
+                    <label for="versionNotes">
+
+                        Version Notes
+
+                    </label>
+
+                    <textarea id="versionNotes"
+                              rows="4"
+                              maxlength="5000"
+                              placeholder="Describe the changes or purpose of this version"></textarea>
+
+                </div>
+
+                <label class="checkbox-field">
+
+                    <input id="versionConfirmed"
+                           type="checkbox"
+                           required>
+
+                    <span>
+
+                        I confirm that this file belongs
+                        to the selected document record.
+
+                    </span>
+
+                </label>
+
+                <div id="versionUploadProgress"
+                     class="information-note"
+                     role="status"
+                     hidden>
+
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+
+                    <p>
+
+                        Uploading and registering version.
+                        Please wait.
+
+                    </p>
+
+                </div>
+
+                <div class="dialog-actions">
+
+                    <button type="button"
+                            class="button button-secondary"
+                            data-close-dialog="versionDialog">
+
+                        Cancel
+
+                    </button>
+
+                    <button id="saveVersionButton"
+                            type="submit"
+                            class="button button-primary"
+                            disabled>
+
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+
+                        <span id="saveVersionButtonText">
+
+                            Upload New Version
+
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- =====================================================
+         ARCHIVE DOCUMENT DIALOG
+         ===================================================== -->
+
+    <dialog id="archiveDialog"
+            class="app-dialog"
+            aria-labelledby="archiveDialogHeading">
+
+        <div class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="archiveDialogHeading">
+
+                    Archive Document
+
+                </h2>
+
+                <button type="button"
+                        class="dialog-close"
+                        data-close-dialog="archiveDialog"
+                        aria-label="Close">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+            <form id="archiveForm">
+
+                <input id="archiveDocumentId"
+                       type="hidden">
+
+                <input id="archiveExpectedRevision"
+                       type="hidden">
+
+                <div class="warning-note">
+
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+
+                    <p>
+
+                        This will remove the document from
+                        the active directory. Original files
+                        and historical versions will be retained.
+
+                    </p>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="archiveReason">
+
+                        Reason for Archival
+
+                        <span class="required">*</span>
+
+                    </label>
+
+                    <textarea id="archiveReason"
+                              rows="4"
+                              maxlength="2000"
+                              required></textarea>
+
+                </div>
+
+                <div id="archiveFormError"
+                     class="form-error"
+                     role="alert"
+                     hidden>
+                </div>
+
+                <div class="dialog-actions">
+
+                    <button type="button"
+                            class="button button-secondary"
+                            data-close-dialog="archiveDialog">
+
+                        Cancel
+
+                    </button>
+
+                    <button id="confirmArchiveButton"
+                            type="submit"
+                            class="button button-danger">
+
+                        Archive Document
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- =====================================================
+         RESTORE DOCUMENT DIALOG
+         ===================================================== -->
+
+    <dialog id="restoreDialog"
+            class="app-dialog"
+            aria-labelledby="restoreDialogHeading">
+
+        <div class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="restoreDialogHeading">
+
+                    Restore Document
+
+                </h2>
+
+                <button type="button"
+                        class="dialog-close"
+                        data-close-dialog="restoreDialog"
+                        aria-label="Close">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+            <form id="restoreForm">
+
+                <input id="restoreDocumentId"
+                       type="hidden">
+
+                <input id="restoreExpectedRevision"
+                       type="hidden">
+
+                <p>
+
+                    Restore this archived document to
+                    the active document directory?
+
+                </p>
+
+                <div id="restoreFormError"
+                     class="form-error"
+                     role="alert"
+                     hidden>
+                </div>
+
+                <div class="dialog-actions">
+
+                    <button type="button"
+                            class="button button-secondary"
+                            data-close-dialog="restoreDialog">
+
+                        Cancel
+
+                    </button>
+
+                    <button id="confirmRestoreButton"
+                            type="submit"
+                            class="button button-primary">
+
+                        Restore Document
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- =====================================================
+         DOCUMENT NOTE DIALOG
+         ===================================================== -->
+
+    <dialog id="noteDialog"
+            class="app-dialog"
+            aria-labelledby="noteDialogHeading">
+
+        <div class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="noteDialogHeading">
+
+                    Add Document Note
+
+                </h2>
+
+                <button type="button"
+                        class="dialog-close"
+                        data-close-dialog="noteDialog"
+                        aria-label="Close">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+            <form id="noteForm">
+
+                <input id="noteDocumentId"
+                       type="hidden">
+
+                <div class="form-group">
+
+                    <label for="documentNote">
+
+                        Administrative Note
+
+                        <span class="required">*</span>
+
+                    </label>
+
+                    <textarea id="documentNote"
+                              rows="5"
+                              maxlength="10000"
+                              required></textarea>
+
+                </div>
+
+                <div id="noteFormError"
+                     class="form-error"
+                     role="alert"
+                     hidden>
+                </div>
+
+                <div class="dialog-actions">
+
+                    <button type="button"
+                            class="button button-secondary"
+                            data-close-dialog="noteDialog">
+
+                        Cancel
+
+                    </button>
+
+                    <button id="saveNoteButton"
+                            type="submit"
+                            class="button button-primary">
+
+                        Save Note
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- =====================================================
+         REGISTRATION RECOVERY DIALOG
+         ===================================================== -->
+
+    <dialog id="registrationRecoveryDialog"
+            class="app-dialog dialog-wide"
+            aria-labelledby="registrationRecoveryHeading">
+
+        <div class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <div>
+
+                    <h2 id="registrationRecoveryHeading">
+
+                        Recover Document Registration
+
+                    </h2>
+
+                    <p>
+
+                        Register a previously uploaded file.
+
+                    </p>
+
+                </div>
+
+                <button type="button"
+                        class="dialog-close"
+                        data-close-dialog="registrationRecoveryDialog"
+                        aria-label="Close">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+            <form id="registrationRecoveryForm"
+                  autocomplete="off">
+
+                <div id="registrationRecoveryError"
+                     class="form-error"
+                     role="alert"
+                     hidden>
+                </div>
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="recoveryDocumentId">
+
+                            Recovery Document ID *
+
+                        </label>
+
+                        <input id="recoveryDocumentId"
+                               type="text"
+                               maxlength="128"
+                               required>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="recoveryDriveFileId">
+
+                            Google Drive File ID *
+
+                        </label>
+
+                        <input id="recoveryDriveFileId"
+                               type="text"
+                               maxlength="128"
+                               required>
+
+                    </div>
+
+                    <div class="form-group full-width">
+
+                        <label for="recoveryDocumentTitle">
+
+                            Document Title *
+
+                        </label>
+
+                        <input id="recoveryDocumentTitle"
+                               type="text"
+                               maxlength="500"
+                               required>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="recoveryDocumentCategory">
+
+                            Category *
+
+                        </label>
+
+                        <select id="recoveryDocumentCategory"
+                                required>
+
+                            <option value="">Select Category</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="recoveryDocumentDate">
+
+                            Document Date
+
+                        </label>
+
+                        <input id="recoveryDocumentDate"
+                               type="date">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="recoveryClientId">
+
+                            Client *
+
+                        </label>
+
+                        <select id="recoveryClientId"
+                                required>
+
+                            <option value="">Select Client</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="recoveryCaseId">
+
+                            Linked Case
+
+                        </label>
+
+                        <select id="recoveryCaseId"
+                                disabled>
+
+                            <option value="">
+
+                                No Case Association
+
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group full-width">
+
+                        <label for="recoveryDescription">
+
+                            Description
+
+                        </label>
+
+                        <textarea id="recoveryDescription"
+                                  rows="3"
+                                  maxlength="10000"></textarea>
+
+                    </div>
+
+                    <div class="form-group full-width">
+
+                        <label for="recoveryVersionNotes">
+
+                            Version Notes
+
+                        </label>
+
+                        <textarea id="recoveryVersionNotes"
+                                  rows="3"
+                                  maxlength="5000"></textarea>
+
+                    </div>
+
+                </div>
+
+                <label class="checkbox-field">
+
+                    <input id="registrationRecoveryConfirmed"
+                           type="checkbox"
+                           required>
+
+                    <span>
+
+                        I have verified the original
+                        upload and recovery details.
+
+                    </span>
+
+                </label>
+
+                <div class="dialog-actions">
+
+                    <button type="button"
+                            class="button button-secondary"
+                            data-close-dialog="registrationRecoveryDialog">
+
+                        Cancel
+
+                    </button>
+
+                    <button id="recoverRegistrationButton"
+                            type="submit"
+                            class="button button-primary">
+
+                        Recover Registration
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- =====================================================
+         VERSION RECOVERY DIALOG
+         ===================================================== -->
+
+    <dialog id="versionRecoveryDialog"
+            class="app-dialog dialog-wide"
+            aria-labelledby="versionRecoveryHeading">
+
+        <div class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <div>
+
+                    <h2 id="versionRecoveryHeading">
+
+                        Recover Document Version
+
+                    </h2>
+
+                    <p>
+
+                        Complete an interrupted version registration.
+
+                    </p>
+
+                </div>
+
+                <button type="button"
+                        class="dialog-close"
+                        data-close-dialog="versionRecoveryDialog"
+                        aria-label="Close">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+            <form id="versionRecoveryForm"
+                  autocomplete="off">
+
+                <div id="versionRecoveryError"
+                     class="form-error"
+                     role="alert"
+                     hidden>
+                </div>
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="recoveryVersionDocumentId">
+
+                            Internal Document ID *
+
+                        </label>
+
+                        <input id="recoveryVersionDocumentId"
+                               type="text"
+                               maxlength="128"
+                               required>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="recoveryVersionFileId">
+
+                            Google Drive File ID *
+
+                        </label>
+
+                        <input id="recoveryVersionFileId"
+                               type="text"
+                               maxlength="128"
+                               required>
+
+                    </div>
+
+                    <div class="form-group full-width">
+
+                        <label for="recoveryOperationId">
+
+                            Upload Operation ID *
+
+                        </label>
+
+                        <input id="recoveryOperationId"
+                               type="text"
+                               maxlength="128"
+                               required>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="recoveryExpectedRevision">
+
+                            Expected Revision *
+
+                        </label>
+
+                        <input id="recoveryExpectedRevision"
+                               type="number"
+                               min="1"
+                               step="1"
+                               required>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="recoveryIntendedVersion">
+
+                            Intended Version *
+
+                        </label>
+
+                        <input id="recoveryIntendedVersion"
+                               type="number"
+                               min="2"
+                               step="1"
+                               required>
+
+                    </div>
+
+                    <div class="form-group full-width">
+
+                        <label for="recoveryNewVersionNotes">
+
+                            Version Notes
+
+                        </label>
+
+                        <textarea id="recoveryNewVersionNotes"
+                                  rows="4"
+                                  maxlength="5000"></textarea>
+
+                    </div>
+
+                </div>
+
+                <label class="checkbox-field">
+
+                    <input id="versionRecoveryConfirmed"
+                           type="checkbox"
+                           required>
+
+                    <span>
+
+                        I have verified the intended
+                        version and recovery details.
+
+                    </span>
+
+                </label>
+
+                <div class="dialog-actions">
+
+                    <button type="button"
+                            class="button button-secondary"
+                            data-close-dialog="versionRecoveryDialog">
+
+                        Cancel
+
+                    </button>
+
+                    <button id="recoverVersionButton"
+                            type="submit"
+                            class="button button-primary">
+
+                        Recover Version
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- =====================================================
+         RECOVERY INFORMATION DIALOG
+         ===================================================== -->
+
+    <dialog id="recoveryInformationDialog"
+            class="app-dialog dialog-wide"
+            aria-labelledby="recoveryInformationHeading">
+
+        <div class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="recoveryInformationHeading">
+
+                    Registration Recovery Required
+
+                </h2>
+
+            </div>
+
+            <div class="warning-note">
+
+                <i class="fa-solid fa-triangle-exclamation"></i>
+
+                <p>
+
+                    A file may already exist in Google Drive.
+                    Retain the recovery information and
+                    avoid uploading a duplicate.
+
+                </p>
+
+            </div>
+
+            <pre id="recoveryInformation"
+                 class="recovery-information"></pre>
+
+            <div class="dialog-actions">
+
+                <button id="copyRecoveryInformationButton"
+                        type="button"
+                        class="button button-secondary">
+
+                    <i class="fa-solid fa-copy"></i>
+
+                    Copy Recovery Details
+
+                </button>
+
+                <button id="continueRecoveryButton"
+                        type="button"
+                        class="button button-primary">
+
+                    Open Recovery Form
+
+                </button>
+
+                <button type="button"
+                        class="button button-secondary"
+                        data-close-dialog="recoveryInformationDialog">
+
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- =====================================================
+         GENERAL CONFIRMATION DIALOG
+         ===================================================== -->
+
+    <dialog id="confirmationDialog"
+            class="app-dialog"
+            aria-labelledby="confirmationTitle">
+
+        <div class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="confirmationTitle">
+
+                    Confirm Operation
+
+                </h2>
+
+            </div>
+
+            <p id="confirmationMessage"></p>
+
+            <div class="dialog-actions">
+
+                <button id="cancelConfirmation"
+                        type="button"
+                        class="button button-secondary">
+
+                    Cancel
+
+                </button>
+
+                <button id="acceptConfirmation"
+                        type="button"
+                        class="button button-primary">
+
+                    Confirm
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- =====================================================
+         APPLICATION FOOTER
+         ===================================================== -->
+
+    <footer class="app-footer">
+
+        <div>
+
+            <strong>MNM Legal Associates</strong>
+
+            <span>Justice, Integrity &amp; Excellence</span>
+
+        </div>
+
+        <div>
+
+            <span>
+
+                Confidential Legal Practice Management System
+
+            </span>
+
+            <span>
+
+                &copy; <span id="currentYear"></span>
+                MNM Legal Associates
+
+            </span>
+
+        </div>
+
+    </footer>
+
+</div>
+
+
+<!-- =========================================================
+     AUTHENTICATION AND APPLICATION BOOTSTRAP
+     ========================================================= -->
+
+<script type="module">
+
+    import {
+
+        protectPage,
+
+        logoutUser,
+
+        verifyStaffAccess
+
+    } from "./auth.js";
+
+    import { auth } from "./firebase-config.js";
+
+
+    const protectedContent = document.getElementById(
+        "protectedContent"
+    );
+
+    const authLoading = document.getElementById(
+        "authLoading"
+    );
+
+    const loadingMessage = document.getElementById(
+        "loadingMessage"
+    );
+
+    const loadingSpinner = document.getElementById(
+        "loadingSpinner"
+    );
+
+    const logoutButton = document.getElementById(
+        "logoutButton"
+    );
+
+    let activeUserId = null;
+
+    let applicationPromise = null;
+
+    let loggingOut = false;
+
+
+    function closeProtectedDialogs() {
+
+        protectedContent
+
+            .querySelectorAll("dialog[open]")
+
+            .forEach(dialog => {
+
+                try {
+
+                    dialog.close();
+
+                } catch {
+
+                    // The protected interface remains hidden.
+
+                }
+
+            });
+
+    }
+
+
+    function hideProtectedApplication() {
+
+        protectedContent.hidden = true;
+
+        authLoading.hidden = false;
+
+        closeProtectedDialogs();
+
+    }
+
+
+    function showLoadingError(message) {
+
+        loadingMessage.textContent = message;
+
+        loadingSpinner.hidden = true;
+
+    }
+
+
+    function assertAuthorizedUser(user, profile) {
+
+        if (
+
+            !user?.uid ||
+
+            auth.currentUser?.uid !== user.uid ||
+
+            profile?.uid !== user.uid ||
+
+            profile?.active !== true ||
+
+            profile?.role !== "admin"
+
+        ) {
+
+            throw new Error(
+                "Administrator authorization is required."
+            );
+
+        }
+
+    }
+
+
+    async function startApplication(user, profile) {
+
+        assertAuthorizedUser(user, profile);
+
+        if (
+
+            activeUserId &&
+
+            activeUserId !== user.uid
+
+        ) {
+
+            throw new Error(
+                "The authenticated session has changed."
+            );
+
+        }
+
+        activeUserId = user.uid;
+
+        document.getElementById(
+            "staffName"
+        ).textContent = profile.name || "Administrator";
+
+        document.getElementById(
+            "currentYear"
+        ).textContent = new Intl.DateTimeFormat(
+
+            "en-IN",
+
+            {
+
+                year: "numeric",
+
+                timeZone: "Asia/Kolkata"
+
+            }
+
+        ).format(new Date());
+
+        if (!applicationPromise) {
+
+            loadingMessage.textContent =
+
+                "Initializing Document Management System...";
+
+            applicationPromise = (async () => {
+
+                const module = await import(
+                    "./documents.js"
+                );
+
+                if (
+
+                    typeof module.initialiseDocumentSystem !==
+                    "function"
+
+                ) {
+
+                    throw new Error(
+                        "Document application engine is unavailable."
+                    );
+
+                }
+
+                await module.initialiseDocumentSystem(user);
+
+                return module;
+
+            })();
+
+        }
+
+        try {
+
+            await applicationPromise;
+
+            const verifiedProfile =
+                await verifyStaffAccess(user);
+
+            assertAuthorizedUser(
+                user,
+                verifiedProfile
+            );
+
+            document.getElementById(
+                "staffName"
+            ).textContent =
+
+                verifiedProfile.name || "Administrator";
+
+        } catch (error) {
+
+            applicationPromise = null;
+
+            showLoadingError(
+
+                "Unable to initialize the document system."
+
+            );
+
+            throw error;
+
+        }
+
+    }
+
+
+    protectPage({
+
+        contentSelector: "#protectedContent",
+
+        loadingSelector: "#authLoading",
+
+        allowedRoles: ["admin"],
+
+        onAuthenticated: startApplication
+
+    });
+
+
+    /*
+     * A temporary authorization-related hide must not
+     * invalidate the entire application or trigger a
+     * page reload.
+     */
+
+    const visibilityObserver = new MutationObserver(() => {
+
+        if (protectedContent.hidden) {
+
+            closeProtectedDialogs();
+
+        }
+
+    });
+
+    visibilityObserver.observe(protectedContent, {
+
+        attributes: true,
+
+        attributeFilter: ["hidden"]
+
+    });
+
+
+    auth.onAuthStateChanged(user => {
+
+        if (
+
+            activeUserId &&
+
+            user?.uid !== activeUserId
+
+        ) {
+
+            hideProtectedApplication();
+
+        }
+
+    });
+
+
+    logoutButton.addEventListener("click", async () => {
+
+        if (loggingOut) return;
+
+        if (logoutButton.disabled) return;
+
+        loggingOut = true;
+
+        logoutButton.disabled = true;
+
+        try {
+
+            const result = await logoutUser();
+
+            if (!result?.success) {
+
+                throw new Error(
+
+                    result?.message || "Logout failed."
+
+                );
+
+            }
+
+            hideProtectedApplication();
+
+        } catch (error) {
+
+            const message = document.getElementById(
+                "appMessage"
+            );
+
+            message.textContent =
+
+                error.message || "Unable to log out.";
+
+            message.className = "app-message error";
+
+            message.hidden = false;
+
+        } finally {
+
+            loggingOut = false;
+
+            logoutButton.disabled = false;
+
+        }
+
+    });
+
+
+    /*
+     * Prevent restoration of an old visible protected
+     * interface from the browser back-forward cache.
+     */
+
+    window.addEventListener("pagehide", () => {
+
+        hideProtectedApplication();
+
+    });
+
+    window.addEventListener("pageshow", event => {
+
+        if (event.persisted) {
+
+            hideProtectedApplication();
+
+            window.location.reload();
+
+        }
+
+    });
+
+</script>
+
+</body>
+
+</html>
