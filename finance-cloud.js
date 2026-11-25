@@ -66,5 +66,3 @@ export async function checkFinanceCloudConnection(){const uid=await admin();awai
 
 
 
-
-₹0
