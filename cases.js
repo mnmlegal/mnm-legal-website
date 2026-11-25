@@ -3157,6 +3157,242 @@ export async function initialiseCaseSystem(user) {
 
 
 /* =========================================================
+   MNM LEGAL ASSOCIATES
+   CASE - DOCUMENT MANAGEMENT INTEGRATION
+   Version 1.0
+   ========================================================= */
+
+(() => {
+
+    let incomingProfileHandled = false;
+
+    const protectedContent = document.getElementById(
+        "protectedContent"
+    );
+
+    function removeDocumentIntegration() {
+
+        document.getElementById(
+            "caseDocumentIntegration"
+        )?.remove();
+
+    }
+
+    function renderDocumentIntegration() {
+
+        if (
+            !state.initialized ||
+            state.invalidated ||
+            protectedContent?.hidden ||
+            auth.currentUser?.uid !== state.userId ||
+            state.tab !== "profile" ||
+            !state.profile?.case
+        ) {
+
+            removeDocumentIntegration();
+
+            return;
+
+        }
+
+        const record = state.profile.case;
+
+        const heading = document.getElementById(
+            "profileCaseTitle"
+        );
+
+        if (!heading) return;
+
+        let container = document.getElementById(
+            "caseDocumentIntegration"
+        );
+
+        if (!container) {
+
+            container = document.createElement("div");
+
+            container.id = "caseDocumentIntegration";
+
+            container.style.cssText = `
+                display:flex;
+                flex-wrap:wrap;
+                align-items:center;
+                gap:10px;
+                margin:16px 0;
+            `;
+
+            const button = document.createElement("button");
+
+            button.type = "button";
+
+            button.className = "button button-primary";
+
+            const icon = document.createElement("i");
+
+            icon.className = "fa-solid fa-folder-open";
+
+            button.appendChild(icon);
+
+            button.appendChild(
+                document.createTextNode(
+                    " View Case Documents"
+                )
+            );
+
+            button.addEventListener("click", async () => {
+
+                try {
+
+                    if (
+                        state.invalidated ||
+                        state.busy ||
+                        protectedContent.hidden ||
+                        !state.profile?.case
+                    ) return;
+
+                    const caseId = state.profile.case.id;
+
+                    await requireSession();
+
+                    if (
+                        protectedContent.hidden ||
+                        auth.currentUser?.uid !== state.userId ||
+                        state.profile?.case?.id !== caseId
+                    ) return;
+
+                    window.location.href =
+                        "/documents.html?caseId=" +
+                        encodeURIComponent(caseId);
+
+                } catch (error) {
+
+                    message(
+                        error.message ||
+                        "Unable to open case documents.",
+                        "error"
+                    );
+
+                }
+
+            });
+
+            container.appendChild(button);
+
+            heading.insertAdjacentElement(
+                "afterend",
+                container
+            );
+
+        }
+
+        container.dataset.caseId = record.id;
+
+    }
+
+    async function handleIncomingCaseProfile() {
+
+        if (
+            incomingProfileHandled ||
+            !state.initialized ||
+            state.invalidated ||
+            protectedContent?.hidden ||
+            state.busy
+        ) return;
+
+        incomingProfileHandled = true;
+
+        const parameters = new URLSearchParams(
+            window.location.search
+        );
+
+        const caseId = parameters.get("caseId");
+
+        if (!caseId) return;
+
+        try {
+
+            await requireSession();
+
+            if (
+                protectedContent.hidden ||
+                auth.currentUser?.uid !== state.userId
+            ) return;
+
+            await openProfile(caseId);
+
+            renderDocumentIntegration();
+
+        } catch (error) {
+
+            message(
+                error.message ||
+                "Unable to open the requested case.",
+                "error"
+            );
+
+        }
+
+    }
+
+    let scheduled = false;
+
+    function scheduleIntegration() {
+
+        if (scheduled) return;
+
+        scheduled = true;
+
+        queueMicrotask(() => {
+
+            scheduled = false;
+
+            renderDocumentIntegration();
+
+            void handleIncomingCaseProfile();
+
+        });
+
+    }
+
+    if (protectedContent) {
+
+        const observer = new MutationObserver(
+            scheduleIntegration
+        );
+
+        observer.observe(protectedContent, {
+            subtree: true,
+            childList: true,
+            characterData: true,
+            attributes: true,
+            attributeFilter: ["hidden"]
+        });
+
+    }
+
+    auth.onAuthStateChanged(user => {
+
+        if (!user || user.uid !== state.userId) {
+
+            removeDocumentIntegration();
+
+        } else {
+
+            scheduleIntegration();
+
+        }
+
+    });
+
+    scheduleIntegration();
+
+})();
+
+/* =========================================================
+   END OF CASE - DOCUMENT INTEGRATION
+   ========================================================= */
+
+/* =========================================================
    END OF CASE MANAGEMENT APPLICATION
 
    MNM LEGAL ASSOCIATES
