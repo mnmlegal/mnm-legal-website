@@ -1,9 +1,4 @@
 
-
-
-
-
-
 /* =========================================================
    MNM LEGAL ASSOCIATES
    HEARING CALENDAR — APPLICATION ENGINE
@@ -2250,7 +2245,7 @@ function buildCauseListHTML(date) {
 
                                 ${
                                     includeClient
-                                        ? `<td>${displayValue(event.clientName)}<div>${displayValue(event.clientMobile || "Mobile not recorded")}</div></td>`
+                                        ? `<td>${displayValue(event.clientName)}</td>`
                                         : ""
                                 }
 
@@ -3197,7 +3192,3 @@ export async function initialiseCalendarSystem(user) {
    MNM LEGAL ASSOCIATES
    Justice, Integrity & Excellence
    ========================================================= */
-
-
-
-
