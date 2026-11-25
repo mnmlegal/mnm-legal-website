@@ -2,7 +2,7 @@
 /* =========================================================
    MNM LEGAL ASSOCIATES
    CENTRALIZED PAYMENT ENGINE
-   Version 1.0.0
+   Version 2.0.0
    Justice, Integrity & Excellence
    ========================================================= */
 
@@ -13,9 +13,10 @@ import {
     fetchTransactions,
     fetchInvoiceLinks,
     fetchFinanceInvoices,
+    fetchFeeAgreements,
     calculateInvoiceReceipts,
     calculateAgreementBalance,
-    fetchFeeAgreements,
+    getTransaction,
     getIndianDate,
     rupeesToPaise,
     formatMoney,
@@ -23,15 +24,12 @@ import {
 } from "./finance-cloud.js";
 
 export const PAYMENT_CONFIG = Object.freeze({
-    version: "1.0.0",
+    version: "2.0.0",
     currency: "INR",
     ledger: "financeTransactions",
+    requestCollection: "paymentRequests",
     timeZone: "Asia/Kolkata"
 });
-
-/* =========================================================
-   VALIDATION
-   ========================================================= */
 
 function fail(message) {
     throw new Error(message);
@@ -73,26 +71,12 @@ function validateAmount(value) {
     return value;
 }
 
-function validatePaymentMode(value) {
-    const mode = cleanText(value, 40, true);
-
-    if (!PAYMENT_MODES.includes(mode)) {
-        fail("Invalid payment mode.");
-    }
-
-    return mode;
-}
-
-/* =========================================================
-   PAYMENT ID
-   ========================================================= */
-
 export function generatePaymentId() {
     return generateTransactionId();
 }
 
 /* =========================================================
-   PAYMENT ASSOCIATION
+   CLIENT, CASE AND INVOICE ASSOCIATION
    ========================================================= */
 
 async function resolveAssociation(input) {
@@ -101,25 +85,26 @@ async function resolveAssociation(input) {
 
     let clientId = cleanId(input.clientId);
     let caseId = cleanId(input.caseId);
+    let resolved = false;
 
     function applyAssociation(record) {
-        const linkedClient = cleanId(
-            record.clientId,
-            true
-        );
-
+        const linkedClient = cleanId(record.clientId, true);
         const linkedCase = cleanId(record.caseId);
 
         if (clientId && clientId !== linkedClient) {
             fail("Client association does not match.");
         }
 
-        if (caseId && caseId !== linkedCase) {
+        if (
+            (resolved || caseId) &&
+            caseId !== linkedCase
+        ) {
             fail("Case association does not match.");
         }
 
         clientId = linkedClient;
         caseId = linkedCase;
+        resolved = true;
     }
 
     if (invoiceId) {
@@ -131,7 +116,7 @@ async function resolveAssociation(input) {
 
         if (!link) {
             fail(
-                "Link this invoice to a registered client first."
+                "Link the invoice to a registered client first."
             );
         }
 
@@ -161,7 +146,7 @@ async function resolveAssociation(input) {
 }
 
 /* =========================================================
-   NORMALIZE PAYMENT
+   PAYMENT NORMALIZATION
    ========================================================= */
 
 async function normalizePayment(input, type) {
@@ -171,9 +156,21 @@ async function normalizePayment(input, type) {
 
     const association = await resolveAssociation(input);
 
-    const amountPaise = input.amountPaise !== undefined
-        ? validateAmount(input.amountPaise)
-        : rupeesToPaise(input.amount);
+    const amountPaise = validateAmount(
+        input.amountPaise !== undefined
+            ? input.amountPaise
+            : rupeesToPaise(input.amount)
+    );
+
+    const paymentMode = cleanText(
+        input.paymentMode,
+        40,
+        true
+    );
+
+    if (!PAYMENT_MODES.includes(paymentMode)) {
+        fail("Invalid payment mode.");
+    }
 
     return {
         ...association,
@@ -191,8 +188,7 @@ async function normalizePayment(input, type) {
 
         amountPaise,
 
-        paymentMode:
-            validatePaymentMode(input.paymentMode),
+        paymentMode,
 
         paymentReference: cleanText(
             input.paymentReference,
@@ -213,12 +209,12 @@ async function normalizePayment(input, type) {
 }
 
 /* =========================================================
-   INVOICE VALIDATION
+   INVOICE VERIFICATION
    ========================================================= */
 
 async function verifyInvoice(invoiceId, type) {
     if (!invoiceId) {
-        return;
+        return null;
     }
 
     const invoices = await fetchFinanceInvoices();
@@ -233,17 +229,22 @@ async function verifyInvoice(invoiceId, type) {
 
     if (
         type === "income" &&
-        invoice.recordStatus === "cancelled"
+        (
+            invoice.recordStatus === "cancelled" ||
+            invoice.status === "cancelled" ||
+            invoice.status === "Cancelled"
+        )
     ) {
         fail(
             "Payment cannot be received against a cancelled invoice."
         );
     }
+
+    return invoice;
 }
 
 /* =========================================================
    PAYMENT PREVIEW
-   Read-only validation before posting
    ========================================================= */
 
 export async function previewPayment(input) {
@@ -261,38 +262,110 @@ export async function previewPayment(input) {
 }
 
 /* =========================================================
-   PAYMENT POSTING
-   Reserved for the next integration phase.
+   CENTRALIZED PAYMENT RECEIPT
    ========================================================= */
 
 export async function receivePayment(
     input,
     paymentId
 ) {
-    fail(
-        "Centralized payment posting is disabled until " +
-        "the synchronization security upgrade is installed."
+    const requestId = cleanId(paymentId, true);
+
+    const payment = await normalizePayment(
+        input,
+        "income"
+    );
+
+    /*
+       Invoice-linked posting remains locked until
+       invoice reconciliation and balance validation
+       are implemented.
+    */
+
+    if (payment.invoiceId) {
+        fail(
+            "Invoice-linked payment posting requires " +
+            "the invoice synchronization upgrade."
+        );
+    }
+
+    return createTransaction(
+        payment,
+        requestId
     );
 }
+
+/* =========================================================
+   CENTRALIZED REFUND
+   ========================================================= */
 
 export async function refundPayment(
     input,
     paymentId
 ) {
+    cleanId(paymentId, true);
+
+    /*
+       Fail closed until refundable balances can
+       be validated atomically.
+    */
+
     fail(
-        "Centralized refunds are disabled until " +
-        "the synchronization security upgrade is installed."
+        "Centralized refunds require the atomic " +
+        "refund balance validation upgrade."
     );
 }
+
+/* =========================================================
+   PAYMENT REVERSAL
+   ========================================================= */
 
 export async function reversePayment(
     originalPaymentId,
     reason,
     reversalId
 ) {
-    fail(
-        "Centralized payment reversal is disabled until " +
-        "the synchronization security upgrade is installed."
+    const originalId = cleanId(
+        originalPaymentId,
+        true
+    );
+
+    const requestId = cleanId(
+        reversalId,
+        true
+    );
+
+    const explanation = cleanText(
+        reason,
+        4900,
+        true
+    );
+
+    const original = await getTransaction(originalId);
+
+    if (!original) {
+        fail("Original payment not found.");
+    }
+
+    if (
+        !["income", "refund"].includes(
+            original.transactionType
+        )
+    ) {
+        fail("Record is not a professional fee payment.");
+    }
+
+    if (original.invoiceId) {
+        fail(
+            "Invoice-linked reversal requires " +
+            "the invoice synchronization upgrade."
+        );
+    }
+
+    return reverseTransaction(
+        originalId,
+        explanation,
+        requestId
     );
 }
 
@@ -332,20 +405,22 @@ export async function getInvoicePaymentSummary(
         transactions
     );
 
-    const paymentHistory = transactions.filter(
-        item => item.invoiceId === id
-    );
-
     return {
         invoiceId: id,
         invoice,
         association,
         linked: Boolean(association),
+
         receivedPaise,
         receivedAmount: receivedPaise / 100,
         formattedReceived: formatMoney(receivedPaise),
-        paymentHistory,
+
+        paymentHistory: transactions.filter(
+            item => item.invoiceId === id
+        ),
+
         legacyReconciliationRequired: true,
+
         synchronizedAt: new Date().toISOString()
     };
 }
@@ -390,46 +465,65 @@ export async function getFeePaymentSummary(
 }
 
 /* =========================================================
-   CLIENT PAYMENT HISTORY
+   PAYMENT HISTORY
    ========================================================= */
+
+function selectPayments(rows, field, id) {
+    const originals = new Map(
+        rows.map(item => [item.id, item])
+    );
+
+    return rows.filter(item => {
+        if (item[field] !== id) {
+            return false;
+        }
+
+        if (
+            ["income", "refund"].includes(
+                item.transactionType
+            )
+        ) {
+            return true;
+        }
+
+        if (item.transactionType === "reversal") {
+            const original = originals.get(
+                item.reversalOf
+            );
+
+            return Boolean(
+                original &&
+                ["income", "refund"].includes(
+                    original.transactionType
+                )
+            );
+        }
+
+        return false;
+    });
+}
 
 export async function getClientPaymentHistory(
     clientId
 ) {
     const id = cleanId(clientId, true);
 
-    const transactions = await fetchTransactions();
-
-    return transactions.filter(
-        item =>
-            item.clientId === id &&
-            [
-                "income",
-                "refund",
-                "reversal"
-            ].includes(item.transactionType)
+    return selectPayments(
+        await fetchTransactions(),
+        "clientId",
+        id
     );
 }
-
-/* =========================================================
-   CASE PAYMENT HISTORY
-   ========================================================= */
 
 export async function getCasePaymentHistory(
     caseId
 ) {
     const id = cleanId(caseId, true);
 
-    const transactions = await fetchTransactions();
-
-    return transactions.filter(
-        item =>
-            item.caseId === id &&
-            [
-                "income",
-                "refund",
-                "reversal"
-            ].includes(item.transactionType)
+    return selectPayments(
+        await fetchTransactions(),
+        "caseId",
+        id
     );
 }
 
@@ -443,8 +537,10 @@ export function getPaymentEngineStatus() {
         ledger: PAYMENT_CONFIG.ledger,
         currency: PAYMENT_CONFIG.currency,
         readEnabled: true,
-        postingEnabled: false,
-        integrationStatus: "pending_security_upgrade"
+        postingEnabled: true,
+        invoicePostingEnabled: false,
+        refundEnabled: false,
+        integrationStatus: "partial_activation"
     };
 }
 
