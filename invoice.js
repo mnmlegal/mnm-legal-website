@@ -1,10 +1,24 @@
 
 
+all
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* =========================================================
    MNM LEGAL ASSOCIATES
    PROFESSIONAL CLOUD INVOICE MANAGEMENT SYSTEM
-   Version 7.0 - Initial Receipt Integration
+   Version 8.0 - Client Resolution and Invoice History
    Justice, Integrity & Excellence
    ========================================================= */
 
@@ -612,7 +626,25 @@ async function resolveBillingClient(data, existingInvoiceId = null) {
         return chosen;
     }
     const matches = await api.findDuplicateClients(normalized);
-    if (matches.length) throw new Error('Possible existing client: ' + matches.map(c => c.fullName + ' (' + c.clientCode + ')').join(', ') + '. Select the registered client from suggestions, or review the Client Directory before saving.');
+    if (matches.length) {
+        const exact = matches.filter(c => norm(c.fullName) === norm(input.fullName));
+        const candidate = exact.length === 1 && matches.length === 1
+            ? records.find(c => c.id === exact[0].id) : null;
+        if (candidate && candidate.status !== 'archived') {
+            const phone = v => String(v || '').replace(/\\D/g, '').replace(/^91(?=\\d{10}$)/, '');
+            const suppliedPhone = phone(input.mobile);
+            const knownPhones = [candidate.mobile, candidate.alternateMobile].map(phone).filter(Boolean);
+            const suppliedEmail = norm(input.email);
+            const knownEmail = norm(candidate.email);
+            const conflict = (suppliedPhone && knownPhones.length && !knownPhones.includes(suppliedPhone)) ||
+                (suppliedEmail && knownEmail && suppliedEmail !== knownEmail);
+            if (!conflict && window.confirm('Use existing registered client ' + candidate.fullName + ' (' + candidate.clientCode + ') for this invoice?')) {
+                selectedClientId = candidate.id;
+                return candidate;
+            }
+        }
+        throw new Error('Select the correct registered client from suggestions. Possible match: ' + matches.map(c => c.fullName + ' (' + c.clientCode + ')').join(', '));
+    }
     // Saving an invoice for a new client authorizes registration.
     pendingClientId = pendingClientId || api.generateClientId();
     const client = await api.createClient(normalized, pendingClientId);
@@ -1205,6 +1237,7 @@ async function saveInvoice(event) {
     const button = $("saveInvoiceButton");
     const form = $("invoiceForm");
 
+    let saveAttempted = false;
     cloudSaving = true;
     button.disabled = true;
 
@@ -1251,6 +1284,7 @@ async function saveInvoice(event) {
                 );
             }
 
+            saveAttempted = true;
             saved = await updateCloudInvoice(
                 editingId,
                 payload,
@@ -1264,6 +1298,7 @@ async function saveInvoice(event) {
 
             payload.id = pendingCreateId;
 
+            saveAttempted = true;
             saved = await createCloudInvoice(payload);
         }
 
@@ -1336,8 +1371,7 @@ async function saveInvoice(event) {
         console.error("Cloud invoice save error:", error);
 
         message(
-            "Cloud save could not be confirmed. " +
-            "Check Saved Invoices before retrying. " +
+            (saveAttempted ? "Cloud save could not be confirmed. Check Saved Invoices before retrying. " : "Invoice not submitted. ") +
             error.message,
             "error"
         );
@@ -1611,7 +1645,7 @@ function filteredInvoices() {
     const year = value("yearFilter");
     const sort = value("sortInvoices");
 
-    const records = readInvoices().map(record => {
+    const records = cloudRecords.map(record => {
 
         const data = normalize(record);
 
@@ -1633,7 +1667,11 @@ function filteredInvoices() {
 
         return (
             (!query || searchText.includes(query)) &&
-            (status === "all" || totals.status === status) &&
+            (status === "all" ||
+                (status === "active" && data.recordStatus !== "cancelled") ||
+                (status === "cancelled" && data.recordStatus === "cancelled" && !String(data.cancellationReason || "").startsWith("[RECOVERABLE_DELETE] ")) ||
+                (status === "deleted" && data.recordStatus === "cancelled" && String(data.cancellationReason || "").startsWith("[RECOVERABLE_DELETE] ")) ||
+                (data.recordStatus !== "cancelled" && totals.status === status)) &&
             (
                 year === "all" ||
                 data.invoiceDate.slice(0, 4) === year
@@ -1670,6 +1708,11 @@ function filteredInvoices() {
     return filtered;
 }
 
+function invoiceHistoryStatus(data, totals) {
+    if (data.recordStatus !== "cancelled") return statusLabels[totals.status];
+    return String(data.cancellationReason || "").startsWith("[RECOVERABLE_DELETE] ") ? "Deleted" : "Cancelled";
+}
+
 function renderSavedInvoices() {
 
     const records = filteredInvoices();
@@ -1704,7 +1747,8 @@ function renderSavedInvoices() {
             `status-badge ${totals.status}`;
 
         badge.textContent =
-            statusLabels[totals.status];
+            invoiceHistoryStatus(data, totals);
+        if (data.recordStatus === "cancelled") badge.title = String(data.cancellationReason || "");
 
         statusCell.appendChild(badge);
         row.appendChild(statusCell);
@@ -1714,7 +1758,11 @@ function renderSavedInvoices() {
 
         actions.className = "invoice-actions";
 
-        actions.append(
+        if (data.recordStatus === "cancelled") {
+            actions.append(actionButton("Details", () => {
+                window.alert("Invoice: " + data.invoiceNo + "\\nStatus: " + invoiceHistoryStatus(data, totals) + "\\nReason: " + (data.cancellationReason || "Not recorded") + "\\nOriginal amount: " + money(totals.total / 100) + "\\nRecorded receipts: " + money(totals.paid / 100));
+            }));
+        } else actions.append(
 
             actionButton(
                 "Edit",
@@ -1786,6 +1834,8 @@ function refreshRecords() {
 
     set("currentSequence", nextSequence(today()));
     set("numberingFormat", "MNM/MMM/NNN/YYYY");
+
+    for (const record of cloudRecords) if (record.invoiceDate) years.add(record.invoiceDate.slice(0, 4));
 
     const yearFilter = $("yearFilter");
     const selected = yearFilter.value;
@@ -2008,7 +2058,7 @@ async function exportCSV() {
             (totals.now / 100).toFixed(2),
             (totals.paid / 100).toFixed(2),
             (totals.balance / 100).toFixed(2),
-            statusLabels[totals.status]
+            invoiceHistoryStatus(data, totals)
         ]);
     }
 
@@ -2107,6 +2157,11 @@ async function refreshCloudView() {
    ========================================================= */
 
 function bindEvents() {
+    const historyFilter = $("statusFilter");
+    for (const [label, key] of [["Active Invoices", "active"], ["Cancelled Invoices", "cancelled"], ["Deleted Invoices", "deleted"]]) {
+        if (![...historyFilter.options].some(o => o.value === key)) historyFilter.add(new Option(label, key));
+    }
+
 
     $("invoiceForm").addEventListener(
         "submit",
@@ -2358,6 +2413,10 @@ export async function initialiseInvoiceSystem(user) {
    Version 6.0
    Justice, Integrity & Excellence
    ========================================================= */
+
+
+
+
 
 
 
