@@ -1,10 +1,13 @@
 
 
 
+
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    CENTRALIZED CLOUD INVOICE MANAGEMENT
-   Version 3.1 - Monthly Numbering and Payment Reconciliation
+   Version 3.2 - Monthly Numbering and Initial Receipt Integration
 
    Justice, Integrity & Excellence
    ========================================================= */
@@ -1911,4 +1914,49 @@ export async function getInvoiceReconciliation(invoiceId) {
     if (!result) throw new Error("Invoice not found.");
     return result;
 }
+
+
+// Explicit receipt integration. Do not invoke for historical invoices or edits.
+// The caller must supply the actual receipt date and confirm receipt.
+export async function syncNewInvoiceReceipt(invoiceId, options = {}) {
+    await requireAdministrator();
+    const uid = auth.currentUser?.uid;
+    if (typeof invoiceId !== "string" || !/^[A-Za-z0-9_-]{1,100}$/.test(invoiceId)) {
+        throw new Error("Invalid invoice ID.");
+    }
+    if (options.confirmedReceipt !== true) throw new Error("Confirm actual payment receipt.");
+    const snapshot = await getDocFromServer(doc(db, CLOUD_CONFIG.invoices, invoiceId));
+    if (!snapshot.exists()) throw new Error("Invoice not found.");
+    const invoice = snapshot.data();
+    if (invoice.recordStatus !== "active" || invoice.revision !== 1) {
+        throw new Error("Only newly created active invoices qualify. Reconcile existing invoices separately.");
+    }
+    if (reconciliationPaise(invoice.receivedEarlier) !== 0) {
+        throw new Error("Earlier receipts require separate reconciliation.");
+    }
+    const amountPaise = reconciliationPaise(invoice.receivedNow ?? invoice.amountPaid);
+    if (amountPaise === 0) return { status: "no_receipt", transaction: null };
+    const modes = {cash:"cash",upi:"upi","bank transfer":"bank_transfer",bank_transfer:"bank_transfer",cheque:"cheque",card:"card",other:"other",neft:"neft",rtgs:"rtgs",imps:"imps"};
+    const mode = modes[String(invoice.paymentMode ?? "").trim().toLowerCase()];
+    if (!mode) throw new Error("Select a single valid payment mode. Multiple modes require separate reconciliation.");
+    if (typeof options.transactionDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(options.transactionDate)) {
+        throw new Error("Actual receipt date is required.");
+    }
+    const links = await fetchInvoiceLinks();
+    const link = links.find(item => item.invoiceId === invoiceId);
+    if (!link?.clientId) throw new Error("Link invoice to a registered client first.");
+    const { syncInitialInvoicePayment } = await import("./payments-cloud.js");
+    await requireAdministrator();
+    if (!uid || auth.currentUser?.uid !== uid) throw new Error("Session changed.");
+    const transaction = await syncInitialInvoicePayment({
+        invoiceId, clientId: link.clientId, caseId: link.caseId || "",
+        amountPaise, transactionDate: options.transactionDate,
+        paymentMode: mode, paymentReference: invoice.paymentReference || "",
+        confirmedReceipt: true
+    });
+    return { status: "posted", transaction };
+}
+
+
+
 
