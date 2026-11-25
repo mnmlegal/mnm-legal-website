@@ -1,16 +1,30 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <meta name="robots"
+          content="noindex, nofollow, noarchive">
+
+    <meta name="referrer" content="no-referrer">
+
     <meta name="theme-color" content="#101d30">
 
-    <title>Office Dashboard | MNM Legal Associates</title>
+    <title>Staff Dashboard | MNM Legal Associates</title>
 
     <link rel="icon" href="/images/logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
 
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap"
           rel="stylesheet">
@@ -21,7 +35,8 @@
     <style>
 
         /* =========================================
-           01. GLOBAL CONFIGURATION
+           MNM LEGAL ASSOCIATES
+           STAFF DASHBOARD VERSION 3.0
            ========================================= */
 
         :root {
@@ -33,11 +48,13 @@
             --background: #f7f6f2;
             --white: #ffffff;
             --text: #263345;
-            --muted: #657184;
-            --border: #e4e1da;
-            --success: #23643c;
-            --danger: #a72b2b;
-            --sidebar-width: 265px;
+            --muted: #64748b;
+            --border: #e1ded6;
+            --green: #166534;
+            --red: #b91c1c;
+            --sidebar-width: 270px;
+            --radius: 12px;
+            --shadow: 0 4px 20px rgba(16, 29, 48, .045);
         }
 
         * {
@@ -54,10 +71,31 @@
 
         body {
             margin: 0;
-            font-family: "DM Sans", sans-serif;
             background: var(--background);
             color: var(--text);
-            -webkit-font-smoothing: antialiased;
+            font-family: "DM Sans", sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button,
+        a {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: .6;
         }
 
         a {
@@ -65,70 +103,66 @@
             text-decoration: none;
         }
 
-        button {
-            font: inherit;
-            cursor: pointer;
-            touch-action: manipulation;
-        }
-
-        button:disabled {
-            cursor: not-allowed;
-            opacity: .55;
-        }
-
-        :focus-visible {
+        button:focus-visible,
+        a:focus-visible {
             outline: 3px solid var(--gold);
-            outline-offset: 3px;
+            outline-offset: 4px;
         }
 
+        h1,
+        h2,
+        h3,
+        p {
+            margin-top: 0;
+        }
 
-        /* =========================================
-           02. AUTHENTICATION SCREEN
-           ========================================= */
+        /* AUTHENTICATION SCREEN */
 
-        .auth-loading {
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            background: var(--navy);
-            color: white;
+        .auth-screen {
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: var(--navy-dark);
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 440px;
+            padding: 42px 28px;
+            border: 1px solid rgba(195, 161, 107, .3);
+            border-radius: 16px;
             text-align: center;
-            padding: 25px;
+            color: white;
+            background: var(--navy);
         }
 
-        .loading-logo {
-            width: 85px;
-            height: 85px;
+        .auth-card img {
+            width: 76px;
+            height: 76px;
             object-fit: contain;
-            background: white;
-            padding: 8px;
-            border-radius: 10px;
+            margin-bottom: 18px;
         }
 
-        .auth-loading h1 {
+        .auth-card h1 {
             font-family: "Libre Baskerville", serif;
-            font-size: 23px;
-        }
-
-        .auth-loading p {
-            font-size: 14px;
-            color: #c5cfdb;
-            line-height: 1.8;
-            max-width: 450px;
-        }
-
-        .auth-loading a {
+            font-size: 20px;
             color: var(--gold);
+        }
+
+        .auth-card p {
+            color: #b8c3d2;
             font-size: 13px;
         }
 
         .spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid #ffffff25;
+            width: 35px;
+            height: 35px;
+            margin: 26px auto;
+            border: 3px solid rgba(255,255,255,.12);
             border-top-color: var(--gold);
             border-radius: 50%;
-            margin: 25px auto;
             animation: spin .8s linear infinite;
         }
 
@@ -138,281 +172,308 @@
             }
         }
 
+        .auth-return {
+            display: inline-block;
+            color: var(--gold);
+            font-size: 13px;
+            margin-top: 15px;
+        }
 
-        /* =========================================
-           03. SIDEBAR
-           ========================================= */
+        /* SIDEBAR */
 
         .sidebar {
             position: fixed;
             inset: 0 auto 0 0;
             width: var(--sidebar-width);
-            background: var(--navy);
-            color: white;
             display: flex;
             flex-direction: column;
+            background: var(--navy);
+            color: white;
+            z-index: 1000;
             overflow-y: auto;
-            overscroll-behavior: contain;
-            z-index: 100;
         }
 
-        .brand {
+        .sidebar-brand {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 26px 20px;
-            border-bottom: 1px solid #ffffff15;
+            gap: 13px;
+            padding: 27px 20px;
+            border-bottom: 1px solid rgba(255,255,255,.08);
         }
 
-        .brand img {
-            width: 46px;
-            height: 46px;
+        .sidebar-brand img {
+            width: 48px;
+            height: 48px;
             object-fit: contain;
-            background: white;
-            border-radius: 6px;
-            padding: 4px;
+            flex-shrink: 0;
         }
 
-        .brand strong {
-            display: block;
+        .brand-name {
             font-family: "Libre Baskerville", serif;
             font-size: 13px;
             line-height: 1.6;
-        }
-
-        .brand small {
-            font-size: 9px;
+            font-weight: 700;
             color: var(--gold);
-            letter-spacing: 1px;
         }
 
-        .navigation {
-            flex: 1;
-            padding: 22px 15px;
-        }
-
-        .nav-heading {
-            color: #9aa9bc;
+        .brand-caption {
+            color: #a6b4c6;
             font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1.6px;
-            margin: 22px 12px 12px;
+            margin-top: 4px;
         }
 
-        .nav-item {
-            width: 100%;
+        .sidebar-navigation {
+            padding: 24px 13px;
+            flex: 1;
+        }
+
+        .navigation-label {
+            color: #8b9bb1;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            padding: 0 12px;
+            margin: 20px 0 10px;
+        }
+
+        .navigation-label:first-child {
+            margin-top: 0;
+        }
+
+        .nav-link {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 13px;
-            min-height: 46px;
+            width: 100%;
+            min-height: 47px;
+            padding: 11px 13px;
+            margin-bottom: 5px;
             border: 0;
-            border-radius: 6px;
+            border-radius: 7px;
             background: transparent;
-            color: #c5cfdb;
+            color: #c4cfde;
             font-size: 13px;
             text-align: left;
-            margin-bottom: 5px;
-            transition: background .2s ease;
-            touch-action: manipulation;
+            transition: background .2s;
         }
 
-        .nav-item i {
-            width: 18px;
+        .nav-link i {
+            width: 19px;
+            color: var(--gold);
             text-align: center;
             flex-shrink: 0;
         }
 
-        .nav-item.active {
-            background: #c3a16b20;
+        .nav-link:hover:not([aria-disabled="true"]):not(:disabled) {
+            background: var(--navy-light);
+            color: white;
+        }
+
+        .nav-link.active {
+            background: rgba(195,161,107,.13);
             color: var(--gold);
             border-left: 3px solid var(--gold);
         }
 
-        .nav-item:hover:not(:disabled):not([aria-disabled="true"]) {
-            background: #ffffff12;
-        }
-
-        .nav-item:disabled,
-        .nav-item[aria-disabled="true"] {
-            opacity: .45;
+        .nav-link[aria-disabled="true"],
+        .nav-link:disabled {
+            opacity: .48;
             cursor: not-allowed;
         }
 
-        .soon {
-            margin-left: auto;
-            font-size: 8px;
-            text-transform: uppercase;
+        .nav-link span {
+            flex: 1;
+        }
+
+        .nav-link .nav-lock {
+            width: auto;
+            font-size: 10px;
+            color: #8b9bb1;
         }
 
         .sidebar-footer {
-            padding: 22px;
-            border-top: 1px solid #ffffff15;
-            font-size: 11px;
-            color: var(--gold);
-            line-height: 1.8;
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,.08);
         }
 
+        .sidebar-footer p {
+            color: #8b9bb1;
+            font-size: 11px;
+            margin: 10px 0 0;
+            text-align: center;
+        }
 
-        /* =========================================
-           04. MAIN WORKSPACE
-           ========================================= */
+        .sidebar-logout {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 11px;
+            border: 1px solid rgba(255,255,255,.16);
+            border-radius: 7px;
+            background: transparent;
+            color: white;
+        }
 
-        .workspace {
-            margin-left: var(--sidebar-width);
+        .sidebar-logout:hover {
+            background: rgba(255,255,255,.07);
+        }
+
+        /* MAIN APPLICATION */
+
+        .main {
             min-height: 100vh;
+            margin-left: var(--sidebar-width);
             display: flex;
             flex-direction: column;
         }
 
         .topbar {
-            min-height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            min-height: 80px;
+            padding: 15px 32px;
             background: white;
             border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-            padding: 14px 30px;
-            position: sticky;
-            top: 0;
-            z-index: 50;
         }
 
-        .topbar-left,
-        .topbar-right {
+        .topbar-left {
             display: flex;
             align-items: center;
-            gap: 13px;
+            gap: 14px;
         }
 
         .topbar-title {
-            font-size: 15px;
+            color: var(--navy);
+            font-size: 17px;
             font-weight: 700;
         }
 
-        .menu-toggle {
-            display: none;
-            border: 0;
-            background: transparent;
-            font-size: 22px;
-            color: var(--navy);
-            width: 44px;
-            height: 44px;
-            padding: 0;
-            touch-action: manipulation;
+        .topbar-caption {
+            color: var(--muted);
+            font-size: 11px;
         }
 
-        .menu-toggle i {
-            pointer-events: none;
+        .menu-button {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: white;
+            color: var(--navy);
+            font-size: 18px;
+        }
+
+        .topbar-account {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .avatar {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border-radius: 50%;
-            background: #f1e9db;
-            color: var(--gold-dark);
-            display: grid;
-            place-items: center;
+            background: var(--navy);
+            color: var(--gold);
             font-weight: 700;
-            font-size: 13px;
             flex-shrink: 0;
         }
 
-        .profile strong {
-            display: block;
+        .account-name {
+            color: var(--navy);
+            font-weight: 700;
             font-size: 13px;
         }
 
-        .profile small {
-            font-size: 11px;
+        .account-role {
             color: var(--muted);
+            font-size: 11px;
         }
 
         .logout-button {
+            min-height: 39px;
+            padding: 8px 13px;
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: 7px;
             background: white;
-            color: var(--danger);
-            padding: 10px 14px;
+            color: var(--navy);
             font-size: 12px;
-            font-weight: 600;
-            min-height: 40px;
+            margin-left: 8px;
         }
 
-        .logout-button:hover:not(:disabled) {
-            background: #fff3f3;
+        .logout-button:hover {
+            background: var(--background);
         }
 
-        main {
-            flex: 1;
+        .dashboard-content {
             width: 100%;
             max-width: 1600px;
-            margin: auto;
-            padding: 30px;
+            margin: 0 auto;
+            padding: 30px 32px;
+            flex: 1;
         }
 
+        /* WELCOME PANEL */
 
-        /* =========================================
-           05. WELCOME SECTION
-           ========================================= */
-
-        .welcome {
+        .welcome-panel {
+            position: relative;
+            overflow: hidden;
+            padding: 32px;
+            margin-bottom: 25px;
+            border-radius: var(--radius);
             background: linear-gradient(
                 120deg,
                 var(--navy-dark),
                 var(--navy-light)
             );
             color: white;
-            padding: 35px;
-            border-radius: 10px;
-            border-left: 4px solid var(--gold);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 25px;
-            margin-bottom: 25px;
         }
 
-        .eyebrow {
-            color: var(--gold);
-            font-size: 10px;
-            letter-spacing: 2px;
-            font-weight: 700;
-            text-transform: uppercase;
+        .welcome-panel::after {
+            content: "";
+            position: absolute;
+            width: 240px;
+            height: 240px;
+            right: -75px;
+            top: -80px;
+            border: 1px solid rgba(195,161,107,.17);
+            border-radius: 50%;
+            pointer-events: none;
         }
 
-        .welcome h1 {
+        .welcome-panel h1 {
+            position: relative;
+            z-index: 1;
             font-family: "Libre Baskerville", serif;
-            font-size: clamp(22px, 3vw, 32px);
-            font-weight: 400;
+            font-size: clamp(21px, 3vw, 30px);
             line-height: 1.5;
-            overflow-wrap: anywhere;
+            margin-bottom: 10px;
         }
 
-        .welcome p {
-            color: #c5cfdb;
+        .welcome-panel p {
+            max-width: 620px;
+            color: #c3cddd;
             font-size: 13px;
-            line-height: 1.8;
+            margin-bottom: 16px;
         }
 
         .welcome-date {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: var(--gold);
             font-size: 12px;
-            color: var(--gold);
-            margin-top: 20px;
         }
 
-        .welcome-symbol {
-            color: var(--gold);
-            font-size: 80px;
-            opacity: .6;
-        }
-
-
-        /* =========================================
-           06. STATUS CARDS
-           ========================================= */
+        /* STATUS CARDS */
 
         .status-grid {
             display: grid;
@@ -422,404 +483,409 @@
         }
 
         .status-card {
+            padding: 19px;
             background: white;
             border: 1px solid var(--border);
-            border-radius: 9px;
-            padding: 19px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
         }
 
-        .status-icon,
-        .module-icon {
-            display: grid;
-            place-items: center;
-            width: 45px;
-            height: 45px;
-            background: #f3ede2;
+        .status-card i {
             color: var(--gold-dark);
-            border-radius: 8px;
-            font-size: 18px;
-            flex-shrink: 0;
+            font-size: 19px;
+            margin-bottom: 12px;
         }
 
-        .status-card small {
-            display: block;
-            font-size: 11px;
+        .status-card p {
             color: var(--muted);
+            font-size: 11px;
+            font-weight: 600;
             margin-bottom: 5px;
         }
 
         .status-card strong {
-            font-size: 14px;
+            display: block;
+            color: var(--navy);
+            font-size: 15px;
             overflow-wrap: anywhere;
         }
 
-        .online {
-            color: var(--success);
+        .status-card strong.online {
+            color: var(--green);
         }
 
-
-        /* =========================================
-           07. OFFICE MANAGEMENT MODULES
-           ========================================= */
+        /* SECTION HEADINGS */
 
         .section-heading {
-            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
         }
 
         .section-heading h2 {
             font-family: "Libre Baskerville", serif;
-            font-size: 21px;
-            margin-bottom: 7px;
+            font-size: 20px;
+            color: var(--navy);
+            margin-bottom: 5px;
         }
 
         .section-heading p {
-            font-size: 13px;
             color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 0;
         }
+
+        .module-count {
+            color: var(--gold-dark);
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* MODULE CARDS */
 
         .module-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 20px;
+            gap: 19px;
             margin-bottom: 35px;
         }
 
         .module-card {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 25px;
-            min-height: 250px;
             display: flex;
             flex-direction: column;
-            transition:
-                border-color .2s ease,
-                box-shadow .2s ease;
+            min-height: 290px;
+            padding: 23px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: white;
+            box-shadow: var(--shadow);
+            transition: transform .2s, box-shadow .2s;
         }
 
         .module-card.available:hover {
-            border-color: var(--gold);
-            box-shadow: 0 5px 20px #101d300a;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 28px rgba(16,29,48,.08);
         }
 
         .module-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
-        }
-
-        .module-status {
-            font-size: 9px;
-            font-weight: 700;
-            letter-spacing: .5px;
-            text-transform: uppercase;
-            padding: 5px 9px;
-            border-radius: 4px;
-            background: #eeefef;
-            color: var(--muted);
-        }
-
-        .module-status.enabled {
-            color: var(--success);
-            background: #eaf4ed;
-        }
-
-        .module-card h3 {
-            font-size: 16px;
-            color: var(--navy);
-            margin: 20px 0 8px;
-        }
-
-        .module-card p {
-            font-size: 12px;
-            color: var(--muted);
-            line-height: 1.8;
+            gap: 8px;
             margin-bottom: 20px;
         }
 
-        .module-action {
-            margin-top: auto;
-            padding-top: 16px;
-            border-top: 1px solid var(--border);
+        .module-icon {
+            width: 52px;
+            height: 52px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            gap: 10px;
-            font-size: 12px;
+            justify-content: center;
+            background: #f5efe5;
+            border-radius: 10px;
             color: var(--gold-dark);
-            font-weight: 700;
-            min-height: 36px;
-        }
-
-        .module-action.pending {
-            color: var(--muted);
-            font-weight: 500;
-        }
-
-        .module-action[aria-disabled="true"] {
-            cursor: not-allowed;
-            color: var(--muted);
-        }
-
-        .module-action[href]:hover {
-            color: var(--navy);
-        }
-
-
-        /* =========================================
-           08. ACCOUNT INFORMATION
-           ========================================= */
-
-        .information-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .information-card {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            padding: 25px;
-            min-width: 0;
-        }
-
-        .information-card h2 {
-            font-size: 16px;
-            margin: 0 0 20px;
-        }
-
-        .information-card h2 i {
-            color: var(--gold-dark);
-            margin-right: 8px;
-        }
-
-        .information-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 15px;
-            padding: 12px 0;
-            border-bottom: 1px solid #eeece7;
-            font-size: 12px;
-        }
-
-        .information-row span {
-            color: var(--muted);
+            font-size: 23px;
             flex-shrink: 0;
         }
 
-        .information-row strong {
-            text-align: right;
-            overflow-wrap: anywhere;
+        .module-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .module-status.enabled {
+            color: #166534;
+            background: #dcfce7;
+        }
+
+        .module-card h3 {
+            color: var(--navy);
+            font-size: 17px;
+            margin-bottom: 9px;
+        }
+
+        .module-card p {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .module-features {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px;
+            color: var(--text);
+            font-size: 12px;
+        }
+
+        .module-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .module-features i {
+            color: var(--gold-dark);
+            font-size: 10px;
+            margin-top: 5px;
+        }
+
+        .module-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            width: 100%;
+            min-height: 43px;
+            margin-top: auto;
+            padding: 11px 13px;
+            border: 0;
+            border-radius: 7px;
+            background: var(--navy);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .module-action:hover:not([aria-disabled="true"]):not(:disabled) {
+            background: var(--navy-light);
+        }
+
+        .module-action[aria-disabled="true"],
+        .module-action:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+            opacity: 1;
+        }
+
+        /* ACCOUNT DETAILS */
+
+        .account-card {
+            padding: 25px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 22px;
+        }
+
+        .account-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 23px;
+        }
+
+        .account-field {
             min-width: 0;
         }
 
-        .information-row:last-child {
-            border-bottom: 0;
-        }
-
-        .notice-text {
-            font-size: 12px;
+        .account-field span {
+            display: block;
+            font-size: 11px;
             color: var(--muted);
-            line-height: 1.9;
+            margin-bottom: 5px;
         }
 
-        .support-link {
-            color: var(--gold-dark);
+        .account-field strong {
+            display: block;
+            color: var(--navy);
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .security-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+            padding: 17px;
+            background: #f4f0e8;
+            border: 1px solid #e5dac8;
+            border-radius: 9px;
+            color: #6b5736;
             font-size: 12px;
-            font-weight: 700;
+        }
+
+        .security-note i {
+            font-size: 19px;
+            margin-top: 2px;
+        }
+
+        .security-note p {
+            margin: 0;
         }
 
         .dashboard-message {
-            background: #fff3e3;
-            border: 1px solid #e5cfaa;
-            border-radius: 7px;
-            padding: 15px;
+            padding: 14px 17px;
             margin-bottom: 20px;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            background: #fef2f2;
+            color: var(--red);
             font-size: 13px;
-            line-height: 1.7;
         }
 
-        #accountInformation {
-            scroll-margin-top: 100px;
-        }
-
-
-        /* =========================================
-           09. FOOTER
-           ========================================= */
-
-        footer {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            flex-wrap: wrap;
+        .main-footer {
+            padding: 22px 32px;
             border-top: 1px solid var(--border);
-            padding: 22px 30px;
             color: var(--muted);
+            text-align: center;
             font-size: 11px;
         }
 
-        .footer-links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .footer-links a:hover {
+        .main-footer strong {
             color: var(--gold-dark);
         }
 
-        .mobile-overlay {
-            display: none;
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background: rgba(10,20,34,.55);
         }
 
+        /* RESPONSIVE DESIGN */
 
-        /* =========================================
-           10. RESPONSIVE DESIGN
-           ========================================= */
-
-        @media (max-width: 1350px) {
-
-            .status-grid {
-                grid-template-columns:
-                    repeat(2, minmax(0, 1fr));
-            }
-
-        }
-
-        @media (max-width: 1150px) {
+        @media (max-width: 1200px) {
 
             .module-grid {
-                grid-template-columns:
-                    repeat(2, minmax(0, 1fr));
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
+            .status-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .account-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
 
         @media (max-width: 900px) {
 
             .sidebar {
                 transform: translateX(-100%);
-                visibility: hidden;
-                transition:
-                    transform .25s ease,
-                    visibility .25s ease;
+                transition: transform .25s ease;
             }
 
             .sidebar.open {
                 transform: translateX(0);
-                visibility: visible;
             }
 
-            .workspace {
+            .main {
                 margin-left: 0;
             }
 
-            .menu-toggle {
-                display: inline-grid;
-                place-items: center;
+            .menu-button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
             }
 
-            .mobile-overlay.open {
-                display: block;
-                position: fixed;
-                inset: 0;
-                background: #00000070;
-                z-index: 90;
+            .topbar {
+                padding: 13px 20px;
+            }
+
+            .dashboard-content {
+                padding: 23px 20px;
             }
 
             body.sidebar-open {
                 overflow: hidden;
             }
-
-            main {
-                padding: 22px;
-            }
-
-            .topbar {
-                padding: 15px 20px;
-            }
-
         }
 
-        @media (max-width: 600px) {
-
-            main {
-                padding: 16px;
-            }
+        @media (max-width: 580px) {
 
             .topbar {
-                padding: 10px 12px;
-                gap: 8px;
-            }
-
-            .topbar-left,
-            .topbar-right {
-                gap: 8px;
+                min-height: 70px;
+                padding: 12px 15px;
             }
 
             .topbar-title {
-                font-size: 13px;
+                font-size: 14px;
             }
 
-            .profile,
-            .logout-button span,
-            .welcome-symbol {
+            .topbar-caption,
+            .topbar-account .account-details {
                 display: none;
             }
 
-            .welcome {
-                padding: 25px;
+            .topbar-account {
+                gap: 7px;
+            }
+
+            .logout-button {
+                padding: 8px 10px;
+                margin-left: 0;
+            }
+
+            .logout-button span {
+                display: none;
+            }
+
+            .avatar {
+                width: 35px;
+                height: 35px;
+                font-size: 12px;
+            }
+
+            .dashboard-content {
+                padding: 18px 15px;
+            }
+
+            .welcome-panel {
+                padding: 23px 20px;
             }
 
             .status-grid {
-                grid-template-columns:
-                    repeat(2, minmax(0, 1fr));
                 gap: 10px;
             }
 
             .status-card {
-                padding: 13px;
-                align-items: flex-start;
-                flex-direction: column;
-                gap: 10px;
+                padding: 15px;
             }
 
             .status-card strong {
                 font-size: 13px;
             }
 
-            .status-icon {
-                width: 36px;
-                height: 36px;
-                font-size: 15px;
-            }
-
-            .module-grid,
-            .information-grid {
+            .module-grid {
                 grid-template-columns: 1fr;
                 gap: 14px;
             }
 
             .module-card {
-                min-height: 210px;
-                padding: 22px;
-            }
-
-            .information-card {
+                min-height: 260px;
                 padding: 20px;
             }
 
-            footer {
-                padding: 20px 16px;
+            .account-grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
             }
 
+            .account-card {
+                padding: 20px;
+            }
+
+            .section-heading h2 {
+                font-size: 18px;
+            }
+
+            .module-count {
+                font-size: 10px;
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -831,10 +897,12 @@
             *,
             *::before,
             *::after {
-                animation-duration: .01ms !important;
-                transition-duration: .01ms !important;
+                transition: none !important;
             }
 
+            .spinner {
+                animation: none;
+            }
         }
 
     </style>
@@ -843,198 +911,181 @@
 
 <body>
 
-    <!-- =========================================
-         AUTHENTICATION LOADING SCREEN
-         ========================================= -->
+    <!-- AUTHORIZATION SCREEN -->
 
-    <div id="authLoading" class="auth-loading">
+    <div id="authLoading" class="auth-screen">
 
-        <div>
+        <div class="auth-card">
 
             <img src="/images/logo.png"
-                 class="loading-logo"
                  alt="MNM Legal Associates">
 
-            <h1>MNM Legal Associates</h1>
+            <h1>MNM LEGAL ASSOCIATES</h1>
 
-            <div class="spinner"
-                 id="loadingSpinner"></div>
+            <p>Secure Legal Practice Management System</p>
+
+            <div id="loadingSpinner"
+                 class="spinner"
+                 aria-hidden="true"></div>
 
             <p id="loadingMessage" role="status">
-                Verifying your authorised staff account...
+                Verifying staff authorization...
             </p>
 
-            <a href="/login.html">
+            <a class="auth-return" href="/login.html">
                 Return to Staff Login
             </a>
-
-            <noscript>
-                <p>
-                    JavaScript is required to access
-                    this workspace.
-                </p>
-            </noscript>
 
         </div>
 
     </div>
 
 
-    <!-- =========================================
-         PROTECTED DASHBOARD
-         ========================================= -->
+    <!-- PROTECTED DASHBOARD -->
 
     <div id="protectedContent" hidden>
 
-        <div id="mobileOverlay"
-             class="mobile-overlay"
-             aria-hidden="true"></div>
+        <div id="sidebarOverlay"
+             class="sidebar-overlay"
+             hidden></div>
 
 
         <!-- SIDEBAR -->
 
-        <aside id="sidebar" class="sidebar">
+        <aside id="sidebar"
+               class="sidebar"
+               aria-label="Staff navigation">
 
-            <a href="/dashboard.html" class="brand">
+            <a href="/dashboard.html" class="sidebar-brand">
 
                 <img src="/images/logo.png"
                      alt="MNM Legal Associates">
 
                 <div>
 
-                    <strong>MNM Legal Associates</strong>
+                    <div class="brand-name">
+                        MNM LEGAL<br>ASSOCIATES
+                    </div>
 
-                    <small>OFFICE MANAGEMENT</small>
+                    <div class="brand-caption">
+                        Justice, Integrity &amp; Excellence
+                    </div>
 
                 </div>
 
             </a>
 
+            <nav class="sidebar-navigation">
 
-            <nav class="navigation"
-                 aria-label="Office navigation">
-
-                <div class="nav-heading">
-                    Workspace
+                <div class="navigation-label">
+                    WORKSPACE
                 </div>
 
                 <a href="/dashboard.html"
-                   class="nav-item active"
+                   class="nav-link active"
                    aria-current="page">
 
                     <i class="fa-solid fa-house"></i>
 
-                    Dashboard
+                    <span>Dashboard</span>
 
                 </a>
 
-                <a class="nav-item"
+                <div class="navigation-label">
+                    PRACTICE MANAGEMENT
+                </div>
+
+                <a class="nav-link"
                    data-invoice-link
                    aria-disabled="true"
                    tabindex="-1">
 
                     <i class="fa-solid fa-file-invoice"></i>
 
-                    Invoice Generator
+                    <span>Invoice Generator</span>
 
                 </a>
 
-
-                <div class="nav-heading">
-                    Practice Management
-                </div>
-
-
-                <a class="nav-item"
+                <a class="nav-link"
                    data-client-link
                    aria-disabled="true"
                    tabindex="-1">
 
                     <i class="fa-solid fa-users"></i>
 
-                    Clients
+                    <span>Client Management</span>
 
                 </a>
 
-
-                <button class="nav-item"
-                        type="button"
-                        disabled>
+                <a class="nav-link"
+                   data-case-link
+                   aria-disabled="true"
+                   tabindex="-1">
 
                     <i class="fa-solid fa-scale-balanced"></i>
 
-                    Cases
+                    <span>Case Management</span>
 
-                    <span class="soon">Soon</span>
+                </a>
 
-                </button>
-
-
-                <button class="nav-item"
-                        type="button"
-                        disabled>
+                <button class="nav-link" disabled>
 
                     <i class="fa-solid fa-calendar-days"></i>
 
-                    Hearing Calendar
+                    <span>Hearing Calendar</span>
 
-                    <span class="soon">Soon</span>
+                    <i class="fa-solid fa-lock nav-lock"></i>
 
                 </button>
 
-
-                <button class="nav-item"
-                        type="button"
-                        disabled>
+                <button class="nav-link" disabled>
 
                     <i class="fa-solid fa-folder-open"></i>
 
-                    Documents
+                    <span>Document Management</span>
 
-                    <span class="soon">Soon</span>
+                    <i class="fa-solid fa-lock nav-lock"></i>
 
                 </button>
 
-
-                <button class="nav-item"
-                        type="button"
-                        disabled>
+                <button class="nav-link" disabled>
 
                     <i class="fa-solid fa-chart-line"></i>
 
-                    Financial Management
+                    <span>Financial Management</span>
 
-                    <span class="soon">Soon</span>
+                    <i class="fa-solid fa-lock nav-lock"></i>
 
                 </button>
 
-
-                <div class="nav-heading">
-                    Account
+                <div class="navigation-label">
+                    ACCOUNT
                 </div>
 
-
                 <a href="#accountInformation"
-                   class="nav-item">
+                   class="nav-link"
+                   data-account-link>
 
                     <i class="fa-solid fa-user-shield"></i>
 
-                    My Account
+                    <span>Account Information</span>
 
                 </a>
 
-
-                <a href="/" class="nav-item">
+                <a href="/" class="nav-link">
 
                     <i class="fa-solid fa-globe"></i>
 
-                    Public Website
+                    <span>Visit Website</span>
 
                 </a>
 
+            </nav>
+
+            <div class="sidebar-footer">
 
                 <button id="sidebarLogout"
-                        class="nav-item"
+                        class="sidebar-logout"
                         type="button">
 
                     <i class="fa-solid fa-right-from-bracket"></i>
@@ -1043,34 +1094,23 @@
 
                 </button>
 
-            </nav>
-
-
-            <div class="sidebar-footer">
-
-                Justice, Integrity &amp; Excellence
-
-                <br>
-
-                Internal Office Workspace
+                <p>Confidential Staff Workspace</p>
 
             </div>
 
         </aside>
 
 
-        <!-- =====================================
-             MAIN WORKSPACE
-             ===================================== -->
+        <!-- MAIN AREA -->
 
-        <div class="workspace">
+        <main class="main">
 
             <header class="topbar">
 
                 <div class="topbar-left">
 
-                    <button id="menuToggle"
-                            class="menu-toggle"
+                    <button id="menuButton"
+                            class="menu-button"
                             type="button"
                             aria-label="Open navigation"
                             aria-controls="sidebar"
@@ -1080,28 +1120,33 @@
 
                     </button>
 
-                    <div class="topbar-title">
-                        Office Dashboard
+                    <div>
+
+                        <div class="topbar-title">
+                            Staff Dashboard
+                        </div>
+
+                        <div class="topbar-caption">
+                            Legal Practice Management System
+                        </div>
+
                     </div>
 
                 </div>
 
-
-                <div class="topbar-right">
+                <div class="topbar-account">
 
                     <div id="profileAvatar" class="avatar">
                         ML
                     </div>
 
-                    <div class="profile">
+                    <div class="account-details">
 
-                        <strong id="profileName">
-                            Staff Member
-                        </strong>
+                        <div id="profileName"
+                             class="account-name">—</div>
 
-                        <small id="profileRole">
-                            Authorised Staff
-                        </small>
+                        <div id="profileRole"
+                             class="account-role">—</div>
 
                     </div>
 
@@ -1121,7 +1166,7 @@
             </header>
 
 
-            <main>
+            <div class="dashboard-content">
 
                 <div id="dashboardMessage"
                      class="dashboard-message"
@@ -1129,147 +1174,104 @@
                      hidden></div>
 
 
-                <!-- WELCOME SECTION -->
+                <!-- WELCOME -->
 
-                <section class="welcome">
+                <section class="welcome-panel">
 
-                    <div>
+                    <h1 id="welcomeHeading">
+                        Welcome to your workspace
+                    </h1>
 
-                        <div class="eyebrow">
-                            MNM Legal Associates
-                        </div>
+                    <p>
+                        Manage your legal practice, client records,
+                        professional billing and case proceedings
+                        from one centralized workspace.
+                    </p>
 
-                        <h1 id="welcomeHeading">
-                            Welcome to your workspace
-                        </h1>
+                    <div class="welcome-date">
 
-                        <p>
-                            Manage client relationships,
-                            professional billing and internal
-                            legal practice operations from
-                            one organised workspace.
-                        </p>
+                        <i class="fa-regular fa-calendar"></i>
 
-                        <div class="welcome-date">
-
-                            <i class="fa-regular fa-calendar"></i>
-
-                            <span id="currentDate"></span>
-
-                        </div>
+                        <span id="currentDate">—</span>
 
                     </div>
-
-                    <i class="fa-solid fa-scale-balanced welcome-symbol"
-                       aria-hidden="true"></i>
 
                 </section>
 
 
-                <!-- WORKSPACE STATUS -->
+                <!-- SYSTEM STATUS -->
 
                 <section class="status-grid"
-                         aria-label="Workspace status">
+                         aria-label="System status">
 
-                    <div class="status-card">
+                    <article class="status-card">
 
-                        <div class="status-icon">
+                        <i class="fa-solid fa-shield-halved"></i>
 
-                            <i class="fa-solid fa-shield-halved"></i>
+                        <p>Staff Authorization</p>
 
-                        </div>
+                        <strong id="authorizationStatus">
+                            Verifying
+                        </strong>
 
-                        <div>
+                    </article>
 
-                            <small>Staff Authorization</small>
+                    <article class="status-card">
 
-                            <strong class="online">
-                                Verified
-                            </strong>
+                        <i class="fa-solid fa-user-tie"></i>
 
-                        </div>
+                        <p>Access Role</p>
 
-                    </div>
+                        <strong id="statusRole">—</strong>
 
+                    </article>
 
-                    <div class="status-card">
+                    <article class="status-card">
 
-                        <div class="status-icon">
+                        <i class="fa-solid fa-cubes"></i>
 
-                            <i class="fa-solid fa-user-shield"></i>
+                        <p>Accessible Modules</p>
 
-                        </div>
+                        <strong id="accessibleModules">—</strong>
 
-                        <div>
+                    </article>
 
-                            <small>Access Role</small>
+                    <article class="status-card">
 
-                            <strong id="statusRole">—</strong>
+                        <i class="fa-solid fa-cloud"></i>
 
-                        </div>
+                        <p>Data Storage</p>
 
-                    </div>
+                        <strong>Firebase Cloud</strong>
 
-
-                    <div class="status-card">
-
-                        <div class="status-icon">
-
-                            <i class="fa-solid fa-file-invoice"></i>
-
-                        </div>
-
-                        <div>
-
-                            <small>Billing Module</small>
-
-                            <strong id="billingStatus">
-                                Checking Access
-                            </strong>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="status-card">
-
-                        <div class="status-icon">
-
-                            <i class="fa-solid fa-cloud"></i>
-
-                        </div>
-
-                        <div>
-
-                            <small>Data Storage</small>
-
-                            <strong>Firebase Cloud</strong>
-
-                        </div>
-
-                    </div>
+                    </article>
 
                 </section>
 
 
-                <!-- =================================
-                     OFFICE MANAGEMENT MODULES
-                     ================================= -->
+                <!-- MANAGEMENT MODULES -->
 
-                <section>
+                <section aria-labelledby="modulesHeading">
 
                     <div class="section-heading">
 
-                        <h2>Office Management</h2>
+                        <div>
 
-                        <p>
-                            Professional tools for your
-                            legal practice.
-                        </p>
+                            <h2 id="modulesHeading">
+                                Practice Management
+                            </h2>
+
+                            <p>
+                                Select a module to manage your legal operations.
+                            </p>
+
+                        </div>
+
+                        <span id="moduleCount" class="module-count">
+                            3 of 6 modules released
+                        </span>
 
                     </div>
-
 
                     <div class="module-grid">
 
@@ -1283,15 +1285,13 @@
 
                                 <div class="module-icon">
 
-                                    <i class="fa-solid fa-file-invoice"></i>
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
 
                                 </div>
 
                                 <span id="invoiceModuleStatus"
                                       class="module-status">
-
                                     Restricted
-
                                 </span>
 
                             </div>
@@ -1299,11 +1299,33 @@
                             <h3>Invoice Generator</h3>
 
                             <p>
-                                Create professional fee invoices,
-                                manage saved bills, record payments
-                                and generate printable invoices
-                                with centralised cloud storage.
+                                Manage professional fee invoices,
+                                payment records and billing documentation.
                             </p>
+
+                            <ul class="module-features">
+
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Professional invoice generation
+                                </li>
+
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Monthly invoice numbering
+                                </li>
+
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Cloud-saved billing records
+                                </li>
+
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Print, PDF and data export
+                                </li>
+
+                            </ul>
 
                             <a class="module-action"
                                data-invoice-link
@@ -1336,9 +1358,7 @@
 
                                 <span id="clientModuleStatus"
                                       class="module-status">
-
                                     Restricted
-
                                 </span>
 
                             </div>
@@ -1346,12 +1366,33 @@
                             <h3>Client Management</h3>
 
                             <p>
-                                Register new clients, manage
-                                confidential client profiles,
-                                maintain contact information
-                                and record professional
-                                engagements and activities.
+                                Maintain permanent client profiles,
+                                contact information and engagement history.
                             </p>
+
+                            <ul class="module-features">
+
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Unique client registration IDs
+                                </li>
+
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Centralized client directory
+                                </li>
+
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Associated legal matters
+                                </li>
+
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Client activity and communication history
+                                </li>
+
+                            </ul>
 
                             <a class="module-action"
                                data-client-link
@@ -1371,7 +1412,8 @@
 
                         <!-- CASE MANAGEMENT -->
 
-                        <article class="module-card">
+                        <article class="module-card"
+                                 id="caseModuleCard">
 
                             <div class="module-top">
 
@@ -1381,8 +1423,9 @@
 
                                 </div>
 
-                                <span class="module-status">
-                                    Coming Soon
+                                <span id="caseModuleStatus"
+                                      class="module-status">
+                                    Restricted
                                 </span>
 
                             </div>
@@ -1390,19 +1433,46 @@
                             <h3>Case Management</h3>
 
                             <p>
-                                Organise case numbers, court
-                                details, litigation status,
-                                client-linked matters and
-                                important proceedings.
+                                Manage litigation and non-litigation
+                                matters throughout their lifecycle.
                             </p>
 
-                            <div class="module-action pending">
+                            <ul class="module-features">
 
-                                Coming Soon
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Case registration and client linking
+                                </li>
 
-                                <i class="fa-regular fa-clock"></i>
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Court details and proceedings history
+                                </li>
 
-                            </div>
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Hearing dates and case-specific tasks
+                                </li>
+
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Confidential case notes and strategy
+                                </li>
+
+                            </ul>
+
+                            <a class="module-action"
+                               data-case-link
+                               aria-disabled="true"
+                               tabindex="-1">
+
+                                <span id="caseAction">
+                                    Administrator Access Required
+                                </span>
+
+                                <i class="fa-solid fa-arrow-right"></i>
+
+                            </a>
 
                         </article>
 
@@ -1428,19 +1498,41 @@
                             <h3>Hearing Calendar</h3>
 
                             <p>
-                                Manage court hearings, filing
-                                deadlines, consultations,
-                                reminders and professional
-                                appointments.
+                                A centralized calendar for court hearings,
+                                appointments and important legal deadlines.
                             </p>
 
-                            <div class="module-action pending">
+                            <ul class="module-features">
 
-                                Coming Soon
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Upcoming hearing schedule
+                                </li>
 
-                                <i class="fa-regular fa-clock"></i>
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Daily and monthly calendar views
+                                </li>
 
-                            </div>
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Case-linked legal deadlines
+                                </li>
+
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Appointment management
+                                </li>
+
+                            </ul>
+
+                            <button class="module-action" disabled>
+
+                                <span>Coming Soon</span>
+
+                                <i class="fa-solid fa-lock"></i>
+
+                            </button>
 
                         </article>
 
@@ -1466,19 +1558,41 @@
                             <h3>Document Management</h3>
 
                             <p>
-                                Organise pleadings, legal notices,
-                                agreements, evidence and other
-                                confidential professional
-                                documents.
+                                Organize legal documents and supporting
+                                records within client and case profiles.
                             </p>
 
-                            <div class="module-action pending">
+                            <ul class="module-features">
 
-                                Coming Soon
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Petitions and affidavits
+                                </li>
 
-                                <i class="fa-regular fa-clock"></i>
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Legal notices and agreements
+                                </li>
 
-                            </div>
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Evidence and court orders
+                                </li>
+
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Document categorization
+                                </li>
+
+                            </ul>
+
+                            <button class="module-action" disabled>
+
+                                <span>Coming Soon</span>
+
+                                <i class="fa-solid fa-lock"></i>
+
+                            </button>
 
                         </article>
 
@@ -1491,7 +1605,7 @@
 
                                 <div class="module-icon">
 
-                                    <i class="fa-solid fa-chart-pie"></i>
+                                    <i class="fa-solid fa-chart-line"></i>
 
                                 </div>
 
@@ -1504,19 +1618,41 @@
                             <h3>Financial Management</h3>
 
                             <p>
-                                Track professional fees,
-                                outstanding payments, expenses
-                                and monthly financial
-                                performance of the firm.
+                                Monitor professional income, outstanding
+                                fees and law firm operating expenses.
                             </p>
 
-                            <div class="module-action pending">
+                            <ul class="module-features">
 
-                                Coming Soon
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Income and expense tracking
+                                </li>
 
-                                <i class="fa-regular fa-clock"></i>
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Outstanding professional fees
+                                </li>
 
-                            </div>
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Monthly financial summaries
+                                </li>
+
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    Billing and collection analysis
+                                </li>
+
+                            </ul>
+
+                            <button class="module-action" disabled>
+
+                                <span>Coming Soon</span>
+
+                                <i class="fa-solid fa-lock"></i>
+
+                            </button>
 
                         </article>
 
@@ -1525,271 +1661,192 @@
                 </section>
 
 
-                <!-- =================================
-                     ACCOUNT INFORMATION
-                     ================================= -->
+                <!-- ACCOUNT INFORMATION -->
 
-                <section class="information-grid">
+                <section id="accountInformation">
 
-                    <article class="information-card"
-                             id="accountInformation">
+                    <div class="section-heading">
 
-                        <h2>
+                        <div>
 
-                            <i class="fa-solid fa-user-shield"></i>
+                            <h2>Account Information</h2>
 
-                            Account Information
-
-                        </h2>
-
-
-                        <div class="information-row">
-
-                            <span>Full Name</span>
-
-                            <strong id="accountName">—</strong>
+                            <p>
+                                Staff identity, authorization and module access.
+                            </p>
 
                         </div>
 
+                    </div>
 
-                        <div class="information-row">
+                    <div class="account-card">
 
-                            <span>Email Address</span>
+                        <div class="account-grid">
 
-                            <strong id="accountEmail">—</strong>
+                            <div class="account-field">
+
+                                <span>Full Name</span>
+
+                                <strong id="accountName">—</strong>
+
+                            </div>
+
+                            <div class="account-field">
+
+                                <span>Registered Email</span>
+
+                                <strong id="accountEmail">—</strong>
+
+                            </div>
+
+                            <div class="account-field">
+
+                                <span>Account Role</span>
+
+                                <strong id="accountRole">—</strong>
+
+                            </div>
+
+                            <div class="account-field">
+
+                                <span>Account Status</span>
+
+                                <strong id="accountStatus">—</strong>
+
+                            </div>
+
+                            <div class="account-field">
+
+                                <span>Email Verification</span>
+
+                                <strong id="emailVerification">—</strong>
+
+                            </div>
+
+                            <div class="account-field">
+
+                                <span>Last Sign In</span>
+
+                                <strong id="lastSignIn">—</strong>
+
+                            </div>
+
+                            <div class="account-field">
+
+                                <span>Invoice Generator Access</span>
+
+                                <strong id="invoiceAccessStatus">—</strong>
+
+                            </div>
+
+                            <div class="account-field">
+
+                                <span>Client Management Access</span>
+
+                                <strong id="clientAccessStatus">—</strong>
+
+                            </div>
+
+                            <div class="account-field">
+
+                                <span>Case Management Access</span>
+
+                                <strong id="caseAccessStatus">—</strong>
+
+                            </div>
 
                         </div>
 
+                    </div>
 
-                        <div class="information-row">
+                    <div class="security-note">
 
-                            <span>Account Role</span>
+                        <i class="fa-solid fa-shield-halved"></i>
 
-                            <strong id="accountRole">—</strong>
+                        <div>
 
-                        </div>
+                            <strong>
+                                Confidential &amp; Authorized Access Only
+                            </strong>
 
-
-                        <div class="information-row">
-
-                            <span>Account Status</span>
-
-                            <strong id="accountStatus">—</strong>
-
-                        </div>
-
-
-                        <div class="information-row">
-
-                            <span>Email Verification</span>
-
-                            <strong id="emailVerification">—</strong>
+                            <p>
+                                This workspace contains confidential legal
+                                and professional records. Access is restricted
+                                according to staff authorization and database
+                                security policies. Always sign out after
+                                using a shared device.
+                            </p>
 
                         </div>
 
-
-                        <div class="information-row">
-
-                            <span>Last Sign-in</span>
-
-                            <strong id="lastSignIn">—</strong>
-
-                        </div>
-
-
-                        <div class="information-row">
-
-                            <span>Authorization</span>
-
-                            <strong>Firestore Staff Profile</strong>
-
-                        </div>
-
-
-                        <div class="information-row">
-
-                            <span>Client Management</span>
-
-                            <strong id="clientAccessStatus">—</strong>
-
-                        </div>
-
-
-                        <div class="information-row">
-
-                            <span>Invoice Generator</span>
-
-                            <strong id="invoiceAccessStatus">—</strong>
-
-                        </div>
-
-                    </article>
-
-
-                    <!-- CONFIDENTIALITY -->
-
-                    <article class="information-card">
-
-                        <h2>
-
-                            <i class="fa-solid fa-lock"></i>
-
-                            Confidentiality &amp; Data Protection
-
-                        </h2>
-
-                        <p class="notice-text">
-
-                            This workspace is intended exclusively
-                            for authorised professional use.
-                            Staff members must maintain the
-                            confidentiality of client information
-                            and office records.
-
-                        </p>
-
-                        <p class="notice-text">
-
-                            Staff authorization is checked through
-                            Firebase Authentication and Firestore
-                            staff profiles.
-
-                        </p>
-
-                        <p class="notice-text">
-
-                            Client records and professional
-                            invoices are managed through
-                            centralised Firebase Cloud Firestore
-                            storage, subject to the applicable
-                            database security rules.
-
-                        </p>
-
-                        <p class="notice-text">
-
-                            Access to Client Management and
-                            Invoice Generator is currently
-                            restricted to authorised
-                            administrators.
-
-                        </p>
-
-                        <p class="notice-text">
-
-                            Maintain periodic independent
-                            backups of important office records.
-                            Store exported files securely and
-                            restrict access to authorised persons.
-
-                        </p>
-
-                        <p class="notice-text">
-
-                            Always sign out after using a shared
-                            computer. Never disclose your
-                            account credentials to unauthorised
-                            persons.
-
-                        </p>
-
-                        <a href="mailto:mnmlegal.in@gmail.com"
-                           class="support-link">
-
-                            Contact Administrator
-
-                        </a>
-
-                    </article>
+                    </div>
 
                 </section>
 
-            </main>
+            </div>
 
 
-            <!-- FOOTER -->
+            <footer class="main-footer">
 
-            <footer>
+                &copy; <span id="currentYear"></span>
+                MNM Legal Associates. All rights reserved.
 
-                <div>
+                <br>
 
-                    &copy; <span id="currentYear"></span>
+                <strong>
+                    Justice, Integrity &amp; Excellence
+                </strong>
 
-                    MNM Legal Associates.
-                    All Rights Reserved.
+                &nbsp; | &nbsp;
 
-                </div>
-
-                <div class="footer-links">
-
-                    <a href="/privacy.html">
-                        Privacy Policy
-                    </a>
-
-                    <a href="/terms.html">
-                        Terms of Use
-                    </a>
-
-                    <a href="/">
-                        Public Website
-                    </a>
-
-                </div>
+                Legal Practice Management System
 
             </footer>
 
-        </div>
+        </main>
 
     </div>
 
 
-    <!-- =========================================
-         DASHBOARD APPLICATION
-         ========================================= -->
+    <!-- DASHBOARD APPLICATION -->
 
     <script type="module">
 
-        /* =====================================
-           01. APPLICATION CONFIGURATION
-           ===================================== */
+        /* =========================================
+           01. CONFIGURATION
+           ========================================= */
+
+        import {
+            protectPage,
+            logoutUser,
+            getStaffProfile,
+            verifyStaffAccess
+        } from "./auth.js";
+
+        import { auth } from "./firebase-config.js";
 
         const $ = id => document.getElementById(id);
 
-        const protectedContent = $("protectedContent");
+        const TIME_ZONE = "Asia/Kolkata";
 
-        const authLoading = $("authLoading");
-
-        const sidebar = $("sidebar");
-
-        const menuToggle = $("menuToggle");
-
-        const mobileOverlay = $("mobileOverlay");
-
-        const logoutButton = $("logoutButton");
-
-        const sidebarLogout = $("sidebarLogout");
-
+        const ROLE_LABELS = Object.freeze({
+            admin: "Administrator",
+            advocate: "Advocate",
+            staff: "Staff Member"
+        });
 
         const MODULE_CONFIG = Object.freeze({
 
             invoice: Object.freeze({
 
                 enabled: true,
-
                 url: "/invoice.html",
-
                 roles: ["admin"],
-
                 selector: "[data-invoice-link]",
-
                 actionId: "invoiceAction",
-
                 statusId: "invoiceModuleStatus",
-
                 cardId: "invoiceModuleCard",
-
                 accessId: "invoiceAccessStatus",
-
                 actionText: "Open Invoice Generator"
 
             }),
@@ -1797,83 +1854,66 @@
             clients: Object.freeze({
 
                 enabled: true,
-
                 url: "/clients.html",
-
                 roles: ["admin"],
-
                 selector: "[data-client-link]",
-
                 actionId: "clientAction",
-
                 statusId: "clientModuleStatus",
-
                 cardId: "clientModuleCard",
-
                 accessId: "clientAccessStatus",
-
                 actionText: "Open Client Management"
+
+            }),
+
+            cases: Object.freeze({
+
+                enabled: true,
+                url: "/cases.html",
+                roles: ["admin"],
+                selector: "[data-case-link]",
+                actionId: "caseAction",
+                statusId: "caseModuleStatus",
+                cardId: "caseModuleCard",
+                accessId: "caseAccessStatus",
+                actionText: "Open Case Management"
 
             })
 
         });
 
-
-        const ROLE_LABELS = Object.freeze({
-
-            admin: "Administrator",
-
-            advocate: "Advocate",
-
-            staff: "Staff Member"
-
-        });
+        let logoutInProgress = false;
+        let verificationPromise = null;
+        let authorizedUserId = null;
+        let sessionGeneration = 0;
+        let navigationInProgress = false;
 
 
-        const TIME_ZONE = "Asia/Kolkata";
+        /* =========================================
+           02. UTILITIES
+           ========================================= */
 
+        function setText(id, value) {
 
-        /* =====================================
-           02. COMMON UTILITIES
-           ===================================== */
+            const node = $(id);
 
-        function setText(id, text) {
+            if (node) {
 
-            const element = $(id);
-
-            if (element) {
-
-                element.textContent = text ?? "—";
+                node.textContent = value ?? "—";
 
             }
 
         }
 
-
         function showMessage(message) {
 
             setText(
-
                 "dashboardMessage",
-
                 message || "An unexpected error occurred."
-
             );
 
             $("dashboardMessage").hidden = false;
 
-            $("dashboardMessage").scrollIntoView({
-
-                behavior: window.matchMedia(
-                    "(prefers-reduced-motion: reduce)"
-                ).matches ? "auto" : "smooth",
-
-                block: "nearest"
-
-            });
-
         }
-
 
         function clearMessage() {
 
@@ -1883,250 +1923,156 @@
 
         }
 
-
-        /* =====================================
-           03. DATE AND TIME
-           ===================================== */
-
         function updateDate() {
 
             const now = new Date();
 
             setText(
-
                 "currentYear",
-
                 new Intl.DateTimeFormat("en-IN", {
-
                     year: "numeric",
-
                     timeZone: TIME_ZONE
-
                 }).format(now)
-
             );
 
-
             setText(
-
                 "currentDate",
-
                 new Intl.DateTimeFormat("en-IN", {
-
                     weekday: "long",
-
                     day: "numeric",
-
                     month: "long",
-
                     year: "numeric",
-
                     timeZone: TIME_ZONE
-
                 }).format(now)
-
             );
 
         }
 
-
         function getGreeting() {
 
             const hour = Number(
-
                 new Intl.DateTimeFormat("en-GB", {
-
                     hour: "2-digit",
-
                     hourCycle: "h23",
-
                     timeZone: TIME_ZONE
-
                 }).format(new Date())
-
             );
 
-            if (hour < 12) {
+            if (hour < 12) return "Good morning";
 
-                return "Good morning";
-
-            }
-
-            if (hour < 17) {
-
-                return "Good afternoon";
-
-            }
+            if (hour < 17) return "Good afternoon";
 
             return "Good evening";
 
         }
 
 
-        updateDate();
-
-
-        /* =====================================
-           04. MOBILE NAVIGATION
-           ===================================== */
-
-        const desktopMedia = window.matchMedia(
-
-            "(min-width: 901px)"
-
-        );
-
+        /* =========================================
+           03. MOBILE SIDEBAR
+           ========================================= */
 
         function setSidebar(open) {
 
-            const shouldOpen =
+            const mobile =
+                window.matchMedia("(max-width: 900px)").matches;
 
-                Boolean(open) && !desktopMedia.matches;
+            const visible = Boolean(open && mobile);
 
-            sidebar.classList.toggle(
+            $("sidebar").classList.toggle("open", visible);
 
-                "open",
-
-                shouldOpen
-
-            );
-
-            mobileOverlay.classList.toggle(
-
-                "open",
-
-                shouldOpen
-
-            );
+            $("sidebarOverlay").hidden = !visible;
 
             document.body.classList.toggle(
-
                 "sidebar-open",
-
-                shouldOpen
-
+                visible
             );
 
-            menuToggle.setAttribute(
-
+            $("menuButton").setAttribute(
                 "aria-expanded",
-
-                String(shouldOpen)
-
+                String(visible)
             );
 
-            menuToggle.setAttribute(
-
+            $("menuButton").setAttribute(
                 "aria-label",
-
-                shouldOpen
+                visible
                     ? "Close navigation"
                     : "Open navigation"
-
             );
 
-            const menuIcon =
-
-                menuToggle.querySelector("i");
-
-            if (menuIcon) {
-
-                menuIcon.className = shouldOpen
-
+            $("menuButton").querySelector("i").className =
+                visible
                     ? "fa-solid fa-xmark"
-
                     : "fa-solid fa-bars";
 
-            }
+            $("sidebar").inert = mobile && !visible;
 
         }
 
-
-        menuToggle.addEventListener("click", () => {
+        $("menuButton").addEventListener("click", () => {
 
             setSidebar(
-
-                !sidebar.classList.contains("open")
-
+                !$("sidebar").classList.contains("open")
             );
 
         });
 
-
-        mobileOverlay.addEventListener("click", () => {
+        $("sidebarOverlay").addEventListener("click", () => {
 
             setSidebar(false);
 
-            menuToggle.focus();
+            $("menuButton").focus();
 
         });
-
 
         document.addEventListener("keydown", event => {
 
             if (
-
                 event.key === "Escape" &&
-
-                sidebar.classList.contains("open")
-
+                $("sidebar").classList.contains("open")
             ) {
 
                 setSidebar(false);
 
-                menuToggle.focus();
+                $("menuButton").focus();
 
             }
 
         });
 
+        window.addEventListener("resize", () => {
 
-        sidebar.querySelectorAll("a").forEach(link => {
-
-            link.addEventListener("click", () => {
+            if (
+                !window.matchMedia("(max-width: 900px)").matches
+            ) {
 
                 setSidebar(false);
+
+            } else {
+
+                $("sidebar").inert =
+                    !$("sidebar").classList.contains("open");
+
+            }
+
+        });
+
+        document.querySelectorAll("[data-account-link]")
+            .forEach(link => {
+
+                link.addEventListener("click", () => {
+
+                    setSidebar(false);
+
+                });
 
             });
 
-        });
+        setSidebar(false);
 
 
-        function handleDesktopChange() {
-
-            if (desktopMedia.matches) {
-
-                setSidebar(false);
-
-            }
-
-        }
-
-
-        if (desktopMedia.addEventListener) {
-
-            desktopMedia.addEventListener(
-
-                "change",
-
-                handleDesktopChange
-
-            );
-
-        } else if (desktopMedia.addListener) {
-
-            desktopMedia.addListener(
-
-                handleDesktopChange
-
-            );
-
-        }
-
-
-        /* =====================================
-           05. MODULE ACCESS CONTROL
-           ===================================== */
+        /* =========================================
+           04. ROLE-BASED MODULE ACCESS
+           ========================================= */
 
         function hasModuleAccess(config, profile) {
 
@@ -2138,165 +2084,111 @@
 
                 profile.active === true &&
 
-                config.roles.includes(profile.role)
+                profile.uid === auth.currentUser?.uid &&
+
+                config.roles.includes(profile.role) &&
+
+                !logoutInProgress
 
             );
 
         }
 
-
         function configureModuleAccess(config, profile) {
 
             const permitted =
-
                 hasModuleAccess(config, profile);
 
-
-            const statusText = permitted
-
+            const status = permitted
                 ? "Available"
-
                 : config.enabled
-
                     ? "Restricted"
-
                     : "Coming Soon";
 
+            setText(config.statusId, status);
 
-            setText(config.statusId, statusText);
-
-            setText(config.accessId, statusText);
-
+            setText(config.accessId, status);
 
             setText(
-
                 config.actionId,
-
                 permitted
-
                     ? config.actionText
-
-                    : config.enabled
-
-                        ? "Administrator Access Required"
-
-                        : "Coming Soon"
-
+                    : "Administrator Access Required"
             );
 
+            $(config.statusId)?.classList.toggle(
+                "enabled",
+                permitted
+            );
 
-            const statusElement = $(config.statusId);
+            $(config.cardId)?.classList.toggle(
+                "available",
+                permitted
+            );
 
-            if (statusElement) {
+            document.querySelectorAll(config.selector)
+                .forEach(link => {
 
-                statusElement.classList.toggle(
+                    if (permitted) {
 
-                    "enabled",
+                        link.href = config.url;
 
-                    permitted
+                        link.removeAttribute("aria-disabled");
 
-                );
+                        link.removeAttribute("tabindex");
 
-            }
+                    } else {
 
+                        link.removeAttribute("href");
 
-            const card = $(config.cardId);
+                        link.setAttribute(
+                            "aria-disabled",
+                            "true"
+                        );
 
-            if (card) {
+                        link.setAttribute("tabindex", "-1");
 
-                card.classList.toggle(
+                    }
 
-                    "available",
+                });
 
-                    permitted
+            return permitted;
 
-                );
+        }
 
-            }
+        function configureAllModules(profile) {
 
+            let accessible = 0;
 
-            document.querySelectorAll(
+            Object.values(MODULE_CONFIG).forEach(config => {
 
-                config.selector
+                if (configureModuleAccess(config, profile)) {
 
-            ).forEach(link => {
-
-                if (permitted) {
-
-                    link.href = config.url;
-
-                    link.removeAttribute("aria-disabled");
-
-                    link.removeAttribute("tabindex");
-
-                } else {
-
-                    link.removeAttribute("href");
-
-                    link.setAttribute(
-
-                        "aria-disabled",
-
-                        "true"
-
-                    );
-
-                    link.setAttribute(
-
-                        "tabindex",
-
-                        "-1"
-
-                    );
+                    accessible++;
 
                 }
 
             });
 
-        }
-
-
-        function configureAllModules(profile) {
-
-            Object.values(MODULE_CONFIG).forEach(config => {
-
-                configureModuleAccess(config, profile);
-
-            });
-
-
-            const billingPermitted = hasModuleAccess(
-
-                MODULE_CONFIG.invoice,
-
-                profile
-
+            setText(
+                "accessibleModules",
+                `${accessible} of 6`
             );
 
+            $("accessibleModules").classList.toggle(
+                "online",
+                accessible > 0
+            );
+
+            const released = Object.values(MODULE_CONFIG)
+                .filter(config => config.enabled).length;
 
             setText(
-
-                "billingStatus",
-
-                billingPermitted
-
-                    ? "Available"
-
-                    : "Restricted"
-
-            );
-
-
-            $("billingStatus").classList.toggle(
-
-                "online",
-
-                billingPermitted
-
+                "moduleCount",
+                `${released} of 6 modules released`
             );
 
         }
-
 
         function disableAllModules() {
 
@@ -2305,12 +2197,9 @@
         }
 
 
-        disableAllModules();
-
-
-        /* =====================================
-           06. STAFF PROFILE
-           ===================================== */
+        /* =========================================
+           05. STAFF PROFILE
+           ========================================= */
 
         function populateProfile(user, profile) {
 
@@ -2322,51 +2211,37 @@
 
                 profile.uid !== user.uid ||
 
+                auth.currentUser?.uid !== user.uid ||
+
                 profile.active !== true ||
 
                 !Object.prototype.hasOwnProperty.call(
-
                     ROLE_LABELS,
-
                     profile.role
-
                 )
 
             ) {
 
                 disableAllModules();
 
-                throw new Error(
-
-                    "Staff authorization failed."
-
-                );
+                throw new Error("Staff authorization failed.");
 
             }
 
+            authorizedUserId = user.uid;
 
             const name =
-
                 String(profile.name || "Staff Member");
-
 
             const role = ROLE_LABELS[profile.role];
 
-
             const initials = name
-
                 .trim()
-
                 .split(/\s+/)
-
                 .slice(0, 2)
-
                 .map(part => part.charAt(0))
-
                 .join("")
-
                 .toUpperCase();
-
 
             setText("profileAvatar", initials || "ML");
 
@@ -2379,67 +2254,45 @@
             setText("accountName", name);
 
             setText(
-
                 "accountEmail",
-
                 user.email || "Not available"
-
             );
 
             setText("accountRole", role);
 
             setText("accountStatus", "Active");
 
-
             setText(
-
                 "emailVerification",
-
                 user.emailVerified
-
                     ? "Verified"
-
                     : "Not verified"
-
             );
-
 
             const lastSignIn =
-
                 user.metadata?.lastSignInTime;
 
-
             setText(
-
                 "lastSignIn",
-
                 lastSignIn
-
                     ? new Date(lastSignIn).toLocaleString(
-
                         "en-IN",
-
-                        {
-
-                            timeZone: TIME_ZONE
-
-                        }
-
+                        { timeZone: TIME_ZONE }
                     )
-
                     : "Not available"
-
             );
-
 
             setText(
-
                 "welcomeHeading",
-
                 `${getGreeting()}, ${name}`
-
             );
 
+            setText(
+                "authorizationStatus",
+                "Authorized"
+            );
+
+            $("authorizationStatus").classList.add("online");
 
             configureAllModules(profile);
 
@@ -2448,247 +2301,449 @@
         }
 
 
-        /* =====================================
-           07. AUTHENTICATION ERROR SCREEN
-           ===================================== */
+        /* =========================================
+           06. SERVER AUTHORIZATION REFRESH
+           ========================================= */
 
-        function showAuthenticationError(message) {
+        async function refreshAuthorization() {
 
-            disableAllModules();
+            if (logoutInProgress) {
 
-            setSidebar(false);
+                throw new Error("Sign out in progress.");
 
-            protectedContent.hidden = true;
+            }
 
-            authLoading.hidden = false;
+            if (verificationPromise) {
 
-            $("loadingSpinner").hidden = true;
+                return verificationPromise;
 
-            setText(
+            }
 
-                "loadingMessage",
+            const generation = sessionGeneration;
 
-                message ||
+            verificationPromise = (async () => {
 
-                "Authorization service unavailable. " +
+                await auth.authStateReady();
 
-                "Please refresh or return to Staff Login."
+                const user = auth.currentUser;
 
-            );
+                if (!user?.uid) {
+
+                    throw new Error("Authentication required.");
+
+                }
+
+                const profile =
+                    await verifyStaffAccess(user);
+
+                if (
+
+                    generation !== sessionGeneration ||
+
+                    logoutInProgress ||
+
+                    auth.currentUser?.uid !== user.uid ||
+
+                    profile?.uid !== user.uid ||
+
+                    profile.active !== true ||
+
+                    !Object.prototype.hasOwnProperty.call(
+                        ROLE_LABELS,
+                        profile.role
+                    )
+
+                ) {
+
+                    throw new Error(
+                        "Staff authorization is no longer valid."
+                    );
+
+                }
+
+                populateProfile(user, profile);
+
+                return profile;
+
+            })();
+
+            try {
+
+                return await verificationPromise;
+
+            } finally {
+
+                verificationPromise = null;
+
+            }
 
         }
 
 
-        /* =====================================
-           08. INITIALISE DASHBOARD
-           ===================================== */
+        /* =========================================
+           07. SECURE MODULE NAVIGATION
+           ========================================= */
 
-        async function initialiseDashboard() {
+        Object.values(MODULE_CONFIG).forEach(config => {
 
-            try {
+            document.querySelectorAll(config.selector)
+                .forEach(link => {
 
-                const {
+                    link.addEventListener("click", async event => {
 
-                    protectPage,
+                        event.preventDefault();
 
-                    logoutUser,
+                        if (
+                            navigationInProgress ||
+                            logoutInProgress ||
+                            $("protectedContent").hidden
+                        ) {
 
-                    getStaffProfile
-
-                } = await import("./auth.js");
-
-
-                /* MODULE NAVIGATION SECURITY */
-
-                Object.values(MODULE_CONFIG).forEach(config => {
-
-                    document.querySelectorAll(
-
-                        config.selector
-
-                    ).forEach(link => {
-
-                        function checkAccess(event) {
-
-                            const profile = getStaffProfile();
-
-                            const permitted = hasModuleAccess(
-
-                                config,
-
-                                profile
-
-                            );
-
-                            if (
-
-                                !permitted ||
-
-                                link.getAttribute(
-
-                                    "aria-disabled"
-
-                                ) === "true"
-
-                            ) {
-
-                                event.preventDefault();
-
-                                configureAllModules(profile);
-
-                                showMessage(
-
-                                    "Administrator access is required."
-
-                                );
-
-                                return;
-
-                            }
-
-                            clearMessage();
+                            return;
 
                         }
 
+                        if (
+                            link.getAttribute("aria-disabled") === "true"
+                        ) {
 
-                        link.addEventListener(
+                            showMessage(
+                                "Administrator access is required."
+                            );
 
-                            "click",
+                            return;
 
-                            checkAccess
+                        }
 
-                        );
+                        navigationInProgress = true;
 
+                        clearMessage();
 
-                        link.addEventListener(
+                        try {
 
-                            "keydown",
+                            const profile =
+                                await refreshAuthorization();
 
-                            event => {
+                            if (
 
-                                if (
+                                !hasModuleAccess(config, profile) ||
 
-                                    event.key === "Enter" ||
+                                $("protectedContent").hidden
 
-                                    event.key === " "
+                            ) {
 
-                                ) {
-
-                                    checkAccess(event);
-
-                                }
+                                throw new Error(
+                                    "Module access is restricted."
+                                );
 
                             }
 
-                        );
+                            setSidebar(false);
+
+                            window.location.assign(config.url);
+
+                        } catch (error) {
+
+                            disableAllModules();
+
+                            showMessage(
+                                "Access could not be verified. " +
+                                "Refresh the dashboard and try again."
+                            );
+
+                        } finally {
+
+                            navigationInProgress = false;
+
+                        }
 
                     });
 
                 });
 
-
-                /* SIGN OUT */
-
-                let logoutInProgress = false;
+        });
 
 
-                async function handleLogout() {
+        /* =========================================
+           08. CLEAR CONFIDENTIAL PROFILE
+           ========================================= */
 
-                    if (logoutInProgress) return;
+        function clearProfile() {
 
-                    logoutInProgress = true;
+            authorizedUserId = null;
 
-                    logoutButton.disabled = true;
+            sessionGeneration++;
 
-                    sidebarLogout.disabled = true;
+            disableAllModules();
 
-                    disableAllModules();
+            [
+                "profileName",
+                "profileRole",
+                "statusRole",
+                "accountName",
+                "accountEmail",
+                "accountRole",
+                "accountStatus",
+                "emailVerification",
+                "lastSignIn"
+            ].forEach(id => setText(id, "—"));
 
-                    setSidebar(false);
+            setText("profileAvatar", "ML");
 
-                    clearMessage();
+            setText(
+                "welcomeHeading",
+                "Welcome to your workspace"
+            );
+
+            setText(
+                "authorizationStatus",
+                "Not verified"
+            );
+
+            $("authorizationStatus")
+                .classList.remove("online");
+
+            clearMessage();
+
+            setSidebar(false);
+
+        }
 
 
-                    try {
+        /* =========================================
+           09. SIGN OUT
+           ========================================= */
 
-                        const result = await logoutUser();
+        async function handleLogout() {
 
-                        if (result?.success === false) {
+            if (logoutInProgress) return;
 
-                            configureAllModules(
+            logoutInProgress = true;
 
-                                getStaffProfile()
+            sessionGeneration++;
 
-                            );
+            $("logoutButton").disabled = true;
 
-                            showMessage(
+            $("sidebarLogout").disabled = true;
 
-                                result.message ||
+            disableAllModules();
 
-                                "Unable to sign out."
+            setSidebar(false);
 
-                            );
+            clearMessage();
 
-                        } else {
+            try {
 
-                            protectedContent.hidden = true;
+                const result = await logoutUser();
 
-                            window.location.replace(
+                if (result?.success === false) {
 
-                                "/login.html"
-
-                            );
-
-                        }
-
-                    } catch (error) {
-
-                        configureAllModules(
-
-                            getStaffProfile()
-
-                        );
-
-                        showMessage(
-
-                            "Unable to sign out. " +
-
-                            "Please try again."
-
-                        );
-
-                    } finally {
-
-                        logoutInProgress = false;
-
-                        logoutButton.disabled = false;
-
-                        sidebarLogout.disabled = false;
-
-                    }
+                    throw new Error("Sign out failed.");
 
                 }
 
+                clearProfile();
 
-                logoutButton.addEventListener(
+                $("protectedContent").hidden = true;
 
-                    "click",
+                window.location.replace("/login.html");
 
-                    handleLogout
+            } catch (error) {
 
+                logoutInProgress = false;
+
+                $("logoutButton").disabled = false;
+
+                $("sidebarLogout").disabled = false;
+
+                try {
+
+                    await refreshAuthorization();
+
+                } catch {
+
+                    disableAllModules();
+
+                }
+
+                showMessage(
+                    "Unable to sign out. Please try again."
                 );
 
+            }
 
-                sidebarLogout.addEventListener(
+        }
 
-                    "click",
+        $("logoutButton").addEventListener(
+            "click",
+            handleLogout
+        );
 
-                    handleLogout
+        $("sidebarLogout").addEventListener(
+            "click",
+            handleLogout
+        );
 
+
+        /* =========================================
+           10. AUTHORIZATION ERROR
+           ========================================= */
+
+        function showAuthenticationError() {
+
+            clearProfile();
+
+            $("protectedContent").hidden = true;
+
+            $("authLoading").hidden = false;
+
+            $("loadingSpinner").hidden = true;
+
+            setText(
+                "loadingMessage",
+                "Authorization service unavailable. " +
+                "Please refresh or return to Staff Login."
+            );
+
+        }
+
+
+        /* =========================================
+           11. SESSION MONITORING
+           ========================================= */
+
+        auth.onAuthStateChanged(user => {
+
+            if (
+
+                authorizedUserId &&
+
+                (
+                    !user ||
+                    user.uid !== authorizedUserId
+                )
+
+            ) {
+
+                clearProfile();
+
+                $("protectedContent").hidden = true;
+
+                window.location.replace("/login.html");
+
+            }
+
+        });
+
+        const visibilityObserver = new MutationObserver(() => {
+
+            if ($("protectedContent").hidden) {
+
+                clearProfile();
+
+            }
+
+        });
+
+        visibilityObserver.observe(
+            $("protectedContent"),
+            {
+                attributes: true,
+                attributeFilter: ["hidden"]
+            }
+        );
+
+        async function refreshVisibleDashboard() {
+
+            if (
+
+                logoutInProgress ||
+
+                document.visibilityState !== "visible" ||
+
+                $("protectedContent").hidden ||
+
+                !authorizedUserId
+
+            ) {
+
+                return;
+
+            }
+
+            try {
+
+                await refreshAuthorization();
+
+            } catch {
+
+                disableAllModules();
+
+                setText(
+                    "authorizationStatus",
+                    "Verification required"
                 );
 
+                $("authorizationStatus")
+                    .classList.remove("online");
 
-                /* PROTECT DASHBOARD */
+                showMessage(
+                    "Staff authorization could not be refreshed. " +
+                    "Check your connection and refresh the dashboard."
+                );
+
+            }
+
+        }
+
+        window.addEventListener(
+            "focus",
+            refreshVisibleDashboard
+        );
+
+        window.addEventListener(
+            "online",
+            refreshVisibleDashboard
+        );
+
+        window.addEventListener(
+            "pageshow",
+            refreshVisibleDashboard
+        );
+
+        document.addEventListener(
+            "visibilitychange",
+            refreshVisibleDashboard
+        );
+
+        window.addEventListener("offline", () => {
+
+            sessionGeneration++;
+
+            disableAllModules();
+
+            setText(
+                "authorizationStatus",
+                "Connection unavailable"
+            );
+
+            $("authorizationStatus")
+                .classList.remove("online");
+
+        });
+
+
+        /* =========================================
+           12. INITIALIZE DASHBOARD
+           ========================================= */
+
+        async function initialiseDashboard() {
+
+            disableAllModules();
+
+            updateDate();
+
+            try {
 
                 await protectPage({
 
@@ -2697,106 +2752,53 @@
                     loadingSelector: "#authLoading",
 
                     allowedRoles: [
-
                         "admin",
-
                         "advocate",
-
                         "staff"
-
                     ],
 
-                    onAuthenticated: (user, profile) => {
+                    onAuthenticated: async user => {
+
+                        if (!user?.uid) {
+
+                            throw new Error(
+                                "Authentication required."
+                            );
+
+                        }
+
+                        const profile =
+                            await verifyStaffAccess(user);
 
                         populateProfile(user, profile);
+
+                        clearMessage();
 
                     }
 
                 });
 
-
-                /* REFRESH DISPLAYED ACCESS */
-
-                function refreshDisplayedAccess() {
-
-                    if (protectedContent.hidden) return;
-
-                    const profile = getStaffProfile();
-
-                    if (!profile || profile.active !== true) {
-
-                        disableAllModules();
-
-                        return;
-
-                    }
-
-                    configureAllModules(profile);
-
-                    updateDate();
-
-                }
-
-
-                window.addEventListener(
-
-                    "focus",
-
-                    refreshDisplayedAccess
-
-                );
-
-
-                document.addEventListener(
-
-                    "visibilitychange",
-
-                    () => {
-
-                        if (
-
-                            document.visibilityState === "visible"
-
-                        ) {
-
-                            refreshDisplayedAccess();
-
-                        }
-
-                    }
-
-                );
-
-
-                window.addEventListener(
-
-                    "pageshow",
-
-                    refreshDisplayedAccess
-
-                );
-
-
             } catch (error) {
 
-                showAuthenticationError(
-
-                    "Authorization service unavailable. " +
-
-                    "Please refresh or return to Staff Login."
-
+                console.error(
+                    "Dashboard initialization failed:",
+                    error?.code || error?.name || "Error"
                 );
+
+                showAuthenticationError();
 
             }
 
         }
 
-
-        /* =====================================
-           09. START APPLICATION
-           ===================================== */
-
         initialiseDashboard();
+
+        /* =========================================
+           END OF STAFF DASHBOARD VERSION 3.0
+
+           MNM LEGAL ASSOCIATES
+           Justice, Integrity & Excellence
+           ========================================= */
 
     </script>
 
