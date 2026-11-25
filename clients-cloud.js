@@ -1,10 +1,12 @@
 
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    LEGAL PRACTICE MANAGEMENT SYSTEM
 
    CLIENT MANAGEMENT - CLOUD ENGINE
-   Version 1.0
+   Version 1.1
 
    Justice, Integrity & Excellence
    ========================================================= */
@@ -2056,6 +2058,21 @@ export async function checkClientCloudConnection() {
    MNM LEGAL ASSOCIATES
    Legal Practice Management System
 
-   Version 1.0
+   Version 1.1
    Justice, Integrity & Excellence
    ========================================================= */
+
+/* Recoverable deletion: existing archive rules remain unchanged. */
+export async function deleteClient(clientId, reason, expectedRevision) {
+    const explanation = cleanText(reason, 1900);
+    if (!explanation) throw new Error("Please enter a reason for deleting this client.");
+    return archiveClient(clientId, "Deleted from directory: " + explanation, expectedRevision);
+}
+
+export async function restoreDeletedClient(clientId, expectedRevision) {
+    return reactivateClient(clientId, expectedRevision);
+}
+
+
+
+
