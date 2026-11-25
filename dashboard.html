@@ -1,4 +1,19 @@
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,7 +35,7 @@
 
     <style>
         /* MNM LEGAL ASSOCIATES
-           STAFF DASHBOARD VERSION 3.1 */
+           STAFF DASHBOARD VERSION 3.2 */
 
         :root {
             --navy: #101d30;
@@ -979,13 +994,10 @@
 
                 </a>
 
-                <button class="nav-link" disabled>
-
+                <a class="nav-link" data-calendar-link aria-disabled="true" tabindex="-1">
                     <i class="fa-solid fa-calendar-days"></i>
                     <span>Hearing Calendar</span>
-                    <i class="fa-solid fa-lock nav-lock"></i>
-
-                </button>
+                </a>
 
                 <button class="nav-link" disabled>
 
@@ -1193,7 +1205,7 @@
                         </div>
 
                         <span id="moduleCount" class="module-count">
-                            3 of 6 modules released
+                            4 of 6 modules released
                         </span>
 
                     </div>
@@ -1394,7 +1406,7 @@
 
                         <!-- HEARING CALENDAR -->
 
-                        <article class="module-card">
+                        <article class="module-card" id="calendarModuleCard">
 
                             <div class="module-top">
 
@@ -1402,8 +1414,8 @@
                                     <i class="fa-solid fa-calendar-days"></i>
                                 </div>
 
-                                <span class="module-status">
-                                    Coming Soon
+                                <span class="module-status" id="calendarModuleStatus">
+                                    Restricted
                                 </span>
 
                             </div>
@@ -1412,19 +1424,19 @@
 
                             <p>
                                 A centralized calendar for court hearings,
-                                appointments and important legal deadlines.
+                                case schedules and important legal deadlines.
                             </p>
 
                             <ul class="module-features">
 
                                 <li>
                                     <i class="fa-solid fa-check"></i>
-                                    Upcoming hearing schedule
+                                    Case-linked hearing synchronization
                                 </li>
 
                                 <li>
                                     <i class="fa-solid fa-check"></i>
-                                    Daily and monthly calendar views
+                                    Daily, weekly and monthly calendar views
                                 </li>
 
                                 <li>
@@ -1434,17 +1446,15 @@
 
                                 <li>
                                     <i class="fa-solid fa-check"></i>
-                                    Appointment management
+                                    Daily cause list and hearing rescheduling
                                 </li>
 
                             </ul>
 
-                            <button class="module-action" disabled>
-
-                                <span>Coming Soon</span>
-                                <i class="fa-solid fa-lock"></i>
-
-                            </button>
+                            <a class="module-action" data-calendar-link aria-disabled="true" tabindex="-1">
+                                <span id="calendarAction">Administrator Access Required</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </a>
 
                         </article>
 
@@ -1631,6 +1641,11 @@
                                 <strong id="caseAccessStatus">—</strong>
                             </div>
 
+                            <div class="account-field">
+                                <span>Hearing Calendar Access</span>
+                                <strong id="calendarAccessStatus">—</strong>
+                            </div>
+
                         </div>
 
                     </div>
@@ -1744,6 +1759,18 @@
                 cardId: "caseModuleCard",
                 accessId: "caseAccessStatus",
                 actionText: "Open Case Management"
+            }),
+
+            calendar: Object.freeze({
+                enabled: true,
+                url: "/calendar.html",
+                roles: ["admin"],
+                selector: "[data-calendar-link]",
+                actionId: "calendarAction",
+                statusId: "calendarModuleStatus",
+                cardId: "calendarModuleCard",
+                accessId: "calendarAccessStatus",
+                actionText: "Open Hearing Calendar"
             })
 
         });
@@ -2662,7 +2689,7 @@
         initialiseDashboard();
 
         /* =========================================
-           END OF STAFF DASHBOARD VERSION 3.1
+           END OF STAFF DASHBOARD VERSION 3.2
 
            MNM LEGAL ASSOCIATES
            Justice, Integrity & Excellence
@@ -2672,3 +2699,7 @@
 
 </body>
 </html>
+
+
+
+
