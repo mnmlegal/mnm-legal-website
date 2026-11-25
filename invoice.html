@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -1863,6 +1865,20 @@
         </dialog>
 
 
+        <section class="no-print" id="financeReconciliation" style="margin:24px auto;padding:20px;max-width:1200px;border:1px solid #c3a16b;border-radius:10px;background:#fff;color:#101d30">
+            <h2>Finance Reconciliation</h2>
+            <p>Compare saved invoice receipts with the financial ledger. Matching amounts do not confirm reconciliation. No payments are posted here.</p>
+            <button type="button" id="refreshReconciliation" style="padding:10px 16px;background:#101d30;color:white;border:0;border-radius:6px">Load / Refresh Finance Records</button>
+            <p id="reconciliationMessage" role="status" aria-live="polite">Select Load to compare saved records.</p>
+            <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;text-align:left;font-size:14px"><thead><tr>
+            <th>Invoice</th><th>Total</th><th>Invoice receipts</th><th>Ledger receipts</th><th>Difference (invoice − ledger)</th><th>Ledger outstanding</th><th>Review status</th><th>Finance</th>
+            </tr></thead><tbody id="reconciliationRows"></tbody></table></div>
+        </section>
+        <style>
+        #financeReconciliation th,#financeReconciliation td{padding:10px;border-bottom:1px solid #e1ded6;white-space:nowrap}
+        @media print{#financeReconciliation{display:none!important}}
+        </style>
+
         <!-- APPLICATION FOOTER -->
 
         <footer class="app-footer no-print">
@@ -2172,5 +2188,61 @@
     initialiseInvoiceApplication();
 
 </script>
+<script type="module">
+    const panel = document.getElementById("financeReconciliation");
+    const content = document.getElementById("protectedContent");
+    const button = document.getElementById("refreshReconciliation");
+    const message = document.getElementById("reconciliationMessage");
+    const body = document.getElementById("reconciliationRows");
+    let generation = 0;
+    const money = n => new Intl.NumberFormat("en-IN", {style:"currency",currency:"INR"}).format(n/100);
+    function clear() {
+        generation++;
+        body.replaceChildren();
+        button.disabled = false;
+        message.textContent = "Select Load to compare saved records.";
+    }
+    new MutationObserver(() => { if (content.hidden) clear(); }).observe(content,{attributes:true,attributeFilter:["hidden"]});
+    window.addEventListener("pagehide", clear);
+    button.addEventListener("click", async () => {
+        if (content.hidden || button.disabled) return;
+        const ticket = ++generation;
+        button.disabled = true;
+        body.replaceChildren();
+        message.textContent = "Loading saved invoice and ledger records…";
+        try {
+            const {fetchInvoiceReconciliation} = await import("./invoice-cloud.js");
+            const records = await fetchInvoiceReconciliation();
+            if (ticket !== generation || content.hidden) return;
+            const fragment = document.createDocumentFragment();
+            for (const r of records) {
+                const row = document.createElement("tr");
+                const status = r.recordStatus === "cancelled" ? "Cancelled — review separately" : !r.linked ? "Client link required" : r.differencePaise === 0 ? "Amounts match — unverified" : "Difference — review required";
+                for (const v of [r.invoiceNo, money(r.totalPaise), money(r.snapshotReceivedPaise), money(r.ledgerReceivedPaise), money(r.differencePaise), money(r.ledgerOutstandingPaise), status]) {
+                    const cell = document.createElement("td");
+                    cell.textContent = String(v ?? "");
+                    row.append(cell);
+                }
+                const cell = document.createElement("td");
+                const link = document.createElement("a");
+                const params = new URLSearchParams();
+                if (r.clientId) params.set("clientId",r.clientId);
+                if (r.caseId) params.set("caseId",r.caseId);
+                link.href = "/finance.html" + (params.size ? "?" + params.toString() : "");
+                link.textContent = "Open Finance";
+                cell.append(link); row.append(cell); fragment.append(row);
+            }
+            body.replaceChildren(fragment);
+            message.textContent = `${records.length} saved invoices compared. Read-only snapshot; refresh after changes. No reconciliation is confirmed.`;
+        } catch (error) {
+            if (ticket === generation && !content.hidden) message.textContent = "Unable to load reconciliation. Check authorization, connection and invoice-cloud.js V3.1.";
+        } finally { if (ticket === generation) button.disabled = false; }
+    });
+</script>
 </body>
 </html>
+
+
+
+
+₹0
