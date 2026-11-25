@@ -3,11 +3,10 @@
 
 
 
-
 /* =========================================================
    MNM LEGAL ASSOCIATES
    CENTRALIZED CLOUD INVOICE MANAGEMENT
-   Version 3.2 - Monthly Numbering and Initial Receipt Integration
+   Version 3.3 - Recoverable Invoice Deletion
 
    Justice, Integrity & Excellence
    ========================================================= */
@@ -1957,6 +1956,48 @@ export async function syncNewInvoiceReceipt(invoiceId, options = {}) {
     return { status: "posted", transaction };
 }
 
+
+// Recoverable deletion uses the existing cancelled status for compatibility.
+const DELETE_PREFIX = "[RECOVERABLE_DELETE] ";
+export function isInvoiceRecoverablyDeleted(invoice) {
+    return invoice?.recordStatus === "cancelled" &&
+        String(invoice.cancellationReason || "").startsWith(DELETE_PREFIX);
+}
+async function verifyNoInvoicePaymentHistory(invoiceId) {
+    const result = await getInvoiceReconciliation(invoiceId);
+    if (result.snapshotReceivedPaise !== 0 || result.ledgerReceivedPaise !== 0 || result.paymentHistory.length !== 0) {
+        throw new Error("Payment history exists. Use cancellation and reconciliation instead.");
+    }
+}
+export async function deleteCloudInvoice(invoiceId, reason, expectedRevision) {
+    await requireAdministrator();
+    const uid = auth.currentUser?.uid;
+    const why = String(reason || "").trim();
+    if (!why) throw new Error("Deletion reason is required.");
+    await verifyNoInvoicePaymentHistory(invoiceId);
+    if (!uid || auth.currentUser?.uid !== uid) throw new Error("Session changed.");
+    return cancelCloudInvoice(invoiceId, DELETE_PREFIX + why, expectedRevision);
+}
+export async function restoreCloudInvoice(invoiceId, expectedRevision) {
+    const administrator = await requireAdministrator();
+    await verifyNoInvoicePaymentHistory(invoiceId);
+    if (auth.currentUser?.uid !== administrator.uid) throw new Error("Session changed.");
+    const reference = doc(db, CENTRAL_BILLING.collection, invoiceId);
+    await runTransaction(db, async transaction => {
+        const snapshot = await transaction.get(reference);
+        if (!snapshot.exists()) throw new Error("Invoice not found.");
+        const existing = snapshot.data();
+        if (!isInvoiceRecoverablyDeleted(existing)) throw new Error("Only recoverably deleted invoices can be restored.");
+        if (existing.revision !== expectedRevision) throw new Error("Invoice changed. Refresh and retry.");
+        if (reconciliationPaise(existing.receivedEarlier) !== 0 || reconciliationPaise(existing.receivedNow ?? existing.amountPaid) !== 0) throw new Error("Payment exists.");
+        transaction.update(reference, {
+            recordStatus: "active", cancellationReason: "", cancelledAt: null, cancelledBy: "",
+            lastDeletionReason: existing.cancellationReason, restoredAt: serverTimestamp(), restoredBy: administrator.uid,
+            revision: existing.revision + 1, updatedAt: serverTimestamp(), updatedBy: administrator.uid
+        });
+    });
+    return true;
+}
 
 
 
