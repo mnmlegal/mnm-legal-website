@@ -4386,6 +4386,232 @@ export async function initialiseClientSystem(user) {
 
 
 /* =========================================================
+   MNM LEGAL ASSOCIATES
+   CLIENT - DOCUMENT MANAGEMENT INTEGRATION
+   Version 1.0
+   ========================================================= */
+
+(() => {
+
+    let incomingProfileHandled = false;
+
+    const protectedContent = document.getElementById(
+        "protectedContent"
+    );
+
+    function removeDocumentIntegration() {
+        document.getElementById(
+            "clientDocumentIntegration"
+        )?.remove();
+    }
+
+    function renderDocumentIntegration() {
+
+        if (
+            !state.initialized ||
+            protectedContent?.hidden ||
+            auth.currentUser?.uid !== state.userId ||
+            state.currentTab !== "profile" ||
+            !state.currentClient
+        ) {
+            removeDocumentIntegration();
+            return;
+        }
+
+        const client = state.currentClient;
+
+        const heading = document.getElementById(
+            "profileName"
+        );
+
+        if (!heading) return;
+
+        let container = document.getElementById(
+            "clientDocumentIntegration"
+        );
+
+        if (!container) {
+
+            container = document.createElement("div");
+
+            container.id = "clientDocumentIntegration";
+
+            container.style.cssText = `
+                display:flex;
+                flex-wrap:wrap;
+                gap:10px;
+                margin:16px 0;
+                align-items:center;
+            `;
+
+            const button = document.createElement("button");
+
+            button.type = "button";
+
+            button.className = "button button-primary";
+
+            const icon = document.createElement("i");
+
+            icon.className = "fa-solid fa-folder-open";
+
+            button.appendChild(icon);
+
+            button.appendChild(
+                document.createTextNode(
+                    " View Client Documents"
+                )
+            );
+
+            button.addEventListener("click", async () => {
+
+                try {
+
+                    if (
+                        protectedContent.hidden ||
+                        !state.currentClient ||
+                        state.busy
+                    ) return;
+
+                    const clientId = state.currentClient.id;
+
+                    await requireAuthorizedSession();
+
+                    if (
+                        protectedContent.hidden ||
+                        auth.currentUser?.uid !== state.userId ||
+                        state.currentClient?.id !== clientId
+                    ) return;
+
+                    window.location.href =
+                        "/documents.html?clientId=" +
+                        encodeURIComponent(clientId);
+
+                } catch (error) {
+
+                    showMessage(
+                        getErrorMessage(error),
+                        "error"
+                    );
+
+                }
+
+            });
+
+            container.appendChild(button);
+
+            heading.insertAdjacentElement(
+                "afterend",
+                container
+            );
+
+        }
+
+        container.dataset.clientId = client.id;
+
+    }
+
+    async function handleIncomingClientProfile() {
+
+        if (
+            incomingProfileHandled ||
+            !state.initialized ||
+            protectedContent?.hidden ||
+            state.busy
+        ) return;
+
+        incomingProfileHandled = true;
+
+        const parameters = new URLSearchParams(
+            window.location.search
+        );
+
+        const clientId = parameters.get("clientId");
+
+        if (!clientId) return;
+
+        try {
+
+            await requireAuthorizedSession();
+
+            if (
+                protectedContent.hidden ||
+                auth.currentUser?.uid !== state.userId
+            ) return;
+
+            await openClientProfile(clientId);
+
+            renderDocumentIntegration();
+
+        } catch (error) {
+
+            showMessage(
+                getErrorMessage(error),
+                "error"
+            );
+
+        }
+
+    }
+
+    let scheduled = false;
+
+    function scheduleIntegration() {
+
+        if (scheduled) return;
+
+        scheduled = true;
+
+        queueMicrotask(() => {
+
+            scheduled = false;
+
+            renderDocumentIntegration();
+
+            void handleIncomingClientProfile();
+
+        });
+
+    }
+
+    if (protectedContent) {
+
+        const observer = new MutationObserver(
+            scheduleIntegration
+        );
+
+        observer.observe(protectedContent, {
+            subtree: true,
+            childList: true,
+            characterData: true,
+            attributes: true,
+            attributeFilter: ["hidden"]
+        });
+
+    }
+
+    auth.onAuthStateChanged(user => {
+
+        if (!user || user.uid !== state.userId) {
+
+            removeDocumentIntegration();
+
+        } else {
+
+            scheduleIntegration();
+
+        }
+
+    });
+
+    scheduleIntegration();
+
+})();
+
+/* =========================================================
+   END OF CLIENT - DOCUMENT INTEGRATION
+   ========================================================= */
+
+/* =========================================================
    END OF CLIENT MANAGEMENT APPLICATION ENGINE
 
    MNM LEGAL ASSOCIATES
