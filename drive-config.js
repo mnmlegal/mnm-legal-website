@@ -22,7 +22,7 @@ export const DRIVE_CONFIG = Object.freeze({
     clientId:
         "14199102894-fv7a88v3f4h4ci3jdhd4ak3q674c5h0n.apps.googleusercontent.com",
 
-    apiKey: "PASTE_YOUR_NEW_RESTRICTED_PICKER_API_KEY",
+    apiKey: "AIzaSyCHv_bte-gyy5f6uuMVdoTjnMWcH9c9IQg",
 
     rootFolderId:
         "13pY7zhrwlhpoJMmo2K7JyLQVCitaZJY2",
