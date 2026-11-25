@@ -3215,8 +3215,8 @@ input[type="checkbox"] {
 
     .print-header img,
     .cause-list-print-header img {
-        width: 17mm;
-        height: 17mm;
+        width: 30mm;
+        height: 30mm;
         margin-bottom: 3mm;
     }
 
