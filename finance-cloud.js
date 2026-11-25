@@ -1,9 +1,11 @@
 
+
+
 import { auth, db } from './firebase-config.js';
 import { verifyStaffAccess } from './auth.js';
 import { collection, doc, getDocFromServer, getDocsFromServer, runTransaction, serverTimestamp } from 'https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js';
 
-export const FINANCE_CONFIG = Object.freeze({version:'1.1.0', currency:'INR', timeZone:'Asia/Kolkata', maxAmountPaise:1000000000000});
+export const FINANCE_CONFIG = Object.freeze({version:'1.2.0', currency:'INR', timeZone:'Asia/Kolkata', maxAmountPaise:1000000000000});
 export const INCOME_CATEGORIES = ['Professional Fees','Consultation Fees','Drafting Fees','Appearance Fees','Retainer Fees','Documentation Fees','Registration Fees','Other Income'];
 export const EXPENSE_CATEGORIES = ['Office Rent','Staff Salary','Court Expenses','Travel Expenses','Printing & Stationery','Electricity & Internet','Software & Subscription','Office Maintenance','Professional Expenses','Other Expenses'];
 export const TRANSACTION_TYPES = ['income','expense','advance','advance_utilization','advance_refund','refund','capital_in','capital_out','reversal'];
@@ -54,3 +56,50 @@ export async function saveFinanceSettings(input){const uid=await admin();const c
 export function generateFinanceCSV(rows){const keys=['transactionCode','transactionDate','transactionType','category','amountPaise','clientId','caseId','invoiceId','feeAgreementId','paymentMode','paymentReference','description','status','reversalOf'];const cell=v=>{let s=String(v??'');if(/^[\s]*[=+\-@]|^[\t\r\n]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};return [keys.join(','),...rows.map(r=>keys.map(k=>cell(r[k])).join(','))].join('\r\n');}
 export async function createFinanceBackup(){const uid=await admin();const [transactions,feeAgreements,invoiceLinks,financeSequences,financeSettings]=await Promise.all(Object.values(C).map(c=>all(c,uid)));const paymentRequests=await all('paymentRequests',uid);return {paymentRequests,application:'MNM Financial Management',version:FINANCE_CONFIG.version,generatedAt:new Date().toISOString(),generatedBy:uid,transactions,feeAgreements,invoiceLinks,financeSequences,financeSettings};}
 export async function checkFinanceCloudConnection(){const uid=await admin();await all(C.sequences,uid);return {connected:true,authorized:true,checkedAt:new Date().toISOString()};}
+
+// Staged invoice receipt API. Only for a newly created invoice, never for
+// historical invoices or ordinary edits. Caller must confirm actual receipt.
+export async function postInitialInvoiceReceipt(input) {
+    const uid = await admin();
+    const invoiceId = id(input.invoiceId, true);
+    const clientId = id(input.clientId, true);
+    const caseId = id(input.caseId);
+    const receiptId = id('invoice_initial_' + invoiceId, true);
+    if (input.confirmedReceipt !== true) fail('Confirm actual receipt before posting.');
+    const d = normalize({transactionDate: input.transactionDate,
+        transactionType: 'income', category: 'Professional Fees',
+        amountPaise: input.amountPaise, clientId, caseId, invoiceId,
+        feeAgreementId: '', paymentMode: input.paymentMode,
+        paymentReference: input.paymentReference,
+        description: 'Initial invoice payment: ' + invoiceId});
+    const y = getFinancialYear(d.transactionDate);
+    // Historical/manual entries require review, not automatic import.
+    const rows = await all(C.transactions, uid);
+    if (rows.some(r => r.invoiceId === invoiceId && r.id !== receiptId))
+        fail('Existing invoice ledger entries require reconciliation.');
+    await runTransaction(db, async tx => {
+        session(uid);
+        const existing = await tx.get(ref(C.transactions, receiptId));
+        if (existing.exists()) {
+            if (Object.keys(d).every(k => existing.data()[k] === d[k])) return;
+            fail('Initial receipt already posted with different details. Reconcile first.');
+        }
+        const inv = await tx.get(ref('invoices', invoiceId));
+        if (!inv.exists()) fail('Invoice not found.');
+        const a = inv.data();
+        if (a.recordStatus !== 'active' || a.revision !== 1)
+            fail('Only new active invoices qualify for initial receipt posting.');
+        if (Number(a.receivedEarlier ?? 0) !== 0 ||
+            rupeesToPaise(a.receivedNow ?? a.amountPaid ?? 0) !== d.amountPaise)
+            fail('Invoice receipt amount differs or earlier payments require review.');
+        const seq = await tx.get(ref(C.sequences, y));
+        await association(tx, d);
+        session(uid);
+        writeTransaction(tx, receiptId, d, y, seq.exists() ? seq.data().nextSequence : 1, uid);
+    });
+    return one(C.transactions, receiptId, uid);
+}
+
+
+
+
