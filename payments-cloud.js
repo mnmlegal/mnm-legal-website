@@ -1,12 +1,15 @@
 
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    CENTRALIZED PAYMENT ENGINE
-   Version 2.0.0
+   Version 2.1.0
    Justice, Integrity & Excellence
    ========================================================= */
 
 import {
+    postInitialInvoiceReceipt,
     createTransaction,
     reverseTransaction,
     generateTransactionId,
@@ -24,7 +27,7 @@ import {
 } from "./finance-cloud.js";
 
 export const PAYMENT_CONFIG = Object.freeze({
-    version: "2.0.0",
+    version: "2.1.0",
     currency: "INR",
     ledger: "financeTransactions",
     requestCollection: "paymentRequests",
@@ -545,3 +548,22 @@ export function getPaymentEngineStatus() {
 }
 
 /* END OF CENTRALIZED PAYMENT ENGINE */
+
+/* Initial receipt for a newly saved, linked invoice.
+   Historical receipts and subsequent installments are not imported here. */
+export async function syncInitialInvoicePayment(input) {
+    if (!input || typeof input !== "object") fail("Invalid invoice payment information.");
+    if (input.confirmedReceipt !== true) fail("Confirm actual receipt before posting.");
+    const invoiceId = cleanId(input.invoiceId, true);
+    const payment = await normalizePayment({...input, invoiceId}, "income");
+    if (payment.feeAgreementId) fail("Initial invoice receipt cannot link a fee agreement yet.");
+    await verifyInvoice(invoiceId, "income");
+    return postInitialInvoiceReceipt({
+        invoiceId, clientId: payment.clientId, caseId: payment.caseId,
+        amountPaise: payment.amountPaise, transactionDate: payment.transactionDate,
+        paymentMode: payment.paymentMode, paymentReference: payment.paymentReference,
+        confirmedReceipt: true
+    });
+}
+
+
