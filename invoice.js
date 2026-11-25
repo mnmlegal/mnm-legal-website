@@ -1,4 +1,6 @@
 
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    PROFESSIONAL CLOUD INVOICE MANAGEMENT SYSTEM
@@ -520,6 +522,62 @@ function insertLegacyFields() {
    FEE PARTICULARS
    ========================================================= */
 
+/* Smart particulars: built-in catalogue + saved invoice descriptions. */
+const LEGAL_PARTICULARS = [
+"Legal Consultation", "Legal Opinion", "Legal Advisory Services", "Legal Notice Drafting", "Reply to Legal Notice", "Legal Notice Dispatch", "Legal Document Review", "Legal Research", "Case File Review", "Conference with Client", "Professional Retainer Fees",
+"Divorce Petition – Mutual Consent", "Divorce Petition – Contested", "Mutual Consent Divorce – First Motion", "Mutual Consent Divorce – Second Motion", "Restitution of Conjugal Rights Petition", "Judicial Separation Petition", "Maintenance Application", "Interim Maintenance Application", "Permanent Alimony Application", "Child Custody Petition", "Child Visitation Application", "Guardianship Petition", "Domestic Violence Application", "Domestic Violence Reply", "Matrimonial Settlement Drafting", "Mediation Appearance",
+"Anticipatory Bail Application", "Regular Bail Application", "Default Bail Application", "Interim Bail Application", "Bail Cancellation Application", "FIR Quashing Petition", "Criminal Complaint Drafting", "Police Complaint Drafting", "Criminal Trial Appearance", "Criminal Revision Application", "Criminal Appeal", "Discharge Application", "Exemption Application", "Remand Hearing Appearance", "Protest Petition", "Written Arguments – Criminal Matter",
+"Civil Suit Drafting", "Money Recovery Suit", "Summary Suit", "Permanent Injunction Suit", "Temporary Injunction Application", "Declaration Suit", "Specific Performance Suit", "Partition Suit", "Written Statement", "Rejoinder Drafting", "Replication Drafting", "Civil Appeal", "Civil Revision Application", "Execution Petition", "Caveat Application", "Notice of Motion", "Evidence Affidavit", "Cross-Examination Appearance", "Written Arguments – Civil Matter",
+"Cheque Bounce Legal Notice", "Cheque Bounce Complaint – Section 138 NI Act", "Cheque Bounce Defence", "Cheque Bounce Settlement", "Consumer Complaint Drafting", "Consumer Complaint Reply", "Consumer Complaint Rejoinder", "Consumer Commission Appearance", "Consumer Appeal", "Insurance Claim Dispute", "Banking Dispute Consultation", "Loan Dispute Legal Notice", "DRT Application", "SARFAESI Legal Advisory", "RERA Complaint", "RERA Reply", "RERA Appearance",
+"Property Title Verification", "Property Due Diligence", "Title Search Report", "Sale Deed Drafting", "Agreement to Sell Drafting", "Gift Deed Drafting", "Rent Agreement Drafting", "Leave and Licence Agreement", "Lease Deed Drafting", "Release Deed Drafting", "Relinquishment Deed Drafting", "Power of Attorney Drafting", "Will Drafting", "Succession Certificate Petition", "Legal Heir Documentation", "Probate Petition", "Property Dispute Consultation", "Society Legal Advisory", "Society Maintenance Recovery Notice", "Society Dispute Representation",
+"Affidavit Drafting", "Declaration Drafting", "Indemnity Bond Drafting", "Undertaking Drafting", "Memorandum of Understanding", "Settlement Agreement Drafting", "Partnership Deed Drafting", "LLP Agreement Drafting", "Commercial Agreement Drafting", "Employment Agreement Drafting", "Non-Disclosure Agreement", "Contract Review", "Trademark Application Assistance", "Copyright Legal Advisory", "Copyright Infringement Notice", "Business Registration Assistance", "MSME Registration Assistance", "GST Registration Assistance", "Shop and Establishment Registration Assistance", "FSSAI Registration Assistance", "Company Incorporation Assistance",
+"High Court Appearance", "District Court Appearance", "Family Court Appearance", "Magistrate Court Appearance", "Tribunal Appearance", "Court Hearing Professional Fees", "Petition Drafting", "Application Drafting", "Vakalatnama Preparation", "Document Compilation", "Court Filing Assistance", "Certified Copy Assistance", "Court Fee Reimbursement", "Travel Expense Reimbursement", "Printing and Documentation Expenses", "Postal and Courier Expenses", "Professional Fees – Part Payment", "Professional Fees – Final Payment"
+];
+function attachParticularSuggestions(field) {
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'relative';
+    field.before(wrapper); wrapper.append(field);
+    const panel = document.createElement('div');
+    panel.hidden = true;
+    panel.style.cssText = 'position:absolute;top:100%;left:0;right:0;z-index:50;background:#fff;color:#263345;border:1px solid #c3a16b;border-radius:6px;box-shadow:0 5px 18px #0002;max-height:240px;overflow:auto;text-align:left;';
+    wrapper.append(panel);
+    let active = -1, matches = [];
+    const close = () => {panel.hidden = true; active = -1;};
+    function choose(text) {
+        field.value = text; close();
+        field.dispatchEvent(new Event('input', {bubbles:true}));
+        close(); field.focus(); close();
+    }
+    function render() {
+        const q = field.value.trim().toLowerCase();
+        const words = q.split(/\s+/).filter(Boolean);
+        const history = cloudRecords.flatMap(r => (r.items || []).map(i => String(i.description ?? i.particular ?? '').trim())).filter(s => s && s.length <= 180 && !/[\r\n]/.test(s));
+        const unique = new Map();
+        for (const s of [...LEGAL_PARTICULARS, ...history]) if (!unique.has(s.toLowerCase())) unique.set(s.toLowerCase(),s);
+        matches = [...unique.values()].filter(s => words.every(w => s.toLowerCase().includes(w))).sort((a,b) => Number(b.toLowerCase().startsWith(q))-Number(a.toLowerCase().startsWith(q))).slice(0,12);
+        panel.replaceChildren(); active = -1;
+        for (const s of matches) {
+            const b = document.createElement('button'); b.type='button'; b.textContent=s;
+            b.style.cssText='display:block;width:100%;padding:9px 10px;text-align:left;background:white;color:#263345;border:0;border-bottom:1px solid #eee;cursor:pointer;font:inherit;white-space:normal;';
+            b.addEventListener('pointerdown', e => e.preventDefault());
+            b.addEventListener('click', () => choose(s)); panel.append(b);
+        }
+        panel.hidden = !matches.length;
+    }
+    field.addEventListener('input', render);
+    field.addEventListener('focus', render);
+    wrapper.addEventListener('focusout', e => {if (!wrapper.contains(e.relatedTarget)) close();});
+    field.addEventListener('keydown', e => {
+        if(e.key==='Escape'){close();return;}
+        if(panel.hidden || !matches.length)return;
+        if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+            e.preventDefault(); active=(active+(e.key==='ArrowDown'?1:active<0?0:-1)+matches.length)%matches.length;
+            [...panel.children].forEach((b,i)=>b.style.background=i===active?'#f1e7d4':'white');
+            panel.children[active].scrollIntoView({block:'nearest'});
+        } else if(e.key==='Enter' && active>=0){e.preventDefault();choose(matches[active]);}
+    });
+}
+
 function addItem(item = {}) {
 
     const fragment = $("invoiceItemTemplate")
@@ -557,6 +615,7 @@ function addItem(item = {}) {
         }));
 
     $("itemsBody").appendChild(fragment);
+    attachParticularSuggestions(row.querySelector(".item-description"));
 }
 
 function collectItems() {
@@ -2190,3 +2249,5 @@ export async function initialiseInvoiceSystem(user) {
    Version 5.0
    Justice, Integrity & Excellence
    ========================================================= */
+
+
