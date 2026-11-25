@@ -1,8 +1,11 @@
 
+
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    DOCUMENT MANAGEMENT CLOUD ENGINE
-   Version 1.0.0
+   Version 2.0.0
 
    Justice, Integrity & Excellence
    ========================================================= */
@@ -48,7 +51,7 @@ import {
 
 export const DMS_CONFIG = Object.freeze({
 
-    version: "1.0.0",
+    version: "2.0.0",
 
     documentStatuses: Object.freeze({
         active: "Active",
@@ -96,6 +99,8 @@ let pickerPending = false;
 let sessionGeneration = 0;
 
 let observedUid = null;
+let rootPending = null;
+const ROOT_MARKER = "mnm-dms-root-v2";
 
 
 /* =========================================================
@@ -565,19 +570,10 @@ export async function initialiseGoogleDrive() {
 
     const validation = validateDriveConfiguration();
 
-    if (!validation.valid) {
+    const errors = validation.errors.filter(message => message !== "Google Picker API Key is not configured.");
+    if (errors.length) throw new Error(errors.join(" "));
 
-        throw new Error(validation.errors.join(" "));
-
-    }
-
-    await Promise.all([
-
-        loadGoogleIdentity(),
-
-        loadGooglePicker()
-
-    ]);
+    await loadGoogleIdentity();
 
     return true;
 
@@ -740,7 +736,7 @@ export async function connectGoogleDrive() {
 
                     tokenClient.requestAccessToken({
 
-                        prompt: "select_account"
+                        prompt: ""
 
                     });
 
@@ -837,6 +833,9 @@ export async function connectGoogleDrive() {
 
             googleSession.email = email;
 
+            try { await checkRootFolderAccess(); } catch (error) {
+                if (!isGoogleDriveConnected()) throw error;
+            }
             return getGoogleDriveConnection();
 
         } catch (error) {
@@ -889,7 +888,7 @@ export function getGoogleDriveConnection() {
 
             isGoogleDriveConnected() &&
 
-            authorizedRootId === DRIVE_CONFIG.rootFolderId
+            authorizedRootId !== null
 
         )
 
@@ -931,6 +930,8 @@ async function driveRequest(
     const response = await fetch(base + path, {
 
         ...options,
+
+        signal: options.signal || AbortSignal.timeout(upload ? 180000 : 30000),
 
         headers,
 
@@ -1038,6 +1039,7 @@ async function openGooglePicker(folderOnly = false) {
 
         const generation = sessionGeneration;
 
+        if (!DRIVE_CONFIG.apiKey || !DRIVE_CONFIG.apiKey.startsWith("AIza")) throw new Error("Google Picker API key is not configured.");
         await loadGooglePicker();
 
         return await new Promise((resolve, reject) => {
@@ -1054,9 +1056,8 @@ async function openGooglePicker(folderOnly = false) {
 
                 clearTimeout(timeout);
 
-                picker?.setVisible(false);
-
-                picker?.dispose?.();
+                try { picker?.setVisible(false); } catch {}
+                try { picker?.dispose?.(); } catch {}
 
                 error ? reject(error) : resolve(result);
 
@@ -1068,7 +1069,7 @@ async function openGooglePicker(folderOnly = false) {
                     "Google Picker session timed out."
                 ));
 
-            }, 180000);
+            }, 45000);
 
             try {
 
@@ -1139,6 +1140,9 @@ async function openGooglePicker(folderOnly = false) {
                             const action =
                                 data[google.picker.Response.ACTION];
 
+                            if (action === "error") {
+                                finish(new Error("Google Picker failed. Check its API key and browser permissions."));
+                            }
                             if (action === google.picker.Action.CANCEL) {
 
                                 finish(null, null);
@@ -1209,96 +1213,80 @@ function ensurePrivateFile(file) {
 }
 
 
-async function verifyRootFolder() {
-
-    const root = ensurePrivateFile(
-
-        await getDriveFile(DRIVE_CONFIG.rootFolderId)
-
-    );
-
-    if (
-        root.mimeType !== DRIVE_CONFIG.folderMimeType ||
-        root.capabilities?.canAddChildren !== true
-    ) {
-
-        throw new Error(
-            "The configured root folder is not writable."
-        );
-
+function validateRoot(root) {
+    ensurePrivateFile(root);
+    if (root.mimeType !== DRIVE_CONFIG.folderMimeType ||
+        root.capabilities?.canAddChildren !== true) {
+        throw new Error("The DMS root folder is not writable.");
     }
-
-    authorizedRootId = root.id;
-
     return root;
-
 }
 
+async function findManagedRoot() {
+    const roots = await listDriveFiles([
+        "trashed = false",
+        `mimeType = '${DRIVE_CONFIG.folderMimeType}'`,
+        `appProperties has { key='mnmDmsRoot' and value='${ROOT_MARKER}' }`
+    ].join(" and "));
+    if (roots.length > 1) throw new Error("Multiple DMS roots found. Manual review required.");
+    return roots.length ? validateRoot(roots[0]) : null;
+}
+
+async function verifyRootFolder() {
+    const session = requireGoogleSession();
+    const generation = sessionGeneration;
+    let root;
+    if (authorizedRootId) {
+        root = validateRoot(await getDriveFile(authorizedRootId));
+    } else {
+        root = await findManagedRoot();
+        if (!root) root = validateRoot(await getDriveFile(DRIVE_CONFIG.rootFolderId));
+    }
+    assertSession(session.uid);
+    if (generation !== sessionGeneration) throw new Error("Google session changed.");
+    authorizedRootId = root.id;
+    return root;
+}
 
 export async function authorizeRootFolder() {
-
     await requireAdministrator();
-
-    requireGoogleSession();
-
-    const selected = await openGooglePicker(true);
-
-    if (!selected) return null;
-
-    if (selected.id !== DRIVE_CONFIG.rootFolderId) {
-
-        throw new Error(
-
-            "Select the designated MNM Legal Associates root folder."
-
-        );
-
-    }
-
-    return verifyRootFolder();
-
+    const session = requireGoogleSession();
+    const generation = sessionGeneration;
+    if (rootPending) return rootPending;
+    const operation = (async () => {
+        try { return await verifyRootFolder(); }
+        catch (error) {
+            if (error.details?.httpStatus !== 404 || authorizedRootId) throw error;
+        }
+        // Explicit button action only; never create on page load.
+        // Do not switch storage roots when existing documents are registered.
+        const records = await fetchDocuments({includeArchived:true});
+        if (records.length) throw new Error("Existing documents detected. Restore access to the original root before creating a new one.");
+        const existing = await findManagedRoot();
+        const root = existing || validateRoot(await driveRequest(
+            `/files?fields=${encodeURIComponent(DRIVE_FIELDS)}`,
+            {method:"POST", headers:{"Content-Type":"application/json"},
+             body:JSON.stringify({name:"MNM Legal Associates - DMS Storage",mimeType:DRIVE_CONFIG.folderMimeType,appProperties:{mnmDmsRoot:ROOT_MARKER}})}
+        ));
+        assertSession(session.uid);
+        if (generation !== sessionGeneration) throw new Error("Google session changed.");
+        authorizedRootId = root.id;
+        return root;
+    })();
+    rootPending = operation;
+    try { return await operation; }
+    finally { if (rootPending === operation) rootPending = null; }
 }
-
 
 export async function checkRootFolderAccess() {
-
     await requireAdministrator();
-
     requireGoogleSession();
-
-    try {
-
-        return await verifyRootFolder();
-
-    } catch (error) {
-
-        authorizedRootId = null;
-
-        throw error;
-
-    }
-
+    return verifyRootFolder();
 }
 
-
 async function requireRootFolder() {
-
     requireGoogleSession();
-
-    if (authorizedRootId !== DRIVE_CONFIG.rootFolderId) {
-
-        throw dmsError(
-
-            "dms/root-required",
-
-            "Authorize the designated root folder first."
-
-        );
-
-    }
-
     return verifyRootFolder();
-
 }
 
 
@@ -3915,3 +3903,7 @@ export async function checkDocumentCloudConnection() {
    MNM LEGAL ASSOCIATES
    Justice, Integrity & Excellence
    ========================================================= */
+
+
+
+
