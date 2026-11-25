@@ -1,0 +1,3077 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <meta name="robots"
+          content="noindex, nofollow, noarchive">
+
+    <meta name="referrer" content="no-referrer">
+
+    <meta name="theme-color" content="#101d30">
+
+    <title>Hearing Calendar | MNM Legal Associates</title>
+
+    <link rel="icon" href="/images/logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <link rel="stylesheet" href="/calendar.css">
+
+    <style>
+        [hidden] {
+            display: none !important;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<!-- =====================================================
+     MNM LEGAL ASSOCIATES
+     LEGAL PRACTICE MANAGEMENT SYSTEM
+     HEARING CALENDAR - VERSION 1.0
+
+     Justice, Integrity & Excellence
+====================================================== -->
+
+
+<!-- AUTHENTICATION LOADING SCREEN -->
+
+<div id="authLoading" class="auth-loading">
+
+    <div class="auth-loading-content">
+
+        <img src="/images/logo.png"
+             class="auth-logo"
+             alt="MNM Legal Associates">
+
+        <h1>MNM Legal Associates</h1>
+
+        <p>Legal Practice Management System</p>
+
+        <div id="loadingSpinner"
+             class="loading-spinner"
+             aria-hidden="true"></div>
+
+        <p id="loadingMessage"
+           role="status">
+
+            Verifying your authentication session...
+
+        </p>
+
+        <a href="/dashboard.html">
+
+            Return to Dashboard
+
+        </a>
+
+        <noscript>
+
+            <p>
+                JavaScript is required to access
+                the Hearing Calendar.
+            </p>
+
+        </noscript>
+
+    </div>
+
+</div>
+
+
+<!-- PROTECTED APPLICATION -->
+
+<div id="protectedContent" hidden>
+
+
+    <!-- APPLICATION HEADER -->
+
+    <header class="app-header">
+
+        <div class="header-brand">
+
+            <a href="/dashboard.html"
+               class="brand-logo-link"
+               aria-label="Return to Dashboard">
+
+                <img src="/images/logo.png"
+                     class="header-logo"
+                     alt="MNM Legal Associates">
+
+            </a>
+
+            <div class="header-brand-text">
+
+                <strong>MNM Legal Associates</strong>
+
+                <span>Legal Practice Management System</span>
+
+            </div>
+
+        </div>
+
+
+        <div class="header-actions">
+
+            <a href="/dashboard.html"
+               class="button button-outline">
+
+                <i class="fa-solid fa-arrow-left"></i>
+
+                <span>Dashboard</span>
+
+            </a>
+
+            <a href="/cases.html"
+               class="button button-outline">
+
+                <i class="fa-solid fa-folder-open"></i>
+
+                <span>Cases</span>
+
+            </a>
+
+            <div class="staff-profile">
+
+                <i class="fa-solid fa-circle-user"></i>
+
+                <div>
+
+                    <strong id="staffName">
+                        Administrator
+                    </strong>
+
+                    <span>Authorized Access</span>
+
+                </div>
+
+            </div>
+
+            <button type="button"
+                    id="logoutButton"
+                    class="button button-danger-outline">
+
+                <i class="fa-solid fa-right-from-bracket"></i>
+
+                <span>Sign Out</span>
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN APPLICATION -->
+
+    <main class="app-container">
+
+
+        <!-- PAGE HEADING -->
+
+        <section class="page-heading">
+
+            <div>
+
+                <div class="breadcrumb">
+
+                    <a href="/dashboard.html">
+                        Dashboard
+                    </a>
+
+                    <i class="fa-solid fa-chevron-right"></i>
+
+                    <span>Hearing Calendar</span>
+
+                </div>
+
+                <h1>Hearing Calendar</h1>
+
+                <p>
+
+                    Manage court schedules, hearing dates,
+                    limitation periods and professional deadlines.
+
+                </p>
+
+            </div>
+
+            <div class="page-heading-actions">
+
+                <button type="button"
+                        id="refreshCalendarButton"
+                        class="button button-secondary">
+
+                    <i class="fa-solid fa-rotate"></i>
+
+                    Refresh
+
+                </button>
+
+                <button type="button"
+                        id="todayCauseListButton"
+                        class="button button-primary">
+
+                    <i class="fa-solid fa-list-check"></i>
+
+                    Today's Cause List
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- CLOUD CONNECTION -->
+
+        <div class="cloud-status-bar">
+
+            <div class="cloud-status-info">
+
+                <span id="cloudStatusIndicator"
+                      class="connection-indicator syncing"></span>
+
+                <i class="fa-solid fa-cloud"></i>
+
+                <span id="cloudStatus">
+
+                    Connecting to secure database...
+
+                </span>
+
+            </div>
+
+            <div class="cloud-status-details">
+
+                <span id="lastSynced">
+
+                    Awaiting synchronization
+
+                </span>
+
+                <span class="timezone-label">
+
+                    <i class="fa-regular fa-clock"></i>
+
+                    IST
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- APPLICATION MESSAGES -->
+
+        <div id="appMessage"
+             class="app-message"
+             role="status"
+             aria-live="polite"
+             hidden></div>
+
+
+        <!-- STATISTICS -->
+
+        <section class="statistics-grid"
+                 aria-label="Calendar Statistics">
+
+            <article class="stat-card">
+
+                <div class="stat-icon stat-today">
+
+                    <i class="fa-solid fa-calendar-day"></i>
+
+                </div>
+
+                <span>Today's Hearings</span>
+
+                <strong id="hearingsToday">—</strong>
+
+                <small>Scheduled for today</small>
+
+                <button type="button"
+                        class="stat-link"
+                        data-stat-action="today">
+
+                    View Schedule
+
+                </button>
+
+            </article>
+
+
+            <article class="stat-card">
+
+                <div class="stat-icon stat-week">
+
+                    <i class="fa-solid fa-calendar-week"></i>
+
+                </div>
+
+                <span>Next 7 Days</span>
+
+                <strong id="hearingsNextSevenDays">—</strong>
+
+                <small>Including today</small>
+
+                <button type="button"
+                        class="stat-link"
+                        data-stat-action="week">
+
+                    View Hearings
+
+                </button>
+
+            </article>
+
+
+            <article class="stat-card">
+
+                <div class="stat-icon stat-month">
+
+                    <i class="fa-solid fa-calendar-days"></i>
+
+                </div>
+
+                <span>This Month</span>
+
+                <strong id="hearingsThisMonth">—</strong>
+
+                <small>Recorded monthly hearings</small>
+
+                <button type="button"
+                        class="stat-link"
+                        data-stat-action="month">
+
+                    View Calendar
+
+                </button>
+
+            </article>
+
+
+            <article class="stat-card">
+
+                <div class="stat-icon stat-deadline">
+
+                    <i class="fa-solid fa-hourglass-half"></i>
+
+                </div>
+
+                <span>Upcoming Deadlines</span>
+
+                <strong id="upcomingDeadlines">—</strong>
+
+                <small>Within the next 30 days</small>
+
+                <button type="button"
+                        class="stat-link"
+                        data-stat-action="deadlines">
+
+                    View Deadlines
+
+                </button>
+
+            </article>
+
+
+            <article class="stat-card">
+
+                <div class="stat-icon stat-overdue">
+
+                    <i class="fa-solid fa-calendar-xmark"></i>
+
+                </div>
+
+                <span>Past Hearing Dates</span>
+
+                <strong id="overdueHearings">—</strong>
+
+                <small>Recorded dates requiring review</small>
+
+                <button type="button"
+                        class="stat-link"
+                        data-stat-action="overdue">
+
+                    Review Dates
+
+                </button>
+
+            </article>
+
+
+            <article class="stat-card">
+
+                <div class="stat-icon stat-danger">
+
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+
+                </div>
+
+                <span>Overdue Deadlines</span>
+
+                <strong id="overdueDeadlines">—</strong>
+
+                <small>Immediate verification required</small>
+
+                <button type="button"
+                        class="stat-link"
+                        data-stat-action="overdue-deadlines">
+
+                    Review Deadlines
+
+                </button>
+
+            </article>
+
+        </section>
+
+
+        <!-- IMPORTANT ALERTS -->
+
+        <section id="calendarAlertsCard"
+                 class="content-card alerts-card"
+                 hidden>
+
+            <div class="card-heading">
+
+                <div>
+
+                    <h2>
+
+                        <i class="fa-solid fa-bell"></i>
+
+                        Important Calendar Alerts
+
+                    </h2>
+
+                    <p>
+
+                        Urgent matters and recorded dates
+                        requiring professional attention.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div id="calendarAlertsList"
+                 class="alerts-list"></div>
+
+        </section>
+
+
+        <!-- CALENDAR VIEW NAVIGATION -->
+
+        <nav class="module-navigation"
+             aria-label="Calendar Views">
+
+            <div class="module-tabs"
+                 role="tablist">
+
+                <button type="button"
+                        id="monthTab"
+                        class="module-tab active"
+                        data-view="month"
+                        role="tab"
+                        aria-selected="true"
+                        aria-controls="monthPanel">
+
+                    <i class="fa-solid fa-calendar-days"></i>
+
+                    Month
+
+                </button>
+
+                <button type="button"
+                        id="weekTab"
+                        class="module-tab"
+                        data-view="week"
+                        role="tab"
+                        tabindex="-1"
+                        aria-selected="false"
+                        aria-controls="weekPanel">
+
+                    <i class="fa-solid fa-calendar-week"></i>
+
+                    Week
+
+                </button>
+
+                <button type="button"
+                        id="dayTab"
+                        class="module-tab"
+                        data-view="day"
+                        role="tab"
+                        tabindex="-1"
+                        aria-selected="false"
+                        aria-controls="dayPanel">
+
+                    <i class="fa-solid fa-calendar-day"></i>
+
+                    Day
+
+                </button>
+
+                <button type="button"
+                        id="upcomingTab"
+                        class="module-tab"
+                        data-view="upcoming"
+                        role="tab"
+                        tabindex="-1"
+                        aria-selected="false"
+                        aria-controls="upcomingPanel">
+
+                    <i class="fa-solid fa-list-ul"></i>
+
+                    Upcoming
+
+                </button>
+
+                <button type="button"
+                        id="overdueTab"
+                        class="module-tab"
+                        data-view="overdue"
+                        role="tab"
+                        tabindex="-1"
+                        aria-selected="false"
+                        aria-controls="overduePanel">
+
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+
+                    Past Dates
+
+                </button>
+
+                <button type="button"
+                        id="deadlinesTab"
+                        class="module-tab"
+                        data-view="deadlines"
+                        role="tab"
+                        tabindex="-1"
+                        aria-selected="false"
+                        aria-controls="deadlinesPanel">
+
+                    <i class="fa-solid fa-hourglass-end"></i>
+
+                    Deadlines
+
+                </button>
+
+            </div>
+
+        </nav>
+
+
+        <!-- CENTRAL CALENDAR FILTERS -->
+
+        <section class="content-card filter-card">
+
+            <div class="card-heading">
+
+                <div>
+
+                    <h2>
+
+                        <i class="fa-solid fa-filter"></i>
+
+                        Calendar Filters
+
+                    </h2>
+
+                    <p>
+
+                        Filter schedules by court, advocate,
+                        matter or priority.
+
+                    </p>
+
+                </div>
+
+                <button type="button"
+                        id="toggleFiltersButton"
+                        class="button button-secondary"
+                        aria-expanded="true"
+                        aria-controls="calendarFilters">
+
+                    <i class="fa-solid fa-sliders"></i>
+
+                    Filters
+
+                </button>
+
+            </div>
+
+
+            <div id="calendarFilters"
+                 class="filter-grid">
+
+                <div class="form-group search-field">
+
+                    <label for="calendarSearch">
+
+                        Search Calendar
+
+                    </label>
+
+                    <div class="search-input-wrapper">
+
+                        <i class="fa-solid fa-magnifying-glass"></i>
+
+                        <input type="search"
+                               id="calendarSearch"
+                               placeholder="Case, client, CNR, court..."
+                               autocomplete="off">
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="courtFilter">
+
+                        Court / Tribunal
+
+                    </label>
+
+                    <select id="courtFilter">
+
+                        <option value="all">
+                            All Courts
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="cityFilter">
+
+                        Court City
+
+                    </label>
+
+                    <select id="cityFilter">
+
+                        <option value="all">
+                            All Cities
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="advocateFilter">
+
+                        Assigned Advocate
+
+                    </label>
+
+                    <select id="advocateFilter">
+
+                        <option value="all">
+                            All Advocates
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="practiceAreaFilter">
+
+                        Practice Area
+
+                    </label>
+
+                    <select id="practiceAreaFilter">
+
+                        <option value="all">
+                            All Practice Areas
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="eventTypeFilter">
+
+                        Event Type
+
+                    </label>
+
+                    <select id="eventTypeFilter">
+
+                        <option value="all">
+                            All Events
+                        </option>
+
+                        <option value="hearing">
+                            Court Hearings
+                        </option>
+
+                        <option value="deadline">
+                            Limitation Deadlines
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="priorityFilter">
+
+                        Priority
+
+                    </label>
+
+                    <select id="priorityFilter">
+
+                        <option value="all">
+                            All Priorities
+                        </option>
+
+                        <option value="normal">
+                            Normal
+                        </option>
+
+                        <option value="high">
+                            High
+                        </option>
+
+                        <option value="urgent">
+                            Urgent
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="filter-actions">
+
+                    <button type="button"
+                            id="clearFiltersButton"
+                            class="button button-secondary">
+
+                        <i class="fa-solid fa-filter-circle-xmark"></i>
+
+                        Clear Filters
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="filter-result-bar">
+
+                <span id="filterResultCount">
+
+                    Loading calendar records...
+
+                </span>
+
+                <span class="confidential-label">
+
+                    <i class="fa-solid fa-lock"></i>
+
+                    Confidential Schedule
+
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- DATE NAVIGATION -->
+
+        <section id="calendarNavigation"
+                 class="calendar-navigation">
+
+            <div class="date-navigation">
+
+                <button type="button"
+                        id="previousPeriodButton"
+                        class="icon-button"
+                        aria-label="Previous period"
+                        title="Previous period">
+
+                    <i class="fa-solid fa-chevron-left"></i>
+
+                </button>
+
+                <button type="button"
+                        id="nextPeriodButton"
+                        class="icon-button"
+                        aria-label="Next period"
+                        title="Next period">
+
+                    <i class="fa-solid fa-chevron-right"></i>
+
+                </button>
+
+                <button type="button"
+                        id="todayButton"
+                        class="button button-secondary">
+
+                    Today
+
+                </button>
+
+            </div>
+
+
+            <h2 id="calendarPeriodTitle"
+                aria-live="polite">
+
+                Hearing Calendar
+
+            </h2>
+
+
+            <div class="date-jump">
+
+                <label for="jumpToDate"
+                       class="sr-only">
+
+                    Jump to Date
+
+                </label>
+
+                <input type="date"
+                       id="jumpToDate">
+
+                <button type="button"
+                        id="jumpToDateButton"
+                        class="button button-secondary">
+
+                    Go
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- CALENDAR COLOUR LEGEND -->
+
+        <div class="calendar-legend">
+
+            <span>
+
+                <i class="legend-dot legend-hearing"></i>
+
+                Court Hearing
+
+            </span>
+
+            <span>
+
+                <i class="legend-dot legend-deadline"></i>
+
+                Limitation Deadline
+
+            </span>
+
+            <span>
+
+                <i class="legend-dot legend-high"></i>
+
+                High Priority
+
+            </span>
+
+            <span>
+
+                <i class="legend-dot legend-urgent"></i>
+
+                Urgent Matter
+
+            </span>
+
+            <span>
+
+                <i class="legend-dot legend-overdue"></i>
+
+                Past / Overdue Date
+
+            </span>
+
+        </div>
+
+
+        <!-- ============================================
+             SECTION 01 - MONTHLY CALENDAR
+        ============================================= -->
+
+        <section id="monthPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="monthTab">
+
+            <div class="calendar-layout">
+
+                <section class="content-card month-calendar-card">
+
+                    <div class="calendar-scroll">
+
+                        <div class="calendar-weekdays">
+
+                            <div>Mon</div>
+
+                            <div>Tue</div>
+
+                            <div>Wed</div>
+
+                            <div>Thu</div>
+
+                            <div>Fri</div>
+
+                            <div>Sat</div>
+
+                            <div>Sun</div>
+
+                        </div>
+
+                        <div id="monthCalendarGrid"
+                             class="month-calendar-grid"
+                             aria-label="Monthly Hearing Calendar">
+
+                            <!-- Generated by calendar.js -->
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- SELECTED DATE SIDEBAR -->
+
+                <aside class="content-card selected-date-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <span class="eyebrow">
+
+                                SELECTED DATE
+
+                            </span>
+
+                            <h2 id="selectedDateHeading">
+
+                                Select a Date
+
+                            </h2>
+
+                            <p id="selectedDateSummary">
+
+                                Select a calendar date
+                                to view scheduled matters.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div id="selectedDateEvents"
+                         class="selected-date-events"></div>
+
+                    <div id="emptySelectedDate"
+                         class="empty-state"
+                         hidden>
+
+                        <i class="fa-regular fa-calendar-check"></i>
+
+                        <h3>No scheduled events</h3>
+
+                        <p>
+
+                            No matching hearings or deadlines
+                            are recorded for this date.
+
+                        </p>
+
+                    </div>
+
+                    <div class="sidebar-actions">
+
+                        <button type="button"
+                                id="openSelectedDayButton"
+                                class="button button-primary">
+
+                            <i class="fa-solid fa-list"></i>
+
+                            Open Daily Schedule
+
+                        </button>
+
+                        <button type="button"
+                                id="printSelectedDateButton"
+                                class="button button-secondary">
+
+                            <i class="fa-solid fa-print"></i>
+
+                            Print Cause List
+
+                        </button>
+
+                    </div>
+
+                </aside>
+
+            </div>
+
+        </section>
+
+
+        <!-- ============================================
+             SECTION 02 - WEEKLY CALENDAR
+        ============================================= -->
+
+        <section id="weekPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="weekTab"
+                 hidden>
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Weekly Court Schedule</h2>
+
+                        <p id="weekScheduleSummary">
+
+                            Hearings and deadlines
+                            for the selected week.
+
+                        </p>
+
+                    </div>
+
+                    <button type="button"
+                            id="exportWeekButton"
+                            class="button button-secondary">
+
+                        <i class="fa-solid fa-file-csv"></i>
+
+                        Export Week
+
+                    </button>
+
+                </div>
+
+                <div class="week-calendar-scroll">
+
+                    <div id="weekCalendarGrid"
+                         class="week-calendar-grid">
+
+                        <!-- Generated by calendar.js -->
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- ============================================
+             SECTION 03 - DAILY SCHEDULE
+        ============================================= -->
+
+        <section id="dayPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="dayTab"
+                 hidden>
+
+            <div class="statistics-grid daily-statistics">
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-today">
+
+                        <i class="fa-solid fa-scale-balanced"></i>
+
+                    </div>
+
+                    <span>Scheduled Hearings</span>
+
+                    <strong id="dailyHearingCount">—</strong>
+
+                </article>
+
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-week">
+
+                        <i class="fa-solid fa-landmark"></i>
+
+                    </div>
+
+                    <span>Courts / Courtrooms</span>
+
+                    <strong id="dailyCourtCount">—</strong>
+
+                </article>
+
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-deadline">
+
+                        <i class="fa-solid fa-hourglass-half"></i>
+
+                    </div>
+
+                    <span>Recorded Deadlines</span>
+
+                    <strong id="dailyDeadlineCount">—</strong>
+
+                </article>
+
+
+                <article class="stat-card">
+
+                    <div class="stat-icon stat-danger">
+
+                        <i class="fa-solid fa-circle-exclamation"></i>
+
+                    </div>
+
+                    <span>Urgent Events</span>
+
+                    <strong id="dailyUrgentCount">—</strong>
+
+                </article>
+
+            </div>
+
+
+            <!-- INTERNAL DAILY CAUSE LIST -->
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>
+
+                            <i class="fa-solid fa-list-check"></i>
+
+                            Internal Daily Cause List
+
+                        </h2>
+
+                        <p id="dailyScheduleDate">
+
+                            Selected date
+
+                        </p>
+
+                    </div>
+
+                    <div class="card-actions">
+
+                        <button type="button"
+                                id="exportDailyButton"
+                                class="button button-secondary">
+
+                            <i class="fa-solid fa-file-csv"></i>
+
+                            Export CSV
+
+                        </button>
+
+                        <button type="button"
+                                id="printCauseListButton"
+                                class="button button-primary">
+
+                            <i class="fa-solid fa-print"></i>
+
+                            Print Cause List
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <div class="information-note">
+
+                    <i class="fa-solid fa-circle-info"></i>
+
+                    <p>
+
+                        This is the firm's internal hearing schedule,
+                        not an official court-issued cause list.
+                        Verify dates, courtrooms and listing details
+                        against official court records.
+
+                    </p>
+
+                </div>
+
+
+                <div id="dailyCauseList"
+                     class="daily-cause-list">
+
+                    <!-- Court-wise hearing groups -->
+
+                </div>
+
+
+                <div id="emptyDailyHearings"
+                     class="empty-state"
+                     hidden>
+
+                    <i class="fa-regular fa-calendar-check"></i>
+
+                    <h3>No scheduled hearings</h3>
+
+                    <p>
+
+                        No matching court hearings
+                        are recorded for the selected date.
+
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- DAILY LIMITATION DEADLINES -->
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>
+
+                            <i class="fa-solid fa-hourglass-end"></i>
+
+                            Deadlines for Selected Date
+
+                        </h2>
+
+                        <p>
+
+                            Recorded limitation and critical dates.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table class="data-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Case ID</th>
+
+                                <th>Case Title</th>
+
+                                <th>Client</th>
+
+                                <th>Advocate</th>
+
+                                <th>Priority</th>
+
+                                <th>Action</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="dailyDeadlinesBody"></tbody>
+
+                    </table>
+
+                </div>
+
+                <div id="emptyDailyDeadlines"
+                     class="empty-state"
+                     hidden>
+
+                    <i class="fa-regular fa-clock"></i>
+
+                    <h3>No recorded deadlines</h3>
+
+                    <p>
+
+                        No matching deadlines are recorded
+                        for this date.
+
+                    </p>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- ============================================
+             SECTION 04 - UPCOMING HEARINGS
+        ============================================= -->
+
+        <section id="upcomingPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="upcomingTab"
+                 hidden>
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Upcoming Court Hearings</h2>
+
+                        <p id="upcomingScheduleSummary">
+
+                            Review upcoming hearing dates.
+
+                        </p>
+
+                    </div>
+
+                    <button type="button"
+                            id="exportUpcomingButton"
+                            class="button button-secondary">
+
+                        <i class="fa-solid fa-file-csv"></i>
+
+                        Export CSV
+
+                    </button>
+
+                </div>
+
+
+                <div class="section-toolbar">
+
+                    <div class="form-group">
+
+                        <label for="upcomingPeriod">
+
+                            Hearing Period
+
+                        </label>
+
+                        <select id="upcomingPeriod">
+
+                            <option value="7">
+                                Next 7 Days
+                            </option>
+
+                            <option value="15">
+                                Next 15 Days
+                            </option>
+
+                            <option value="30" selected>
+                                Next 30 Days
+                            </option>
+
+                            <option value="60">
+                                Next 60 Days
+                            </option>
+
+                            <option value="90">
+                                Next 90 Days
+                            </option>
+
+                            <option value="365">
+                                Next 365 Days
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <span id="upcomingResultCount"
+                          class="result-count">
+
+                        —
+
+                    </span>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table class="data-table hearing-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Hearing Date</th>
+
+                                <th>Case / Matter</th>
+
+                                <th>Case Number</th>
+
+                                <th>Court</th>
+
+                                <th>Purpose</th>
+
+                                <th>Advocate</th>
+
+                                <th>Priority</th>
+
+                                <th>Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="upcomingHearingsBody"></tbody>
+
+                    </table>
+
+                </div>
+
+
+                <div id="emptyUpcomingHearings"
+                     class="empty-state"
+                     hidden>
+
+                    <i class="fa-regular fa-calendar"></i>
+
+                    <h3>No upcoming hearings</h3>
+
+                    <p>
+
+                        No matching hearings are recorded
+                        within the selected period.
+
+                    </p>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- ============================================
+             SECTION 05 - PAST HEARING DATES
+        ============================================= -->
+
+        <section id="overduePanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="overdueTab"
+                 hidden>
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>
+
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+
+                            Past Hearing Dates
+
+                        </h2>
+
+                        <p>
+
+                            Matters with past dates still recorded
+                            as their next hearing date.
+
+                        </p>
+
+                    </div>
+
+                    <button type="button"
+                            id="exportOverdueButton"
+                            class="button button-secondary">
+
+                        <i class="fa-solid fa-file-csv"></i>
+
+                        Export CSV
+
+                    </button>
+
+                </div>
+
+
+                <div class="warning-note">
+
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+
+                    <p>
+
+                        A past recorded hearing date does not
+                        necessarily mean that a hearing was missed.
+                        Verify the proceedings and update the
+                        next hearing date where appropriate.
+
+                    </p>
+
+                </div>
+
+
+                <div class="section-toolbar">
+
+                    <span id="overdueResultCount"
+                          class="result-count">
+
+                        —
+
+                    </span>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table class="data-table hearing-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Recorded Date</th>
+
+                                <th>Days Elapsed</th>
+
+                                <th>Case / Matter</th>
+
+                                <th>Court</th>
+
+                                <th>Purpose</th>
+
+                                <th>Advocate</th>
+
+                                <th>Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="overdueHearingsBody"></tbody>
+
+                    </table>
+
+                </div>
+
+
+                <div id="emptyOverdueHearings"
+                     class="empty-state"
+                     hidden>
+
+                    <i class="fa-solid fa-circle-check"></i>
+
+                    <h3>No past hearing dates requiring review</h3>
+
+                    <p>
+
+                        No matching records were identified.
+
+                    </p>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- ============================================
+             SECTION 06 - LIMITATION TRACKER
+        ============================================= -->
+
+        <section id="deadlinesPanel"
+                 class="module-panel"
+                 role="tabpanel"
+                 aria-labelledby="deadlinesTab"
+                 hidden>
+
+            <section class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>
+
+                            <i class="fa-solid fa-hourglass-end"></i>
+
+                            Limitation & Critical Deadlines
+
+                        </h2>
+
+                        <p>
+
+                            Track manually recorded legal
+                            and procedural deadlines.
+
+                        </p>
+
+                    </div>
+
+                    <button type="button"
+                            id="exportDeadlinesButton"
+                            class="button button-secondary">
+
+                        <i class="fa-solid fa-file-csv"></i>
+
+                        Export CSV
+
+                    </button>
+
+                </div>
+
+
+                <div class="warning-note">
+
+                    <i class="fa-solid fa-scale-balanced"></i>
+
+                    <p>
+
+                        This system does not calculate statutory
+                        limitation, exclusions, extensions or
+                        condonation periods. All recorded dates
+                        must be independently verified by the
+                        responsible advocate.
+
+                    </p>
+
+                </div>
+
+
+                <div class="section-toolbar">
+
+                    <div class="form-group">
+
+                        <label for="deadlinePeriod">
+
+                            Deadline Period
+
+                        </label>
+
+                        <select id="deadlinePeriod">
+
+                            <option value="7">
+                                Next 7 Days
+                            </option>
+
+                            <option value="15">
+                                Next 15 Days
+                            </option>
+
+                            <option value="30" selected>
+                                Next 30 Days
+                            </option>
+
+                            <option value="90">
+                                Next 90 Days
+                            </option>
+
+                            <option value="365">
+                                Next 365 Days
+                            </option>
+
+                            <option value="overdue">
+                                Overdue Only
+                            </option>
+
+                            <option value="all">
+                                All Recorded Deadlines
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <label class="checkbox-field">
+
+                        <input type="checkbox"
+                               id="includeOverdueDeadlines"
+                               checked>
+
+                        Include Overdue Deadlines
+
+                    </label>
+
+
+                    <span id="deadlineResultCount"
+                          class="result-count">
+
+                        —
+
+                    </span>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table class="data-table deadline-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Deadline</th>
+
+                                <th>Time Remaining</th>
+
+                                <th>Case / Matter</th>
+
+                                <th>Client</th>
+
+                                <th>Advocate</th>
+
+                                <th>Priority</th>
+
+                                <th>Status</th>
+
+                                <th>Action</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="deadlinesTableBody"></tbody>
+
+                    </table>
+
+                </div>
+
+
+                <div id="emptyDeadlines"
+                     class="empty-state"
+                     hidden>
+
+                    <i class="fa-regular fa-clock"></i>
+
+                    <h3>No matching deadlines</h3>
+
+                    <p>
+
+                        No recorded deadlines match
+                        the selected filters.
+
+                    </p>
+
+                </div>
+
+            </section>
+
+        </section>
+
+
+        <!-- DATA SOURCE INFORMATION -->
+
+        <section class="content-card integration-card">
+
+            <div class="integration-icon">
+
+                <i class="fa-solid fa-link"></i>
+
+            </div>
+
+            <div class="integration-content">
+
+                <h3>Integrated Case Management</h3>
+
+                <p>
+
+                    Calendar records are derived from the firm's
+                    existing Case Management database.
+
+                    Hearing updates are saved directly to
+                    the original case record.
+
+                </p>
+
+                <div class="integration-meta">
+
+                    <span>
+
+                        <i class="fa-solid fa-database"></i>
+
+                        Firebase Firestore
+
+                    </span>
+
+                    <span>
+
+                        <i class="fa-solid fa-shield-halved"></i>
+
+                        Administrator Access
+
+                    </span>
+
+                    <span>
+
+                        <i class="fa-solid fa-clock"></i>
+
+                        Asia/Kolkata
+
+                    </span>
+
+                </div>
+
+            </div>
+
+            <a href="/cases.html"
+               class="button button-secondary">
+
+                Open Case Management
+
+                <i class="fa-solid fa-arrow-right"></i>
+
+            </a>
+
+        </section>
+
+    </main>
+
+
+    <!-- APPLICATION FOOTER -->
+
+    <footer class="app-footer">
+
+        <div>
+
+            <strong>MNM Legal Associates</strong>
+
+            <span>Justice, Integrity &amp; Excellence</span>
+
+        </div>
+
+        <div>
+
+            <span>
+
+                Hearing Calendar v1.0
+
+            </span>
+
+            <span>
+
+                &copy; <span id="currentYear"></span>
+                MNM Legal Associates
+
+            </span>
+
+        </div>
+
+    </footer>
+
+
+    <!-- ============================================
+         DIALOG 01 - CALENDAR EVENT DETAILS
+    ============================================= -->
+
+    <dialog id="eventDetailsDialog"
+            class="app-dialog dialog-wide"
+            aria-labelledby="eventDetailsHeading">
+
+        <div class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <div>
+
+                    <span id="eventDetailsType"
+                          class="eyebrow">
+
+                        CALENDAR EVENT
+
+                    </span>
+
+                    <h2 id="eventDetailsHeading">
+
+                        Event Details
+
+                    </h2>
+
+                </div>
+
+                <button type="button"
+                        class="dialog-close"
+                        data-close-dialog="eventDetailsDialog"
+                        aria-label="Close event details">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+
+            <div class="event-detail-header">
+
+                <div class="event-detail-icon">
+
+                    <i id="eventDetailsIcon"
+                       class="fa-solid fa-scale-balanced"></i>
+
+                </div>
+
+                <div>
+
+                    <span id="eventDetailsCaseCode"
+                          class="case-code">
+
+                        —
+
+                    </span>
+
+                    <h3 id="eventDetailsCaseTitle">
+
+                        —
+
+                    </h3>
+
+                    <div class="event-detail-badges">
+
+                        <span id="eventDetailsPriority"
+                              class="priority-badge">
+
+                            —
+
+                        </span>
+
+                        <span id="eventDetailsStatus"
+                              class="status-badge">
+
+                            —
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <dl class="details-grid">
+
+                <div>
+
+                    <dt>Scheduled Date</dt>
+
+                    <dd id="eventDetailsDate">—</dd>
+
+                </div>
+
+                <div>
+
+                    <dt>Date Status</dt>
+
+                    <dd id="eventDetailsTiming">—</dd>
+
+                </div>
+
+                <div>
+
+                    <dt>Client</dt>
+
+                    <dd id="eventDetailsClient">—</dd>
+
+                </div>
+
+                <div>
+
+                    <dt>Practice Area</dt>
+
+                    <dd id="eventDetailsPracticeArea">—</dd>
+
+                </div>
+
+                <div>
+
+                    <dt>Court / Tribunal</dt>
+
+                    <dd id="eventDetailsCourt">—</dd>
+
+                </div>
+
+                <div>
+
+                    <dt>Courtroom</dt>
+
+                    <dd id="eventDetailsCourtNumber">—</dd>
+
+                </div>
+
+                <div>
+
+                    <dt>Court City</dt>
+
+                    <dd id="eventDetailsCity">—</dd>
+
+                </div>
+
+                <div>
+
+                    <dt>Official Case Number</dt>
+
+                    <dd id="eventDetailsCaseNumber">—</dd>
+
+                </div>
+
+                <div>
+
+                    <dt>CNR Number</dt>
+
+                    <dd id="eventDetailsCnr">—</dd>
+
+                </div>
+
+                <div>
+
+                    <dt>Presiding Judge</dt>
+
+                    <dd id="eventDetailsJudge">—</dd>
+
+                </div>
+
+                <div>
+
+                    <dt>Assigned Advocate</dt>
+
+                    <dd id="eventDetailsAdvocate">—</dd>
+
+                </div>
+
+                <div>
+
+                    <dt>Current Stage</dt>
+
+                    <dd id="eventDetailsStage">—</dd>
+
+                </div>
+
+                <div class="full-width">
+
+                    <dt>Purpose / Description</dt>
+
+                    <dd id="eventDetailsPurpose">—</dd>
+
+                </div>
+
+            </dl>
+
+
+            <div class="dialog-actions">
+
+                <button type="button"
+                        class="button button-secondary"
+                        data-close-dialog="eventDetailsDialog">
+
+                    Close
+
+                </button>
+
+                <button type="button"
+                        id="openCaseProfileButton"
+                        class="button button-secondary">
+
+                    <i class="fa-solid fa-folder-open"></i>
+
+                    Open Case
+
+                </button>
+
+                <button type="button"
+                        id="rescheduleEventButton"
+                        class="button button-primary">
+
+                    <i class="fa-solid fa-calendar-plus"></i>
+
+                    Reschedule Hearing
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- ============================================
+         DIALOG 02 - RESCHEDULE HEARING
+    ============================================= -->
+
+    <dialog id="rescheduleDialog"
+            class="app-dialog dialog-wide"
+            aria-labelledby="rescheduleHeading">
+
+        <div class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <div>
+
+                    <h2 id="rescheduleHeading">
+
+                        Reschedule Hearing
+
+                    </h2>
+
+                    <p>
+
+                        Update the next hearing date
+                        of the original case record.
+
+                    </p>
+
+                </div>
+
+                <button type="button"
+                        class="dialog-close"
+                        data-close-dialog="rescheduleDialog"
+                        aria-label="Close rescheduling form">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+
+            <div id="rescheduleLoading"
+                 class="dialog-loading"
+                 role="status"
+                 hidden>
+
+                <i class="fa-solid fa-spinner fa-spin"></i>
+
+                Retrieving latest case record...
+
+            </div>
+
+
+            <form id="rescheduleForm"
+                  autocomplete="off">
+
+                <input type="hidden"
+                       id="rescheduleCaseId">
+
+                <input type="hidden"
+                       id="rescheduleRevision">
+
+
+                <div class="case-summary-box">
+
+                    <span id="rescheduleCaseCode">
+
+                        —
+
+                    </span>
+
+                    <h3 id="rescheduleCaseTitle">
+
+                        —
+
+                    </h3>
+
+                    <p id="rescheduleCourtName">
+
+                        —
+
+                    </p>
+
+                    <p>
+
+                        Current Hearing Date:
+
+                        <strong id="rescheduleCurrentDate">
+
+                            —
+
+                        </strong>
+
+                    </p>
+
+                </div>
+
+
+                <div id="rescheduleError"
+                     class="form-error"
+                     role="alert"
+                     hidden></div>
+
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="rescheduleNextDate">
+
+                            New Hearing Date
+
+                            <span class="required">*</span>
+
+                        </label>
+
+                        <input type="date"
+                               id="rescheduleNextDate"
+                               required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="rescheduleCurrentStage">
+
+                            Current Case Stage
+
+                        </label>
+
+                        <input type="text"
+                               id="rescheduleCurrentStage"
+                               list="caseStageList"
+                               maxlength="500"
+                               placeholder="Evidence, Arguments...">
+
+                    </div>
+
+
+                    <div class="form-group full-width">
+
+                        <label for="rescheduleNextPurpose">
+
+                            Purpose of Next Hearing
+
+                        </label>
+
+                        <textarea id="rescheduleNextPurpose"
+                                  rows="4"
+                                  maxlength="500"
+                                  placeholder="Reply, Evidence, Arguments, Order..."></textarea>
+
+                    </div>
+
+                </div>
+
+
+                <div class="information-note">
+
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+
+                    <p>
+
+                        This update will be saved directly
+                        to Case Management and recorded
+                        in the case activity history.
+
+                        It does not create a court proceeding
+                        or change an official court listing.
+
+                    </p>
+
+                </div>
+
+
+                <label class="checkbox-field confirmation-checkbox">
+
+                    <input type="checkbox"
+                           id="hearingDateVerified"
+                           required>
+
+                    I have verified the updated hearing date
+                    against the available court record
+                    or authorized case instructions.
+
+                </label>
+
+
+                <div class="dialog-actions">
+
+                    <button type="button"
+                            class="button button-secondary"
+                            data-close-dialog="rescheduleDialog">
+
+                        Cancel
+
+                    </button>
+
+                    <button type="submit"
+                            id="saveRescheduleButton"
+                            class="button button-primary">
+
+                        <i class="fa-solid fa-floppy-disk"></i>
+
+                        <span id="saveRescheduleButtonText">
+
+                            Save Hearing Date
+
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- ============================================
+         DIALOG 03 - DAILY CAUSE LIST PREVIEW
+    ============================================= -->
+
+    <dialog id="causeListDialog"
+            class="app-dialog dialog-extra-wide"
+            aria-labelledby="causeListHeading">
+
+        <div class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <div>
+
+                    <h2 id="causeListHeading">
+
+                        Cause List Preview
+
+                    </h2>
+
+                    <p>
+
+                        Review the internal schedule
+                        before printing.
+
+                    </p>
+
+                </div>
+
+                <button type="button"
+                        class="dialog-close"
+                        data-close-dialog="causeListDialog"
+                        aria-label="Close cause list preview">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+
+            <div class="cause-list-options">
+
+                <label class="checkbox-field">
+
+                    <input type="checkbox"
+                           id="printIncludeClientName">
+
+                    Include Client Names
+
+                </label>
+
+                <label class="checkbox-field">
+
+                    <input type="checkbox"
+                           id="printIncludeAdvocate"
+                           checked>
+
+                    Include Assigned Advocate
+
+                </label>
+
+                <label class="checkbox-field">
+
+                    <input type="checkbox"
+                           id="printIncludePurpose"
+                           checked>
+
+                    Include Hearing Purpose
+
+                </label>
+
+            </div>
+
+
+            <div id="causeListPreview"
+                 class="cause-list-preview">
+
+                <!-- Generated by calendar.js -->
+
+            </div>
+
+
+            <div class="warning-note">
+
+                <i class="fa-solid fa-lock"></i>
+
+                <p>
+
+                    Printed and exported schedules may contain
+                    confidential client information.
+                    Handle them securely.
+
+                </p>
+
+            </div>
+
+
+            <div class="dialog-actions">
+
+                <button type="button"
+                        class="button button-secondary"
+                        data-close-dialog="causeListDialog">
+
+                    Close
+
+                </button>
+
+                <button type="button"
+                        id="confirmPrintButton"
+                        class="button button-primary">
+
+                    <i class="fa-solid fa-print"></i>
+
+                    Print Schedule
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- ============================================
+         DIALOG 04 - CONFIRMATION
+    ============================================= -->
+
+    <dialog id="confirmationDialog"
+            class="app-dialog"
+            aria-labelledby="confirmationTitle">
+
+        <div class="dialog-content">
+
+            <div class="dialog-heading">
+
+                <h2 id="confirmationTitle">
+
+                    Confirm Action
+
+                </h2>
+
+            </div>
+
+            <p id="confirmationMessage">
+
+                Are you sure you want to continue?
+
+            </p>
+
+            <div class="dialog-actions">
+
+                <button type="button"
+                        id="cancelConfirmation"
+                        class="button button-secondary">
+
+                    Cancel
+
+                </button>
+
+                <button type="button"
+                        id="acceptConfirmation"
+                        class="button button-primary">
+
+                    Confirm
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- PRINT CONTAINER -->
+
+    <section id="printContainer"
+             class="print-container"
+             aria-label="Printable Cause List"
+             hidden>
+
+        <!-- Populated immediately before printing -->
+
+    </section>
+
+
+    <!-- CASE STAGE SUGGESTIONS -->
+
+    <datalist id="caseStageList">
+
+        <option value="Pre-Litigation">
+
+        <option value="Drafting">
+
+        <option value="Filing">
+
+        <option value="Scrutiny">
+
+        <option value="Registration">
+
+        <option value="Admission">
+
+        <option value="Notice">
+
+        <option value="Service of Notice">
+
+        <option value="Appearance">
+
+        <option value="Written Statement">
+
+        <option value="Reply">
+
+        <option value="Rejoinder">
+
+        <option value="Interim Application">
+
+        <option value="Interim Relief">
+
+        <option value="Mediation">
+
+        <option value="Conciliation">
+
+        <option value="Settlement">
+
+        <option value="Framing of Issues">
+
+        <option value="Framing of Charge">
+
+        <option value="Evidence">
+
+        <option value="Examination-in-Chief">
+
+        <option value="Cross-Examination">
+
+        <option value="Further Evidence">
+
+        <option value="Final Arguments">
+
+        <option value="Reserved for Judgment">
+
+        <option value="Order">
+
+        <option value="Judgment">
+
+        <option value="Compliance">
+
+        <option value="Execution">
+
+    </datalist>
+
+</div>
+
+
+<!-- ================================================
+     AUTHENTICATION AND APPLICATION INITIALIZATION
+
+     protectPage remains the authority for showing
+     and hiding the protected interface.
+
+     Temporary authorization revalidation does not
+     trigger automatic page reloads.
+================================================= -->
+
+<script type="module">
+
+    const content =
+        document.getElementById("protectedContent");
+
+    const loading =
+        document.getElementById("authLoading");
+
+    const loadingSpinner =
+        document.getElementById("loadingSpinner");
+
+    const loadingMessage =
+        document.getElementById("loadingMessage");
+
+    const logoutButton =
+        document.getElementById("logoutButton");
+
+
+    let applicationPromise = null;
+
+    let activeUserId = null;
+
+    let logoutInProgress = false;
+
+
+    function closeProtectedDialogs() {
+
+        content
+
+            .querySelectorAll("dialog[open]")
+
+            .forEach(dialog => {
+
+                dialog.close();
+
+            });
+
+    }
+
+
+    function showInitializationError(message) {
+
+        closeProtectedDialogs();
+
+        content.hidden = true;
+
+        loading.hidden = false;
+
+        loadingSpinner.hidden = true;
+
+        loadingMessage.textContent = message;
+
+    }
+
+
+    /*
+     * Temporary staff verification may hide the
+     * interface while Firebase verifies the session.
+     *
+     * Close sensitive dialogs, but do not reload
+     * or permanently invalidate the session.
+     */
+
+    const visibilityObserver = new MutationObserver(() => {
+
+        if (content.hidden) {
+
+            closeProtectedDialogs();
+
+        }
+
+    });
+
+
+    visibilityObserver.observe(content, {
+
+        attributes: true,
+
+        attributeFilter: ["hidden"]
+
+    });
+
+
+    async function initialiseCalendarApplication() {
+
+        try {
+
+            const {
+
+                protectPage,
+
+                logoutUser,
+
+                verifyStaffAccess
+
+            } = await import("./auth.js");
+
+
+            const { auth } =
+
+                await import("./firebase-config.js");
+
+
+            logoutButton.addEventListener(
+
+                "click",
+
+                async () => {
+
+                    if (logoutInProgress) return;
+
+                    logoutInProgress = true;
+
+                    logoutButton.disabled = true;
+
+                    closeProtectedDialogs();
+
+                    content.hidden = true;
+
+                    loading.hidden = false;
+
+                    loadingSpinner.hidden = false;
+
+                    loadingMessage.textContent =
+
+                        "Signing out securely...";
+
+
+                    try {
+
+                        await logoutUser();
+
+                    } catch (error) {
+
+                        console.error(
+
+                            "Calendar sign-out failed:",
+
+                            error
+
+                        );
+
+                        showInitializationError(
+
+                            "Sign-out could not be completed. " +
+
+                            "Return to the Dashboard and try again."
+
+                        );
+
+                    } finally {
+
+                        logoutInProgress = false;
+
+                        logoutButton.disabled = false;
+
+                    }
+
+                }
+
+            );
+
+
+            protectPage({
+
+                contentSelector: "#protectedContent",
+
+                loadingSelector: "#authLoading",
+
+                allowedRoles: ["admin"],
+
+
+                onAuthenticated: async (user, profile) => {
+
+                    if (
+
+                        !user?.uid ||
+
+                        !profile ||
+
+                        profile.uid !== user.uid ||
+
+                        profile.active !== true ||
+
+                        profile.role !== "admin"
+
+                    ) {
+
+                        throw new Error(
+
+                            "Administrator authorization required."
+
+                        );
+
+                    }
+
+
+                    /*
+                     * Never reuse confidential application
+                     * state for a different Firebase user.
+                     */
+
+                    if (
+
+                        activeUserId &&
+
+                        activeUserId !== user.uid
+
+                    ) {
+
+                        closeProtectedDialogs();
+
+                        throw new Error(
+
+                            "Authentication session changed. " +
+
+                            "Please sign in again."
+
+                        );
+
+                    }
+
+
+                    activeUserId = user.uid;
+
+
+                    loadingSpinner.hidden = false;
+
+                    loadingMessage.textContent =
+
+                        "Initialising authorized Hearing Calendar...";
+
+
+                    document.getElementById(
+
+                        "staffName"
+
+                    ).textContent =
+
+                        profile.name || "Administrator";
+
+
+                    document.getElementById(
+
+                        "currentYear"
+
+                    ).textContent =
+
+                        new Intl.DateTimeFormat("en-IN", {
+
+                            year: "numeric",
+
+                            timeZone: "Asia/Kolkata"
+
+                        }).format(new Date());
+
+
+                    /*
+                     * Initialize the application only once
+                     * for the current authenticated user.
+                     */
+
+                    if (!applicationPromise) {
+
+                        applicationPromise = (async () => {
+
+                            const {
+
+                                initialiseCalendarSystem
+
+                            } = await import("./calendar.js");
+
+
+                            await initialiseCalendarSystem(user);
+
+                        })();
+
+                    }
+
+
+                    try {
+
+                        await applicationPromise;
+
+                    } catch (error) {
+
+                        applicationPromise = null;
+
+                        console.error(
+
+                            "Hearing Calendar initialization failed:",
+
+                            error
+
+                        );
+
+                        showInitializationError(
+
+                            "Unable to initialise Hearing Calendar."
+
+                        );
+
+                        throw error;
+
+                    }
+
+
+                    /*
+                     * Reverify authorization before
+                     * protectPage reveals the interface.
+                     */
+
+                    const verifiedProfile =
+
+                        await verifyStaffAccess(user);
+
+
+                    if (
+
+                        auth.currentUser?.uid !== user.uid ||
+
+                        verifiedProfile.uid !== user.uid ||
+
+                        verifiedProfile.active !== true ||
+
+                        verifiedProfile.role !== "admin"
+
+                    ) {
+
+                        throw new Error(
+
+                            "Administrator authorization failed."
+
+                        );
+
+                    }
+
+
+                    document.getElementById(
+
+                        "staffName"
+
+                    ).textContent =
+
+                        verifiedProfile.name || "Administrator";
+
+
+                    loadingMessage.textContent =
+
+                        "Verifying secure access...";
+
+                }
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+
+                "Hearing Calendar authentication error:",
+
+                error
+
+            );
+
+            showInitializationError(
+
+                "Unable to verify secure access. " +
+
+                "Please return to the Dashboard."
+
+            );
+
+        }
+
+    }
+
+
+    /*
+     * Hide confidential content before the browser
+     * stores a page in its back-forward cache.
+     */
+
+    window.addEventListener("pagehide", () => {
+
+        closeProtectedDialogs();
+
+        content.hidden = true;
+
+        loading.hidden = false;
+
+    });
+
+
+    /*
+     * Reinitialize only when restored from the
+     * browser's back-forward cache.
+     *
+     * This is not tied to Firebase snapshot changes.
+     */
+
+    window.addEventListener("pageshow", event => {
+
+        if (event.persisted) {
+
+            content.hidden = true;
+
+            loading.hidden = false;
+
+            window.location.reload();
+
+        }
+
+    });
+
+
+    initialiseCalendarApplication();
+
+</script>
+
+</body>
+
+</html>
