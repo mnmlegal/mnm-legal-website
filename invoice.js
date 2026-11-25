@@ -1,5 +1,8 @@
 
 
+
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    PROFESSIONAL CLOUD INVOICE MANAGEMENT SYSTEM
@@ -532,50 +535,88 @@ const LEGAL_PARTICULARS = [
 "Affidavit Drafting", "Declaration Drafting", "Indemnity Bond Drafting", "Undertaking Drafting", "Memorandum of Understanding", "Settlement Agreement Drafting", "Partnership Deed Drafting", "LLP Agreement Drafting", "Commercial Agreement Drafting", "Employment Agreement Drafting", "Non-Disclosure Agreement", "Contract Review", "Trademark Application Assistance", "Copyright Legal Advisory", "Copyright Infringement Notice", "Business Registration Assistance", "MSME Registration Assistance", "GST Registration Assistance", "Shop and Establishment Registration Assistance", "FSSAI Registration Assistance", "Company Incorporation Assistance",
 "High Court Appearance", "District Court Appearance", "Family Court Appearance", "Magistrate Court Appearance", "Tribunal Appearance", "Court Hearing Professional Fees", "Petition Drafting", "Application Drafting", "Vakalatnama Preparation", "Document Compilation", "Court Filing Assistance", "Certified Copy Assistance", "Court Fee Reimbursement", "Travel Expense Reimbursement", "Printing and Documentation Expenses", "Postal and Courier Expenses", "Professional Fees – Part Payment", "Professional Fees – Final Payment"
 ];
-function attachParticularSuggestions(field) {
-    const wrapper = document.createElement('div');
-    wrapper.style.position = 'relative';
-    field.before(wrapper); wrapper.append(field);
+// Shared inline suggestions: no floating overlay or native datalist.
+function attachSuggestions(field, search, select) {
+    if (!field || field.dataset.mnmSuggestions) return;
+    field.dataset.mnmSuggestions = '1';
     const panel = document.createElement('div');
-    panel.hidden = true;
-    panel.style.cssText = 'position:static;width:100%;margin-top:4px;z-index:50;background:#fff;color:#263345;border:1px solid #c3a16b;border-radius:6px;box-shadow:0 5px 18px #0002;max-height:240px;overflow:auto;text-align:left;';
-    wrapper.append(panel);
-    let active = -1, matches = [];
-    const close = () => {panel.hidden = true; panel.style.display = 'none'; active = -1;};
-    close();
-    function choose(text) {
-        field.value = text; close();
-        field.dispatchEvent(new Event('input', {bubbles:true}));
-        close(); field.focus(); close();
-    }
-    function render() {
+    panel.style.cssText = 'display:none;position:relative;width:100%;max-height:230px;overflow-y:auto;background:white;border:1px solid #c3a16b;border-radius:6px;margin-top:4px;text-align:left;';
+    field.after(panel);
+    let generation = 0;
+    function close() { generation++; panel.style.display = 'none'; panel.replaceChildren(); }
+    async function render() {
+        const token = ++generation;
         const q = field.value.trim().toLowerCase();
-        const words = q.split(/\s+/).filter(Boolean);
-        const history = (Array.isArray(cloudRecords) ? cloudRecords : []).flatMap(r => (Array.isArray(r?.items) ? r.items : []).map(i => String(i?.description ?? i?.particular ?? '').trim())).filter(s => s && s.length <= 180 && !/[\r\n]/.test(s));
-        const unique = new Map();
-        for (const s of [...LEGAL_PARTICULARS, ...history]) if (!unique.has(s.toLowerCase())) unique.set(s.toLowerCase(),s);
-        matches = [...unique.values()].filter(s => words.every(w => s.toLowerCase().includes(w))).sort((a,b) => Number(b.toLowerCase().startsWith(q))-Number(a.toLowerCase().startsWith(q))).slice(0,12);
-        panel.replaceChildren(); active = -1;
-        for (const s of matches) {
-            const b = document.createElement('button'); b.type='button'; b.textContent=s;
-            b.style.cssText='display:block;width:100%;padding:9px 10px;text-align:left;background:white;color:#263345;border:0;border-bottom:1px solid #eee;cursor:pointer;font:inherit;white-space:normal;';
-            b.addEventListener('pointerdown', e => e.preventDefault());
-            b.addEventListener('click', () => choose(s)); panel.append(b);
+        if (!q) { close(); return; }
+        try {
+            const results = await search(q);
+            if (token !== generation || document.activeElement !== field || !field.isConnected) return;
+            panel.replaceChildren();
+            for (const result of results.slice(0,12)) {
+                const button = document.createElement('button');
+                button.type = 'button'; button.textContent = result.label;
+                button.style.cssText = 'display:block;width:100%;padding:10px;background:white;color:#263345;text-align:left;border:0;border-bottom:1px solid #ddd;white-space:normal;cursor:pointer;font:inherit;';
+                button.addEventListener('mousedown', e => e.preventDefault());
+                button.addEventListener('click', () => { select(result); close(); dirty = true; updatePreview(); });
+                panel.append(button);
+            }
+            panel.style.display = results.length ? 'block' : 'none';
+        } catch (error) {
+            if (token !== generation) return;
+            panel.textContent = 'Unable to load suggestions. Manual entry is available.';
+            panel.style.display = 'block'; console.error('MNM suggestions:', error);
         }
-        panel.hidden = !matches.length;
-        panel.style.display = matches.length ? 'block' : 'none';
     }
     field.addEventListener('input', render);
     field.addEventListener('focus', render);
-    wrapper.addEventListener('focusout', e => {if (!wrapper.contains(e.relatedTarget)) close();});
-    field.addEventListener('keydown', e => {
-        if(e.key==='Escape'){close();return;}
-        if(panel.hidden || !matches.length)return;
-        if(e.key==='ArrowDown'||e.key==='ArrowUp'){
-            e.preventDefault(); active=(active+(e.key==='ArrowDown'?1:active<0?0:-1)+matches.length)%matches.length;
-            [...panel.children].forEach((b,i)=>b.style.background=i===active?'#f1e7d4':'white');
-            panel.children[active].scrollIntoView({block:'nearest'});
-        } else if(e.key==='Enter' && active>=0){e.preventDefault();choose(matches[active]);}
+    field.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== field && !panel.contains(document.activeElement)) close(); }, 180));
+    field.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+}
+function attachParticularSuggestions(field) {
+    attachSuggestions(field, q => LEGAL_PARTICULARS.filter(s => q.split(/\s+/).every(w => s.toLowerCase().includes(w))).map(s => ({label:s})), result => { field.value = result.label; });
+}
+let clientCache = null, clientCacheTime = 0, clientRequest = null;
+let selectedClientId = null;
+let pendingClientId = null;
+async function resolveBillingClient(data) {
+    const api = await import('./clients-cloud.js');
+    const input = {fullName:data.clientName, mobile:data.clientPhone, email:data.clientEmail, address:data.clientAddress, clientType:'individual', status:'active', referenceSource:'Invoice Generator'};
+    const normalized = api.validateClientData(input);
+    const records = await api.fetchClients({includeArchived:true});
+    const norm = v => String(v || '').trim().replace(/\s+/g,' ').toLowerCase();
+    const chosen = records.find(c => c.id === selectedClientId || c.id === pendingClientId);
+    if (chosen) {
+        if (chosen.status === 'archived' || norm(chosen.fullName) !== norm(input.fullName)) throw new Error('Client selection has changed. Start a new invoice or select the correct client.');
+        return chosen;
+    }
+    const matches = await api.findDuplicateClients(normalized);
+    if (matches.length) throw new Error('Possible existing client: ' + matches.map(c => c.fullName + ' (' + c.clientCode + ')').join(', ') + '. Select the registered client from suggestions, or review the Client Directory before saving.');
+    if (!window.confirm('Register ' + input.fullName + ' as a new active client and save this invoice?')) return null;
+    pendingClientId = pendingClientId || api.generateClientId();
+    const client = await api.createClient(normalized, pendingClientId);
+    selectedClientId = client.id;
+    clientCache = null;
+    return client;
+}
+async function searchRegisteredClients(q) {
+    if (!clientCache || Date.now() - clientCacheTime > 60000) {
+        if (!clientRequest) clientRequest = (async () => {
+            const {fetchClients} = await import('./clients-cloud.js');
+            clientCache = await fetchClients({includeArchived:false});
+            clientCacheTime = Date.now();
+        })().finally(() => { clientRequest = null; });
+        await clientRequest;
+    }
+    return clientCache.filter(c => c.fullName && [c.fullName,c.mobile,c.clientCode].some(v => String(v ?? '').toLowerCase().includes(q))).map(c => ({client:c,label:[c.fullName,c.clientCode,c.mobile].filter(Boolean).join(' · ')}));
+}
+function attachClientSuggestions() {
+    $('clientName').addEventListener('input', () => { selectedClientId = null; });
+    attachSuggestions($('clientName'), searchRegisteredClients, ({client:c}) => {
+        selectedClientId = c.id;
+        set('clientName', c.fullName);
+        set('clientPhone', c.mobile || c.alternateMobile || '');
+        set('clientEmail', c.email || '');
+        set('clientAddress', [...new Set([c.address,c.city,c.state,c.pinCode].map(v => String(v ?? '').trim()).filter(Boolean))].join(', '));
     });
 }
 
@@ -1171,6 +1212,11 @@ async function saveInvoice(event) {
         );
 
         let saved;
+        let billingClient = null;
+        if (!isEditing) {
+            billingClient = await resolveBillingClient(data);
+            if (!billingClient) return;
+        }
 
         if (isEditing) {
 
@@ -1230,11 +1276,19 @@ async function saveInvoice(event) {
 
         updatePreview();
         refreshRecords();
-
-        message(
-            "Invoice " + saved.invoiceNo +
-            " successfully saved to Firebase Cloud."
-        );
+        if (billingClient) {
+            try {
+                const {linkInvoice} = await import('./finance-cloud.js');
+                await linkInvoice(saved.id, billingClient.id);
+                message('Invoice ' + saved.invoiceNo + ' saved and linked to ' + billingClient.clientCode + '.');
+            } catch (linkError) {
+                console.error('Invoice association failed:', linkError);
+                message('Invoice and client saved, but linking failed. Link this saved invoice in Financial Management. Do not create another invoice.', 'error');
+                window.alert('Invoice and client saved. Association failed: ' + linkError.message + '\nLink the saved invoice in Financial Management. Do not create another invoice.');
+            }
+        } else {
+            message('Invoice ' + saved.invoiceNo + ' successfully saved to Firebase Cloud.');
+        }
 
     } catch (error) {
 
@@ -1271,6 +1325,9 @@ async function saveInvoice(event) {
    ========================================================= */
 
 function resetForm() {
+
+    selectedClientId = null;
+    pendingClientId = null;
 
     editingId = null;
     originalRecord = null;
@@ -2230,6 +2287,7 @@ export async function initialiseInvoiceSystem(user) {
     resetForm();
 
     bindEvents();
+    attachClientSuggestions();
 
     refreshRecords();
 
@@ -2250,3 +2308,7 @@ export async function initialiseInvoiceSystem(user) {
    Version 5.0
    Justice, Integrity & Excellence
    ========================================================= */
+
+
+
+
