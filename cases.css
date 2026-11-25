@@ -1,0 +1,4250 @@
+
+/* =========================================================
+   MNM LEGAL ASSOCIATES
+   LEGAL PRACTICE MANAGEMENT SYSTEM
+
+   CASE MANAGEMENT STYLESHEET
+   Version 1.0
+
+   Justice, Integrity & Excellence
+   ========================================================= */
+
+
+/* =========================================================
+   01. SHARED DESIGN FOUNDATION
+   ========================================================= */
+
+@import url("./clients.css");
+
+
+/* =========================================================
+   02. CASE MANAGEMENT DESIGN VARIABLES
+   ========================================================= */
+
+:root {
+
+    --case-purple: #6941a5;
+    --case-purple-light: #f2edfc;
+
+    --case-teal: #167d86;
+    --case-teal-light: #e8f7f7;
+
+    --case-orange: #b45309;
+    --case-orange-light: #fff3e5;
+
+    --case-grey: #667085;
+    --case-grey-light: #f0f2f5;
+
+    --case-red: #b42332;
+    --case-red-light: #fff0f1;
+
+    --case-green: #24734b;
+    --case-green-light: #eaf6ef;
+
+    --case-blue: #285b98;
+    --case-blue-light: #edf4ff;
+
+}
+
+
+/* =========================================================
+   03. APPLICATION LAYOUT
+   ========================================================= */
+
+.app-container {
+
+    width: 100%;
+
+    max-width: 1680px;
+
+    margin-left: auto;
+
+    margin-right: auto;
+
+    padding: 30px 4% 45px;
+
+}
+
+.module-panel,
+.profile-panel {
+
+    min-width: 0;
+
+    animation: caseFadeIn 180ms ease;
+
+}
+
+@keyframes caseFadeIn {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateY(3px);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: translateY(0);
+
+    }
+
+}
+
+.content-card {
+
+    min-width: 0;
+
+    margin-bottom: 22px;
+
+}
+
+.card-heading {
+
+    flex-wrap: wrap;
+
+}
+
+.card-heading > div {
+
+    min-width: 0;
+
+}
+
+.card-heading h2 > i {
+
+    color: var(--gold-dark);
+
+    margin-right: 6px;
+
+}
+
+.page-heading h1 {
+
+    letter-spacing: -0.5px;
+
+}
+
+.card-actions {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-top: 20px;
+
+}
+
+
+/* =========================================================
+   04. MODULE NAVIGATION
+   ========================================================= */
+
+.module-navigation {
+
+    margin-bottom: 25px;
+
+}
+
+.module-tabs {
+
+    display: flex;
+
+    flex-wrap: nowrap;
+
+    align-items: stretch;
+
+    gap: 5px;
+
+    overflow-x: auto;
+
+    scrollbar-width: thin;
+
+    -webkit-overflow-scrolling: touch;
+
+}
+
+.module-tab {
+
+    flex: 1 0 auto;
+
+    min-height: 48px;
+
+    padding: 13px 18px;
+
+    white-space: nowrap;
+
+    font-weight: 600;
+
+    touch-action: manipulation;
+
+}
+
+.module-tab > i {
+
+    margin-right: 5px;
+
+}
+
+.module-tab.active {
+
+    color: var(--navy);
+
+    font-weight: 700;
+
+}
+
+
+/* =========================================================
+   05. CASE STATISTICS
+   ========================================================= */
+
+.statistics-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    gap: 18px;
+
+    margin-bottom: 25px;
+
+}
+
+.stat-card {
+
+    position: relative;
+
+    min-width: 0;
+
+    min-height: 155px;
+
+    padding: 22px;
+
+    overflow: hidden;
+
+    transition:
+
+        transform var(--transition),
+
+        box-shadow var(--transition),
+
+        border-color var(--transition);
+
+}
+
+.stat-card::after {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+
+    right: 0;
+
+    width: 65px;
+
+    height: 65px;
+
+    background: var(--gold-light);
+
+    border-radius: 0 0 0 100%;
+
+    opacity: 0.3;
+
+    pointer-events: none;
+
+}
+
+@media (hover: hover) {
+
+    .stat-card:hover {
+
+        transform: translateY(-3px);
+
+        border-color: var(--gold);
+
+        box-shadow: var(--shadow);
+
+    }
+
+}
+
+.stat-card > span {
+
+    display: block;
+
+    margin-top: 12px;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: var(--muted);
+
+}
+
+.stat-card > strong {
+
+    display: block;
+
+    margin: 5px 0;
+
+    font-size: 34px;
+
+    line-height: 1.2;
+
+    font-weight: 700;
+
+    color: var(--navy);
+
+    font-variant-numeric: tabular-nums;
+
+}
+
+.stat-card > small {
+
+    display: block;
+
+    font-size: 11px;
+
+    color: var(--muted);
+
+}
+
+.stat-icon {
+
+    position: relative;
+
+    z-index: 1;
+
+}
+
+.stat-icon.stat-hearing {
+
+    background: var(--case-purple-light);
+
+    color: var(--case-purple);
+
+}
+
+.stat-icon.stat-urgent,
+
+.stat-icon.stat-danger {
+
+    background: var(--case-red-light);
+
+    color: var(--case-red);
+
+}
+
+.stat-icon.stat-warning {
+
+    background: var(--case-orange-light);
+
+    color: var(--case-orange);
+
+}
+
+.stat-icon.stat-closed {
+
+    background: var(--case-grey-light);
+
+    color: var(--case-grey);
+
+}
+
+.hearing-statistics {
+
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+}
+
+.task-statistics {
+
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+
+}
+
+
+/* =========================================================
+   06. QUICK ACTIONS
+   ========================================================= */
+
+.quick-actions-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    gap: 15px;
+
+}
+
+.quick-action {
+
+    min-width: 0;
+
+    min-height: 145px;
+
+    padding: 22px 16px;
+
+}
+
+.quick-action > i {
+
+    font-size: 25px;
+
+    color: var(--gold-dark);
+
+}
+
+.quick-action > strong {
+
+    font-size: 14px;
+
+}
+
+.quick-action > span {
+
+    font-size: 12px;
+
+    line-height: 1.6;
+
+}
+
+
+/* =========================================================
+   07. IMPORTANT CASE ALERTS
+   ========================================================= */
+
+.alerts-list {
+
+    display: grid;
+
+    gap: 12px;
+
+}
+
+.alerts-list:empty {
+
+    display: none;
+
+}
+
+.case-alert,
+.alert-item,
+.alert-card {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+
+    padding: 16px 18px;
+
+    border: 1px solid var(--border);
+
+    border-left: 4px solid var(--gold);
+
+    border-radius: var(--radius);
+
+    background: var(--surface-muted);
+
+}
+
+.case-alert > i,
+.alert-item > i,
+.alert-card > i {
+
+    flex-shrink: 0;
+
+    font-size: 21px;
+
+    color: var(--gold-dark);
+
+}
+
+.alert-content,
+.alert-details,
+.alert-body {
+
+    flex: 1;
+
+    min-width: 0;
+
+}
+
+.alert-content h3,
+.alert-details h3,
+.alert-body h3 {
+
+    margin: 0 0 4px;
+
+    font-size: 14px;
+
+    overflow-wrap: anywhere;
+
+}
+
+.alert-content p,
+.alert-details p,
+.alert-body p {
+
+    margin: 0;
+
+    font-size: 12px;
+
+    color: var(--muted);
+
+    overflow-wrap: anywhere;
+
+}
+
+.case-alert.urgent,
+.case-alert.danger,
+.case-alert.overdue,
+.alert-item.urgent,
+.alert-item.danger,
+.alert-item.overdue,
+.alert-card.urgent,
+.alert-card.danger,
+.alert-card.overdue {
+
+    background: var(--danger-light);
+
+    border-color: #f3c9cf;
+
+    border-left-color: var(--danger);
+
+}
+
+.case-alert.warning,
+.alert-item.warning,
+.alert-card.warning {
+
+    background: var(--warning-light);
+
+    border-color: #ead6af;
+
+    border-left-color: var(--warning);
+
+}
+
+.case-alert.info,
+.alert-item.info,
+.alert-card.info {
+
+    background: var(--info-light);
+
+    border-color: #cbdcf5;
+
+    border-left-color: var(--info);
+
+}
+
+.alert-date {
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    font-variant-numeric: tabular-nums;
+
+}
+
+
+/* =========================================================
+   08. CASE DIRECTORY FILTERS
+   ========================================================= */
+
+.directory-toolbar {
+
+    display: grid;
+
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    align-items: end;
+
+    gap: 15px;
+
+    margin-bottom: 20px;
+
+}
+
+.directory-toolbar > .search-field {
+
+    grid-column: span 2;
+
+}
+
+.directory-toolbar > .button {
+
+    min-height: 43px;
+
+    width: 100%;
+
+}
+
+.directory-toolbar select {
+
+    width: 100%;
+
+    min-width: 0;
+
+}
+
+.directory-toolbar label {
+
+    font-size: 12px;
+
+}
+
+#caseSearch {
+
+    min-width: 0;
+
+    width: 100%;
+
+}
+
+.directory-result-bar {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+}
+
+#caseResultCount {
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+}
+
+
+/* =========================================================
+   09. CASE TABLES
+   ========================================================= */
+
+.table-wrapper {
+
+    width: 100%;
+
+    max-width: 100%;
+
+    overflow-x: auto;
+
+    -webkit-overflow-scrolling: touch;
+
+    scrollbar-width: thin;
+
+}
+
+.data-table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+}
+
+.case-table {
+
+    min-width: 1160px;
+
+}
+
+.data-table th {
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.3px;
+
+}
+
+.data-table td {
+
+    vertical-align: middle;
+
+    font-size: 13px;
+
+}
+
+.data-table td:first-child {
+
+    font-variant-numeric: tabular-nums;
+
+}
+
+.data-table td .button {
+
+    white-space: nowrap;
+
+}
+
+.case-table th:nth-child(2),
+
+.case-table td:nth-child(2) {
+
+    min-width: 210px;
+
+    max-width: 340px;
+
+}
+
+.case-table th:nth-child(3),
+
+.case-table td:nth-child(3) {
+
+    min-width: 150px;
+
+}
+
+.case-table th:nth-child(4),
+
+.case-table td:nth-child(4) {
+
+    min-width: 175px;
+
+}
+
+.case-code {
+
+    display: inline-block;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    color: var(--gold-dark);
+
+    white-space: nowrap;
+
+}
+
+.case-title,
+.case-name {
+
+    display: block;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    color: var(--navy);
+
+    line-height: 1.6;
+
+    overflow-wrap: anywhere;
+
+}
+
+.case-title-link {
+
+    border: 0;
+
+    background: transparent;
+
+    color: var(--navy);
+
+    font-weight: 700;
+
+    padding: 0;
+
+    text-align: left;
+
+    line-height: 1.6;
+
+    overflow-wrap: anywhere;
+
+}
+
+.case-title-link:hover {
+
+    color: var(--gold-dark);
+
+    text-decoration: underline;
+
+}
+
+.case-secondary,
+.table-secondary,
+.case-subtitle,
+.cell-secondary {
+
+    display: block;
+
+    margin-top: 4px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+
+    line-height: 1.5;
+
+    overflow-wrap: anywhere;
+
+}
+
+.table-actions,
+.row-actions {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    align-items: center;
+
+    gap: 7px;
+
+}
+
+.table-actions .button,
+.row-actions .button {
+
+    min-height: 34px;
+
+    padding: 7px 11px;
+
+    font-size: 11px;
+
+}
+
+.table-actions .icon-button,
+.row-actions .icon-button {
+
+    width: 34px;
+
+    min-width: 34px;
+
+    height: 34px;
+
+    min-height: 34px;
+
+}
+
+.date-cell {
+
+    white-space: nowrap;
+
+    font-variant-numeric: tabular-nums;
+
+}
+
+.text-danger,
+.date-overdue {
+
+    color: var(--danger);
+
+    font-weight: 600;
+
+}
+
+.text-success {
+
+    color: var(--success);
+
+}
+
+.text-warning {
+
+    color: var(--warning);
+
+}
+
+.text-muted {
+
+    color: var(--muted);
+
+}
+
+
+/* =========================================================
+   10. CASE STATUS BADGES
+   ========================================================= */
+
+.status-badge,
+.priority-badge,
+.task-status-badge,
+.deadline-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    width: fit-content;
+
+    max-width: 100%;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    line-height: 1.5;
+
+    white-space: nowrap;
+
+    background: var(--case-grey-light);
+
+    color: var(--case-grey);
+
+}
+
+.status-badge.status-pre_litigation,
+.status-badge.status-pre-litigation,
+.status-badge[data-status="pre_litigation"] {
+
+    background: var(--case-purple-light);
+
+    color: var(--case-purple);
+
+}
+
+.status-badge.status-drafting,
+.status-badge[data-status="drafting"] {
+
+    background: var(--case-orange-light);
+
+    color: var(--case-orange);
+
+}
+
+.status-badge.status-ready_for_filing,
+.status-badge.status-ready-for-filing,
+.status-badge[data-status="ready_for_filing"] {
+
+    background: var(--case-teal-light);
+
+    color: var(--case-teal);
+
+}
+
+.status-badge.status-filed,
+.status-badge[data-status="filed"] {
+
+    background: var(--case-blue-light);
+
+    color: var(--case-blue);
+
+}
+
+.status-badge.status-pending,
+.status-badge[data-status="pending"] {
+
+    background: var(--case-green-light);
+
+    color: var(--case-green);
+
+}
+
+.status-badge.status-stayed,
+.status-badge[data-status="stayed"] {
+
+    background: var(--case-orange-light);
+
+    color: var(--case-orange);
+
+}
+
+.status-badge.status-reserved_for_judgment,
+.status-badge.status-reserved-for-judgment,
+.status-badge[data-status="reserved_for_judgment"] {
+
+    background: var(--case-purple-light);
+
+    color: var(--case-purple);
+
+}
+
+.status-badge.status-disposed,
+.status-badge[data-status="disposed"],
+
+.status-badge.status-settled,
+.status-badge[data-status="settled"] {
+
+    background: var(--case-green-light);
+
+    color: var(--case-green);
+
+}
+
+.status-badge.status-withdrawn,
+.status-badge[data-status="withdrawn"] {
+
+    background: var(--case-orange-light);
+
+    color: var(--case-orange);
+
+}
+
+.status-badge.status-closed,
+.status-badge[data-status="closed"],
+
+.status-badge.status-archived,
+.status-badge[data-status="archived"] {
+
+    background: var(--case-grey-light);
+
+    color: var(--case-grey);
+
+}
+
+
+/* =========================================================
+   11. CASE PRIORITY INDICATORS
+   ========================================================= */
+
+.priority-badge.priority-normal,
+.priority-badge[data-priority="normal"] {
+
+    background: var(--case-grey-light);
+
+    color: var(--case-grey);
+
+}
+
+.priority-badge.priority-high,
+.priority-badge[data-priority="high"] {
+
+    background: var(--case-orange-light);
+
+    color: var(--case-orange);
+
+}
+
+.priority-badge.priority-urgent,
+.priority-badge[data-priority="urgent"] {
+
+    background: var(--case-red-light);
+
+    color: var(--case-red);
+
+}
+
+.priority-badge.priority-urgent::before,
+.priority-badge[data-priority="urgent"]::before {
+
+    content: "";
+
+    width: 6px;
+
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: currentColor;
+
+}
+
+
+/* =========================================================
+   12. REGISTRATION FORM
+   ========================================================= */
+
+#caseForm {
+
+    display: block;
+
+    width: 100%;
+
+}
+
+#caseForm > .content-card {
+
+    margin-bottom: 22px;
+
+}
+
+.form-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 20px;
+
+}
+
+.form-grid > * {
+
+    min-width: 0;
+
+}
+
+.form-grid .full-width {
+
+    grid-column: 1 / -1;
+
+}
+
+.form-group {
+
+    min-width: 0;
+
+}
+
+.form-group label {
+
+    display: block;
+
+    margin-bottom: 7px;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: var(--navy);
+
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+
+    width: 100%;
+
+    min-width: 0;
+
+}
+
+.form-group textarea {
+
+    resize: vertical;
+
+    line-height: 1.75;
+
+}
+
+.form-group input[type="date"] {
+
+    min-height: 43px;
+
+    max-width: 100%;
+
+}
+
+.form-group input[readonly] {
+
+    background: var(--surface-muted);
+
+    color: var(--gold-dark);
+
+    font-weight: 700;
+
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+
+    border-color: var(--gold-dark);
+
+    box-shadow: 0 0 0 3px rgba(195, 161, 107, 0.14);
+
+}
+
+#cnrNumber {
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.8px;
+
+    font-variant-numeric: tabular-nums;
+
+}
+
+#caseCode {
+
+    letter-spacing: 0.3px;
+
+}
+
+.field-help a {
+
+    color: var(--gold-dark);
+
+    text-decoration: underline;
+
+    text-underline-offset: 3px;
+
+}
+
+#briefFacts,
+#legalStrategy,
+#reliefsSought,
+#pendingWork,
+#notes {
+
+    font-size: 14px;
+
+    line-height: 1.8;
+
+}
+
+
+/* =========================================================
+   13. SELECTED CLIENT SUMMARY
+   ========================================================= */
+
+.client-summary {
+
+    padding: 18px 20px;
+
+    background: var(--gold-light);
+
+    border: 1px solid #e5d7bd;
+
+    border-radius: var(--radius);
+
+    color: var(--navy);
+
+    overflow-wrap: anywhere;
+
+}
+
+.client-summary strong {
+
+    color: var(--navy);
+
+}
+
+.client-summary p {
+
+    margin: 4px 0;
+
+    font-size: 13px;
+
+}
+
+.client-summary-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 15px;
+
+}
+
+.client-summary-grid > div {
+
+    min-width: 0;
+
+}
+
+.client-summary-grid span {
+
+    display: block;
+
+    font-size: 11px;
+
+    color: var(--gold-dark);
+
+}
+
+.client-summary-grid strong {
+
+    display: block;
+
+    margin-top: 3px;
+
+    font-size: 13px;
+
+    overflow-wrap: anywhere;
+
+}
+
+
+/* =========================================================
+   14. CONFIDENTIAL INFORMATION CARDS
+   ========================================================= */
+
+.confidential-card {
+
+    border-top: 3px solid var(--gold);
+
+}
+
+.confidential-card .card-heading h2 > i {
+
+    color: var(--gold-dark);
+
+}
+
+.confidential-label {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    color: var(--gold-dark);
+
+}
+
+.profile-notes {
+
+    min-height: 55px;
+
+    padding: 18px;
+
+    background: var(--surface-muted);
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius-sm);
+
+    font-size: 14px;
+
+    line-height: 1.85;
+
+    white-space: pre-wrap;
+
+    overflow-wrap: anywhere;
+
+}
+
+
+/* =========================================================
+   15. INFORMATION AND WARNING BOXES
+   ========================================================= */
+
+.information-note {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 12px;
+
+    padding: 15px 18px;
+
+    margin-top: 18px;
+
+    margin-bottom: 18px;
+
+    border-radius: var(--radius-sm);
+
+}
+
+.information-note > i {
+
+    margin-top: 3px;
+
+    flex-shrink: 0;
+
+}
+
+.information-note p {
+
+    margin: 0;
+
+    font-size: 12px;
+
+    line-height: 1.75;
+
+}
+
+.warning-card {
+
+    padding: 18px;
+
+    margin-top: 18px;
+
+    margin-bottom: 18px;
+
+    overflow-wrap: anywhere;
+
+}
+
+.warning-card h3 {
+
+    font-size: 14px;
+
+}
+
+.warning-card p:last-child {
+
+    margin-bottom: 0;
+
+}
+
+.duplicate-case,
+.duplicate-client {
+
+    padding: 13px 15px;
+
+    margin-top: 10px;
+
+    border: 1px solid #e8d6b4;
+
+    border-radius: var(--radius-sm);
+
+    background: rgba(255, 255, 255, 0.65);
+
+}
+
+.duplicate-case strong {
+
+    display: block;
+
+    color: var(--navy);
+
+    overflow-wrap: anywhere;
+
+}
+
+
+/* =========================================================
+   16. CASE PROFILE HEADER
+   ========================================================= */
+
+.profile-toolbar {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    flex-wrap: wrap;
+
+    gap: 15px;
+
+    margin-bottom: 20px;
+
+}
+
+.profile-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+}
+
+.profile-header {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 22px;
+
+    min-width: 0;
+
+    padding: 28px;
+
+    margin-bottom: 22px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+
+    border-top: 3px solid var(--gold);
+
+    border-radius: var(--radius-lg);
+
+    box-shadow: var(--shadow-sm);
+
+}
+
+.profile-avatar {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 82px;
+
+    height: 82px;
+
+    border-radius: 14px;
+
+    background: var(--navy);
+
+    color: var(--gold);
+
+    font-size: 32px;
+
+}
+
+.profile-heading {
+
+    flex: 1;
+
+    min-width: 0;
+
+}
+
+.profile-code {
+
+    display: block;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.4px;
+
+    color: var(--gold-dark);
+
+}
+
+.profile-heading h2 {
+
+    margin: 6px 0 10px;
+
+    font-family: var(--heading-font);
+
+    font-size: clamp(19px, 2vw, 26px);
+
+    line-height: 1.5;
+
+    overflow-wrap: anywhere;
+
+}
+
+.profile-meta {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    align-items: center;
+
+    gap: 10px;
+
+    font-size: 12px;
+
+    color: var(--muted);
+
+}
+
+.profile-registration {
+
+    flex-shrink: 0;
+
+    padding-left: 20px;
+
+    border-left: 1px solid var(--border);
+
+}
+
+.profile-registration span {
+
+    display: block;
+
+    font-size: 11px;
+
+    color: var(--muted);
+
+}
+
+.profile-registration strong {
+
+    display: block;
+
+    margin-top: 5px;
+
+    color: var(--navy);
+
+    font-size: 13px;
+
+}
+
+
+/* =========================================================
+   17. CASE PROFILE SUB-NAVIGATION
+   ========================================================= */
+
+.profile-navigation {
+
+    margin-bottom: 24px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow-sm);
+
+    overflow: hidden;
+
+}
+
+.profile-tabs {
+
+    display: flex;
+
+    flex-wrap: nowrap;
+
+    align-items: stretch;
+
+    gap: 0;
+
+    overflow-x: auto;
+
+    scrollbar-width: thin;
+
+    -webkit-overflow-scrolling: touch;
+
+}
+
+.profile-tab {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex: 1 0 auto;
+
+    gap: 8px;
+
+    min-height: 53px;
+
+    padding: 15px 19px;
+
+    background: transparent;
+
+    border: 0;
+
+    border-bottom: 3px solid transparent;
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    transition:
+
+        background var(--transition),
+
+        color var(--transition),
+
+        border-color var(--transition);
+
+}
+
+.profile-tab > i {
+
+    font-size: 13px;
+
+}
+
+.profile-tab:hover {
+
+    color: var(--navy);
+
+    background: var(--surface-muted);
+
+}
+
+.profile-tab.active {
+
+    color: var(--navy);
+
+    background: var(--gold-light);
+
+    border-bottom-color: var(--gold-dark);
+
+    font-weight: 700;
+
+}
+
+
+/* =========================================================
+   18. CASE PROFILE DETAILS
+   ========================================================= */
+
+.profile-details-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 22px;
+
+    margin-bottom: 22px;
+
+}
+
+.profile-details-grid > .content-card {
+
+    margin-bottom: 0;
+
+}
+
+.details-list {
+
+    margin: 0;
+
+}
+
+.details-list > div {
+
+    display: grid;
+
+    grid-template-columns: minmax(110px, 40%) minmax(0, 1fr);
+
+    gap: 14px;
+
+    padding: 12px 0;
+
+    border-bottom: 1px solid var(--border);
+
+}
+
+.details-list > div:last-child {
+
+    border-bottom: 0;
+
+}
+
+.details-list dt {
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+    font-weight: 500;
+
+}
+
+.details-list dd {
+
+    margin: 0;
+
+    color: var(--navy);
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    white-space: pre-wrap;
+
+    overflow-wrap: anywhere;
+
+}
+
+#profileCnrNumber {
+
+    letter-spacing: 0.5px;
+
+    font-variant-numeric: tabular-nums;
+
+}
+
+#profileOppositePartyAddress,
+#profileDisposalOutcome,
+#profileClosureReason {
+
+    line-height: 1.75;
+
+}
+
+
+/* =========================================================
+   19. NEXT HEARING AND DEADLINE CARDS
+   ========================================================= */
+
+.hearing-card {
+
+    border-top: 3px solid var(--gold);
+
+}
+
+.hearing-details-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 15px;
+
+}
+
+.hearing-date-box,
+.hearing-purpose-box,
+.deadline-box {
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    min-width: 0;
+
+    min-height: 130px;
+
+    padding: 20px;
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius);
+
+    background: var(--surface-muted);
+
+}
+
+.hearing-date-box {
+
+    background: var(--case-blue-light);
+
+    border-color: #d4e3f8;
+
+}
+
+.deadline-box {
+
+    background: var(--case-orange-light);
+
+    border-color: #f0dcc0;
+
+}
+
+.hearing-date-box > span,
+.hearing-purpose-box > span,
+.deadline-box > span {
+
+    display: block;
+
+    margin-bottom: 9px;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    color: var(--muted);
+
+}
+
+.hearing-date-box > strong,
+.deadline-box > strong {
+
+    display: block;
+
+    color: var(--navy);
+
+    font-size: 23px;
+
+    font-weight: 700;
+
+    line-height: 1.4;
+
+    font-variant-numeric: tabular-nums;
+
+    overflow-wrap: anywhere;
+
+}
+
+.hearing-purpose-box > strong {
+
+    display: block;
+
+    color: var(--navy);
+
+    font-size: 16px;
+
+    font-weight: 600;
+
+    line-height: 1.6;
+
+    overflow-wrap: anywhere;
+
+}
+
+.hearing-date-box > small,
+.deadline-box > small {
+
+    display: block;
+
+    margin-top: 8px;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+}
+
+.hearing-date-box.overdue,
+.deadline-box.overdue {
+
+    background: var(--danger-light);
+
+    border-color: #efc5cc;
+
+}
+
+.hearing-date-box.today {
+
+    background: var(--success-light);
+
+    border-color: #c7e6d4;
+
+}
+
+.deadline-badge.overdue,
+.deadline-badge[data-status="overdue"] {
+
+    background: var(--danger-light);
+
+    color: var(--danger);
+
+}
+
+.deadline-badge.today,
+.deadline-badge[data-status="today"] {
+
+    background: var(--warning-light);
+
+    color: var(--warning);
+
+}
+
+.deadline-badge.upcoming,
+.deadline-badge[data-status="upcoming"] {
+
+    background: var(--info-light);
+
+    color: var(--info);
+
+}
+
+#hearingsTableBody td:first-child,
+#upcomingHearingsBody td:first-child,
+#deadlinesTableBody td:first-child {
+
+    white-space: nowrap;
+
+    font-weight: 600;
+
+}
+
+
+/* =========================================================
+   20. COURT PROCEEDINGS TIMELINE
+   ========================================================= */
+
+.proceedings-timeline,
+.activity-timeline {
+
+    position: relative;
+
+    min-width: 0;
+
+}
+
+.proceedings-timeline:empty,
+.activity-timeline:empty {
+
+    display: none;
+
+}
+
+.proceeding-item,
+.proceeding-entry,
+.proceeding-card {
+
+    position: relative;
+
+    margin: 0 0 20px 17px;
+
+    padding: 22px;
+
+    border: 1px solid var(--border);
+
+    border-left: 3px solid var(--gold);
+
+    border-radius: var(--radius);
+
+    background: var(--surface);
+
+    overflow-wrap: anywhere;
+
+}
+
+.proceeding-item::before,
+.proceeding-entry::before,
+.proceeding-card::before {
+
+    content: "";
+
+    position: absolute;
+
+    left: -25px;
+
+    top: 26px;
+
+    width: 11px;
+
+    height: 11px;
+
+    border: 2px solid var(--surface);
+
+    border-radius: 50%;
+
+    background: var(--gold-dark);
+
+    box-shadow: 0 0 0 2px var(--gold-light);
+
+}
+
+.proceedings-timeline:not(:empty)::before {
+
+    content: "";
+
+    position: absolute;
+
+    top: 10px;
+
+    bottom: 10px;
+
+    left: 0;
+
+    width: 2px;
+
+    background: var(--border);
+
+}
+
+.proceeding-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    padding-bottom: 14px;
+
+    margin-bottom: 15px;
+
+    border-bottom: 1px solid var(--border);
+
+}
+
+.proceeding-header h3 {
+
+    margin: 0;
+
+    font-size: 16px;
+
+    color: var(--navy);
+
+}
+
+.proceeding-date {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 6px 11px;
+
+    border-radius: var(--radius-sm);
+
+    background: var(--gold-light);
+
+    color: var(--gold-dark);
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    font-variant-numeric: tabular-nums;
+
+}
+
+.proceeding-meta {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 10px 18px;
+
+    margin-bottom: 14px;
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+}
+
+.proceeding-section {
+
+    margin-top: 15px;
+
+}
+
+.proceeding-section h4 {
+
+    margin: 0 0 7px;
+
+    color: var(--navy);
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+}
+
+.proceeding-section p,
+.proceeding-text,
+.proceeding-description,
+.proceeding-details {
+
+    margin: 0;
+
+    color: var(--text);
+
+    font-size: 13px;
+
+    line-height: 1.8;
+
+    white-space: pre-wrap;
+
+    overflow-wrap: anywhere;
+
+}
+
+.proceeding-order,
+.order-summary {
+
+    padding: 15px;
+
+    margin-top: 14px;
+
+    border-left: 3px solid var(--gold);
+
+    border-radius: var(--radius-sm);
+
+    background: var(--surface-muted);
+
+    white-space: pre-wrap;
+
+    overflow-wrap: anywhere;
+
+}
+
+.proceeding-next-hearing {
+
+    display: flex;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    margin-top: 18px;
+
+    padding: 12px 15px;
+
+    border: 1px solid #d4e3f8;
+
+    border-radius: var(--radius-sm);
+
+    background: var(--info-light);
+
+    color: var(--info);
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+}
+
+.proceeding-confidential {
+
+    margin-top: 14px;
+
+    padding: 15px;
+
+    border: 1px solid #e5d7bd;
+
+    border-radius: var(--radius-sm);
+
+    background: var(--gold-light);
+
+    white-space: pre-wrap;
+
+    overflow-wrap: anywhere;
+
+}
+
+.proceeding-footer {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-top: 18px;
+
+    padding-top: 12px;
+
+    border-top: 1px solid var(--border);
+
+    font-size: 11px;
+
+    color: var(--muted);
+
+}
+
+
+/* =========================================================
+   21. TASK MANAGEMENT
+   ========================================================= */
+
+.task-summary-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+
+    gap: 12px;
+
+    margin-bottom: 22px;
+
+}
+
+.task-summary-grid > div {
+
+    padding: 16px;
+
+    min-width: 0;
+
+    text-align: center;
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius);
+
+    background: var(--surface-muted);
+
+}
+
+.task-summary-grid span {
+
+    display: block;
+
+    font-size: 11px;
+
+    color: var(--muted);
+
+    font-weight: 600;
+
+}
+
+.task-summary-grid strong {
+
+    display: block;
+
+    margin-top: 6px;
+
+    font-size: 26px;
+
+    color: var(--navy);
+
+    font-weight: 700;
+
+    font-variant-numeric: tabular-nums;
+
+}
+
+.task-summary-grid > div:nth-child(2) {
+
+    background: var(--warning-light);
+
+}
+
+.task-summary-grid > div:nth-child(3) {
+
+    background: var(--info-light);
+
+}
+
+.task-summary-grid > div:nth-child(4) {
+
+    background: var(--success-light);
+
+}
+
+.task-summary-grid > div:nth-child(5) {
+
+    background: var(--danger-light);
+
+}
+
+.task-title {
+
+    display: block;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    color: var(--navy);
+
+    overflow-wrap: anywhere;
+
+}
+
+.task-description {
+
+    display: block;
+
+    margin-top: 5px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+
+    line-height: 1.6;
+
+    white-space: pre-wrap;
+
+    overflow-wrap: anywhere;
+
+}
+
+.task-status-badge.status-pending,
+.task-status-badge[data-status="pending"],
+.task-status-pending {
+
+    background: var(--warning-light);
+
+    color: var(--warning);
+
+}
+
+.task-status-badge.status-in_progress,
+.task-status-badge.status-in-progress,
+.task-status-badge[data-status="in_progress"],
+.task-status-in_progress,
+.task-status-in-progress,
+.status-badge.status-in_progress,
+.status-badge[data-status="in_progress"] {
+
+    background: var(--info-light);
+
+    color: var(--info);
+
+}
+
+.task-status-badge.status-completed,
+.task-status-badge[data-status="completed"],
+.task-status-completed,
+.status-badge.status-completed,
+.status-badge[data-status="completed"] {
+
+    background: var(--success-light);
+
+    color: var(--success);
+
+}
+
+.task-status-badge.status-cancelled,
+.task-status-badge[data-status="cancelled"],
+.task-status-cancelled,
+.status-badge.status-cancelled,
+.status-badge[data-status="cancelled"] {
+
+    background: var(--case-grey-light);
+
+    color: var(--case-grey);
+
+}
+
+.task-status-badge.status-overdue,
+.task-status-badge[data-status="overdue"],
+.task-status-overdue,
+.status-badge.status-overdue,
+.status-badge[data-status="overdue"] {
+
+    background: var(--danger-light);
+
+    color: var(--danger);
+
+}
+
+.task-overdue td:first-child {
+
+    border-left: 3px solid var(--danger);
+
+}
+
+.task-completed .task-title {
+
+    color: var(--muted);
+
+}
+
+.task-due-date {
+
+    font-variant-numeric: tabular-nums;
+
+    white-space: nowrap;
+
+}
+
+#taskLoadingMessage {
+
+    padding: 12px 15px;
+
+    background: var(--info-light);
+
+    border-radius: var(--radius-sm);
+
+    color: var(--info);
+
+}
+
+
+/* =========================================================
+   22. LINKED CLIENT ASSOCIATIONS
+   ========================================================= */
+
+#linkedClientsTableBody td {
+
+    vertical-align: middle;
+
+}
+
+.linked-client-name {
+
+    display: block;
+
+    font-weight: 700;
+
+    color: var(--navy);
+
+    overflow-wrap: anywhere;
+
+}
+
+.linked-client-code {
+
+    display: block;
+
+    color: var(--gold-dark);
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+}
+
+.linked-client-inactive {
+
+    color: var(--muted);
+
+}
+
+.association-status {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    background: var(--case-grey-light);
+
+    color: var(--case-grey);
+
+}
+
+.association-status.active {
+
+    background: var(--success-light);
+
+    color: var(--success);
+
+}
+
+
+/* =========================================================
+   23. ACTIVITY HISTORY
+   ========================================================= */
+
+.activity-item,
+.timeline-item {
+
+    overflow-wrap: anywhere;
+
+}
+
+.activity-header {
+
+    flex-wrap: wrap;
+
+}
+
+.activity-description,
+.activity-content,
+.activity-text {
+
+    font-size: 13px;
+
+    line-height: 1.75;
+
+    white-space: pre-wrap;
+
+    overflow-wrap: anywhere;
+
+}
+
+.activity-type {
+
+    font-weight: 700;
+
+}
+
+.activity-date {
+
+    font-size: 11px;
+
+    font-variant-numeric: tabular-nums;
+
+}
+
+.activity-meta {
+
+    font-size: 11px;
+
+    color: var(--muted);
+
+}
+
+
+/* =========================================================
+   24. FUTURE MODULE INTEGRATIONS
+   ========================================================= */
+
+.integration-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 18px;
+
+    margin-bottom: 22px;
+
+}
+
+.integration-card {
+
+    min-width: 0;
+
+    min-height: 180px;
+
+    padding: 23px;
+
+}
+
+.integration-card > i {
+
+    font-size: 25px;
+
+    color: var(--gold-dark);
+
+}
+
+.integration-card h3 {
+
+    margin-top: 13px;
+
+    font-size: 15px;
+
+}
+
+.integration-card p {
+
+    font-size: 12px;
+
+    line-height: 1.7;
+
+}
+
+.coming-soon {
+
+    display: inline-block;
+
+    margin-bottom: 10px;
+
+    padding: 4px 9px;
+
+    border-radius: 20px;
+
+    background: var(--gold-light);
+
+    color: var(--gold-dark);
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+}
+
+
+/* =========================================================
+   25. DIALOGS AND MODAL FORMS
+   ========================================================= */
+
+.app-dialog {
+
+    width: calc(100% - 32px);
+
+    max-width: 520px;
+
+    max-height: 90vh;
+
+    max-height: 90dvh;
+
+    padding: 0;
+
+    overflow: auto;
+
+    overscroll-behavior: contain;
+
+    border: 1px solid var(--border);
+
+    border-top: 4px solid var(--gold);
+
+    border-radius: var(--radius-lg);
+
+    background: var(--surface);
+
+    color: var(--text);
+
+    box-shadow: var(--shadow-lg);
+
+}
+
+.app-dialog.dialog-wide {
+
+    max-width: 800px;
+
+}
+
+.app-dialog::backdrop {
+
+    background: rgba(10, 20, 34, 0.68);
+
+    backdrop-filter: blur(3px);
+
+}
+
+.app-dialog[open] {
+
+    animation: caseDialogOpen 180ms ease;
+
+}
+
+@keyframes caseDialogOpen {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateY(8px) scale(0.99);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: translateY(0) scale(1);
+
+    }
+
+}
+
+.dialog-content {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 18px;
+
+    padding: 25px;
+
+}
+
+.dialog-heading {
+
+    padding-bottom: 15px;
+
+    margin-bottom: 0;
+
+    border-bottom: 1px solid var(--border);
+
+}
+
+.dialog-heading h2 {
+
+    margin: 0;
+
+    color: var(--navy);
+
+    font-family: var(--heading-font);
+
+    font-size: 20px;
+
+    line-height: 1.5;
+
+}
+
+.dialog-content > p {
+
+    margin-bottom: 0;
+
+    font-size: 13px;
+
+    line-height: 1.75;
+
+    overflow-wrap: anywhere;
+
+}
+
+.dialog-content .form-grid {
+
+    gap: 16px;
+
+}
+
+.dialog-content .information-note,
+.dialog-content .warning-card {
+
+    margin-top: 0;
+
+    margin-bottom: 0;
+
+}
+
+.dialog-actions {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    padding-top: 17px;
+
+    margin-top: 0;
+
+    border-top: 1px solid var(--border);
+
+}
+
+.dialog-actions > .button {
+
+    min-height: 42px;
+
+}
+
+#confirmationMessage {
+
+    white-space: pre-wrap;
+
+    overflow-wrap: anywhere;
+
+}
+
+body:has(dialog[open]) {
+
+    overflow: hidden;
+
+}
+
+
+/* =========================================================
+   26. CHECKBOX FIELDS
+   ========================================================= */
+
+.checkbox-field {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 11px;
+
+    padding: 13px 15px;
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius-sm);
+
+    background: var(--surface-muted);
+
+    cursor: pointer;
+
+}
+
+.checkbox-field input[type="checkbox"] {
+
+    flex: 0 0 18px;
+
+    width: 18px;
+
+    height: 18px;
+
+    margin: 2px 0 0;
+
+    accent-color: var(--navy);
+
+    cursor: pointer;
+
+}
+
+.checkbox-field > span {
+
+    color: var(--text);
+
+    font-size: 12px;
+
+    line-height: 1.7;
+
+}
+
+.checkbox-field:has(input:checked) {
+
+    border-color: var(--gold);
+
+    background: var(--gold-light);
+
+}
+
+
+/* =========================================================
+   27. FORM ACTION BAR
+   ========================================================= */
+
+.form-action-bar {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 15px;
+
+    padding: 20px;
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius);
+
+    background: var(--surface);
+
+    box-shadow: var(--shadow-sm);
+
+}
+
+.form-action-note {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+}
+
+.form-action-note > i {
+
+    color: var(--gold-dark);
+
+}
+
+.form-actions {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+}
+
+
+/* =========================================================
+   28. EMPTY STATES
+   ========================================================= */
+
+.empty-state {
+
+    padding: 38px 20px;
+
+    text-align: center;
+
+}
+
+.empty-state > i {
+
+    font-size: 35px;
+
+    color: var(--gold-dark);
+
+}
+
+.empty-state h3 {
+
+    margin-top: 14px;
+
+    font-size: 16px;
+
+}
+
+.empty-state p {
+
+    max-width: 500px;
+
+    margin-left: auto;
+
+    margin-right: auto;
+
+    color: var(--muted);
+
+    font-size: 13px;
+
+}
+
+
+/* =========================================================
+   29. DATABASE SETTINGS
+   ========================================================= */
+
+#settingsPanel .content-card {
+
+    margin-bottom: 22px;
+
+}
+
+#settingsPanel .details-list {
+
+    margin-bottom: 20px;
+
+}
+
+.backup-information {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 16px;
+
+    padding: 20px;
+
+    margin-bottom: 20px;
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius);
+
+    background: var(--surface-muted);
+
+}
+
+.backup-information > i {
+
+    flex-shrink: 0;
+
+    font-size: 28px;
+
+    color: var(--gold-dark);
+
+}
+
+.backup-information h3 {
+
+    margin: 0 0 6px;
+
+    font-size: 15px;
+
+}
+
+.backup-information p {
+
+    margin: 0;
+
+    font-size: 13px;
+
+    color: var(--muted);
+
+    line-height: 1.75;
+
+}
+
+
+/* =========================================================
+   30. PAGINATION
+   ========================================================= */
+
+.pagination-bar {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 15px;
+
+    margin-top: 20px;
+
+}
+
+.pagination-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+}
+
+#currentPageNumber {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-width: 36px;
+
+    height: 36px;
+
+    padding: 5px 10px;
+
+    border-radius: var(--radius-sm);
+
+    background: var(--navy);
+
+    color: #ffffff;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    font-variant-numeric: tabular-nums;
+
+}
+
+
+/* =========================================================
+   31. APPLICATION LOADING STATES
+   ========================================================= */
+
+.is-loading {
+
+    position: relative;
+
+    cursor: wait !important;
+
+    opacity: 0.75;
+
+}
+
+.button.is-loading::after {
+
+    content: "";
+
+    display: inline-block;
+
+    width: 13px;
+
+    height: 13px;
+
+    border: 2px solid currentColor;
+
+    border-right-color: transparent;
+
+    border-radius: 50%;
+
+    animation: spin 0.7s linear infinite;
+
+}
+
+.connection-indicator.syncing {
+
+    background: var(--warning);
+
+}
+
+.connection-indicator.online,
+.connection-indicator.connected {
+
+    background: var(--success);
+
+}
+
+.connection-indicator.offline,
+.connection-indicator.disconnected,
+.connection-indicator.error {
+
+    background: var(--danger);
+
+}
+
+
+/* =========================================================
+   32. RESPONSIVE - LARGE DESKTOP
+   ========================================================= */
+
+@media (min-width: 1500px) {
+
+    .app-container {
+
+        padding-left: 45px;
+
+        padding-right: 45px;
+
+    }
+
+    .stat-card {
+
+        min-height: 165px;
+
+        padding: 25px;
+
+    }
+
+    .directory-toolbar {
+
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+
+    }
+
+}
+
+
+/* =========================================================
+   33. RESPONSIVE - LAPTOP
+   ========================================================= */
+
+@media (max-width: 1200px) {
+
+    .statistics-grid {
+
+        gap: 14px;
+
+    }
+
+    .stat-card {
+
+        padding: 18px;
+
+    }
+
+    .task-statistics {
+
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    }
+
+    .directory-toolbar {
+
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    }
+
+    .module-tab {
+
+        padding: 12px 15px;
+
+    }
+
+    .profile-tab {
+
+        padding: 14px 16px;
+
+    }
+
+    .profile-details-grid {
+
+        gap: 17px;
+
+    }
+
+}
+
+
+/* =========================================================
+   34. RESPONSIVE - TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .app-container {
+
+        padding: 24px 3% 35px;
+
+    }
+
+    .statistics-grid {
+
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    }
+
+    .hearing-statistics {
+
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    }
+
+    .task-statistics {
+
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    }
+
+    .quick-actions-grid {
+
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    }
+
+    .directory-toolbar {
+
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    }
+
+    .directory-toolbar > .search-field {
+
+        grid-column: 1 / -1;
+
+    }
+
+    .profile-details-grid {
+
+        grid-template-columns: minmax(0, 1fr);
+
+    }
+
+    .profile-registration {
+
+        display: none;
+
+    }
+
+    .hearing-details-grid {
+
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    }
+
+    .hearing-purpose-box {
+
+        grid-column: 1 / -1;
+
+        grid-row: 2;
+
+    }
+
+    .integration-grid {
+
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    }
+
+    .task-summary-grid {
+
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    }
+
+}
+
+
+/* =========================================================
+   35. RESPONSIVE - MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .app-container {
+
+        padding: 18px 14px 30px;
+
+    }
+
+    .app-header {
+
+        position: relative;
+
+    }
+
+    .page-heading {
+
+        gap: 17px;
+
+    }
+
+    .page-heading h1 {
+
+        font-size: 25px;
+
+    }
+
+    .page-heading p {
+
+        font-size: 12px;
+
+    }
+
+    .page-heading-actions {
+
+        display: flex;
+
+        width: 100%;
+
+        gap: 10px;
+
+    }
+
+    .page-heading-actions > .button {
+
+        flex: 1;
+
+        min-height: 44px;
+
+    }
+
+    .statistics-grid,
+
+    .hearing-statistics,
+
+    .task-statistics {
+
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        gap: 11px;
+
+        margin-bottom: 20px;
+
+    }
+
+    .stat-card {
+
+        min-height: 140px;
+
+        padding: 15px;
+
+    }
+
+    .stat-card > span {
+
+        font-size: 12px;
+
+    }
+
+    .stat-card > strong {
+
+        font-size: 29px;
+
+    }
+
+    .stat-card > small {
+
+        font-size: 10px;
+
+    }
+
+    .stat-icon {
+
+        width: 38px;
+
+        height: 38px;
+
+    }
+
+    .module-navigation {
+
+        margin-bottom: 18px;
+
+    }
+
+    .module-tab {
+
+        flex: 0 0 auto;
+
+        min-height: 45px;
+
+        padding: 12px 14px;
+
+        font-size: 12px;
+
+    }
+
+    .module-tab > i {
+
+        margin-right: 3px;
+
+    }
+
+    .content-card {
+
+        padding: 17px;
+
+        margin-bottom: 17px;
+
+    }
+
+    .card-heading {
+
+        align-items: flex-start;
+
+        gap: 12px;
+
+    }
+
+    .card-heading h2 {
+
+        font-size: 16px;
+
+    }
+
+    .card-heading p {
+
+        font-size: 12px;
+
+    }
+
+    .quick-actions-grid {
+
+        gap: 10px;
+
+    }
+
+    .quick-action {
+
+        min-height: 130px;
+
+        padding: 16px 10px;
+
+    }
+
+    .quick-action > i {
+
+        font-size: 22px;
+
+    }
+
+    .quick-action > strong {
+
+        font-size: 12px;
+
+    }
+
+    .quick-action > span {
+
+        font-size: 11px;
+
+    }
+
+    .directory-toolbar {
+
+        gap: 12px;
+
+    }
+
+    .directory-toolbar > .button {
+
+        grid-column: 1 / -1;
+
+    }
+
+    .form-grid {
+
+        grid-template-columns: minmax(0, 1fr);
+
+        gap: 17px;
+
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea,
+    .search-input-wrapper input {
+
+        font-size: 16px;
+
+    }
+
+    .form-group label {
+
+        font-size: 12px;
+
+    }
+
+    .form-group input[type="date"] {
+
+        min-height: 44px;
+
+    }
+
+    .form-group textarea {
+
+        min-height: 100px;
+
+    }
+
+    .client-summary {
+
+        padding: 15px;
+
+    }
+
+    .client-summary-grid {
+
+        grid-template-columns: minmax(0, 1fr);
+
+        gap: 10px;
+
+    }
+
+    .form-action-bar {
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        padding: 16px;
+
+    }
+
+    .form-actions {
+
+        display: grid;
+
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    }
+
+    #saveCaseButton {
+
+        grid-column: 1 / -1;
+
+        min-height: 46px;
+
+    }
+
+    .form-action-note {
+
+        font-size: 11px;
+
+    }
+
+    .profile-toolbar {
+
+        align-items: stretch;
+
+        flex-direction: column;
+
+        gap: 12px;
+
+    }
+
+    .profile-actions {
+
+        justify-content: flex-start;
+
+        gap: 8px;
+
+    }
+
+    .profile-actions > .button {
+
+        flex: 1 1 auto;
+
+        font-size: 11px;
+
+        padding: 10px 12px;
+
+    }
+
+    .profile-header {
+
+        align-items: flex-start;
+
+        gap: 14px;
+
+        padding: 20px 16px;
+
+    }
+
+    .profile-avatar {
+
+        width: 54px;
+
+        height: 54px;
+
+        font-size: 23px;
+
+        border-radius: 10px;
+
+    }
+
+    .profile-heading h2 {
+
+        font-size: 18px;
+
+        line-height: 1.5;
+
+    }
+
+    .profile-code {
+
+        font-size: 11px;
+
+    }
+
+    .profile-meta {
+
+        gap: 7px;
+
+        font-size: 11px;
+
+    }
+
+    .profile-registration {
+
+        display: none;
+
+    }
+
+    .profile-tab {
+
+        flex: 0 0 auto;
+
+        min-height: 46px;
+
+        padding: 12px 14px;
+
+        font-size: 11px;
+
+    }
+
+    .profile-navigation {
+
+        margin-bottom: 17px;
+
+    }
+
+    .profile-details-grid {
+
+        gap: 17px;
+
+        margin-bottom: 17px;
+
+    }
+
+    .details-list > div {
+
+        grid-template-columns: minmax(100px, 40%) minmax(0, 1fr);
+
+        gap: 10px;
+
+        padding: 11px 0;
+
+    }
+
+    .details-list dt {
+
+        font-size: 11px;
+
+    }
+
+    .details-list dd {
+
+        font-size: 12px;
+
+    }
+
+    .hearing-details-grid {
+
+        grid-template-columns: minmax(0, 1fr);
+
+        gap: 12px;
+
+    }
+
+    .hearing-purpose-box {
+
+        grid-column: auto;
+
+        grid-row: auto;
+
+    }
+
+    .hearing-date-box,
+    .hearing-purpose-box,
+    .deadline-box {
+
+        min-height: 100px;
+
+        padding: 16px;
+
+    }
+
+    .hearing-date-box > strong,
+    .deadline-box > strong {
+
+        font-size: 21px;
+
+    }
+
+    .hearing-purpose-box > strong {
+
+        font-size: 14px;
+
+    }
+
+    .profile-notes {
+
+        padding: 13px;
+
+        font-size: 13px;
+
+    }
+
+    .integration-grid {
+
+        grid-template-columns: minmax(0, 1fr);
+
+        gap: 12px;
+
+    }
+
+    .integration-card {
+
+        min-height: auto;
+
+        padding: 18px;
+
+    }
+
+    .case-alert,
+    .alert-item,
+    .alert-card {
+
+        flex-wrap: wrap;
+
+        align-items: flex-start;
+
+        gap: 10px;
+
+        padding: 13px;
+
+    }
+
+    .case-alert > .button,
+    .alert-item > .button,
+    .alert-card > .button {
+
+        width: 100%;
+
+    }
+
+    .task-summary-grid {
+
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        gap: 10px;
+
+    }
+
+    .task-summary-grid > div {
+
+        padding: 12px;
+
+    }
+
+    .task-summary-grid strong {
+
+        font-size: 23px;
+
+    }
+
+    .proceeding-item,
+    .proceeding-entry,
+    .proceeding-card {
+
+        margin-left: 13px;
+
+        padding: 15px;
+
+    }
+
+    .proceeding-item::before,
+    .proceeding-entry::before,
+    .proceeding-card::before {
+
+        left: -21px;
+
+    }
+
+    .proceeding-header h3 {
+
+        font-size: 14px;
+
+    }
+
+    .proceeding-meta {
+
+        flex-direction: column;
+
+        gap: 5px;
+
+    }
+
+    .proceeding-section p,
+    .proceeding-text,
+    .proceeding-details {
+
+        font-size: 12px;
+
+    }
+
+    .information-note {
+
+        padding: 13px;
+
+        gap: 9px;
+
+    }
+
+    .warning-card {
+
+        padding: 14px;
+
+    }
+
+    .app-dialog,
+
+    .app-dialog.dialog-wide {
+
+        width: calc(100% - 20px);
+
+        max-height: 92vh;
+
+        max-height: 92dvh;
+
+        border-radius: 11px;
+
+    }
+
+    .dialog-content {
+
+        padding: 18px;
+
+        gap: 15px;
+
+    }
+
+    .dialog-heading h2 {
+
+        font-size: 17px;
+
+    }
+
+    .dialog-content .form-grid {
+
+        grid-template-columns: minmax(0, 1fr);
+
+        gap: 14px;
+
+    }
+
+    .dialog-actions {
+
+        gap: 8px;
+
+    }
+
+    .dialog-actions > .button {
+
+        flex: 1;
+
+        min-height: 44px;
+
+        font-size: 12px;
+
+        white-space: normal;
+
+    }
+
+    .backup-information {
+
+        padding: 15px;
+
+        gap: 12px;
+
+    }
+
+    .backup-information > i {
+
+        font-size: 23px;
+
+    }
+
+    .pagination-bar {
+
+        flex-direction: column;
+
+        align-items: center;
+
+    }
+
+    .pagination-actions {
+
+        justify-content: center;
+
+        width: 100%;
+
+    }
+
+    .empty-state {
+
+        padding: 30px 12px;
+
+    }
+
+}
+
+
+/* =========================================================
+   36. RESPONSIVE - SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+    .app-container {
+
+        padding-left: 10px;
+
+        padding-right: 10px;
+
+    }
+
+    .page-heading h1 {
+
+        font-size: 22px;
+
+    }
+
+    .stat-card {
+
+        min-height: 130px;
+
+        padding: 12px;
+
+    }
+
+    .stat-card > strong {
+
+        font-size: 26px;
+
+    }
+
+    .stat-card > span {
+
+        font-size: 11px;
+
+    }
+
+    .stat-card > small {
+
+        font-size: 9px;
+
+    }
+
+    .content-card {
+
+        padding: 13px;
+
+    }
+
+    .directory-toolbar {
+
+        grid-template-columns: minmax(0, 1fr);
+
+    }
+
+    .details-list > div {
+
+        grid-template-columns: minmax(0, 1fr);
+
+        gap: 5px;
+
+    }
+
+    .profile-header {
+
+        padding: 16px 12px;
+
+    }
+
+    .profile-avatar {
+
+        width: 45px;
+
+        height: 45px;
+
+        font-size: 20px;
+
+    }
+
+    .profile-heading h2 {
+
+        font-size: 16px;
+
+    }
+
+    .dialog-content {
+
+        padding: 14px;
+
+    }
+
+}
+
+
+/* =========================================================
+   37. TOUCH DEVICE OPTIMIZATION
+   ========================================================= */
+
+@media (pointer: coarse) {
+
+    .button,
+    .icon-button,
+    .module-tab,
+    .profile-tab {
+
+        min-height: 44px;
+
+        touch-action: manipulation;
+
+    }
+
+    .table-actions .icon-button,
+    .row-actions .icon-button {
+
+        min-width: 44px;
+
+        min-height: 44px;
+
+    }
+
+    .button > i,
+    .module-tab > i,
+    .profile-tab > i {
+
+        pointer-events: none;
+
+    }
+
+}
+
+
+/* =========================================================
+   38. KEYBOARD ACCESSIBILITY
+   ========================================================= */
+
+.module-tab:focus-visible,
+.profile-tab:focus-visible,
+.quick-action:focus-visible,
+.case-title-link:focus-visible {
+
+    outline: 2px solid var(--gold-dark);
+
+    outline-offset: -3px;
+
+}
+
+.checkbox-field:focus-within {
+
+    outline: 2px solid var(--gold-dark);
+
+    outline-offset: 2px;
+
+}
+
+
+/* =========================================================
+   39. REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .module-panel,
+    .profile-panel,
+    .app-dialog[open] {
+
+        animation: none !important;
+
+    }
+
+    .stat-card,
+    .quick-action,
+    .profile-tab {
+
+        transition: none !important;
+
+    }
+
+    .stat-card:hover {
+
+        transform: none;
+
+    }
+
+}
+
+
+/* =========================================================
+   40. CONFIDENTIAL PRINT RESTRICTION
+
+   Prevent accidental dashboard printing.
+   This is not a data security or access control mechanism.
+   ========================================================= */
+
+@media print {
+
+    #protectedContent,
+    #authLoading,
+    dialog {
+
+        display: none !important;
+
+    }
+
+    body {
+
+        background: #ffffff;
+
+    }
+
+    body::after {
+
+        content: "MNM Legal Associates - Confidential Case Management System. Direct dashboard printing is disabled.";
+
+        display: block;
+
+        padding: 30px;
+
+        color: #101d30;
+
+        font-family: Arial, sans-serif;
+
+        font-size: 12pt;
+
+    }
+
+}
+
+
+/* =========================================================
+   END OF CASE MANAGEMENT STYLESHEET
+
+   MNM LEGAL ASSOCIATES
+   Legal Practice Management System
+
+   Version 1.0
+
+   Justice, Integrity & Excellence
+   ========================================================= */
