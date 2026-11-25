@@ -1,12 +1,10 @@
 
 
 
-
-
 /* =========================================================
    MNM LEGAL ASSOCIATES
    PROFESSIONAL CLOUD INVOICE MANAGEMENT SYSTEM
-   Version 5.0 - Monthly Invoice Numbering
+   Version 6.0 - Monthly Invoice Numbering
    Justice, Integrity & Excellence
    ========================================================= */
 
@@ -369,13 +367,27 @@ function formatDate(date) {
    APPLICATION MESSAGES
    ========================================================= */
 
+let invoiceMessageTimer;
+let invoiceMessageHideTimer;
+
 function message(text, type = "success") {
-
     const element = $("appMessage");
-
+    clearTimeout(invoiceMessageTimer);
+    clearTimeout(invoiceMessageHideTimer);
     element.className = `app-message no-print ${type}`;
     element.textContent = text;
+    element.style.transition = "opacity 200ms ease";
+    element.style.opacity = "1";
     element.hidden = false;
+    if (["success", "info"].includes(type)) {
+        invoiceMessageTimer = setTimeout(() => {
+            element.style.opacity = "0";
+            invoiceMessageHideTimer = setTimeout(() => {
+                element.hidden = true;
+                element.style.opacity = "1";
+            }, 200);
+        }, 1800);
+    }
 }
 
 function handleError(error) {
@@ -578,12 +590,21 @@ function attachParticularSuggestions(field) {
 let clientCache = null, clientCacheTime = 0, clientRequest = null;
 let selectedClientId = null;
 let pendingClientId = null;
-async function resolveBillingClient(data) {
+async function resolveBillingClient(data, existingInvoiceId = null) {
     const api = await import('./clients-cloud.js');
     const input = {fullName:data.clientName, mobile:data.clientPhone, email:data.clientEmail, address:data.clientAddress, clientType:'individual', status:'active', referenceSource:'Invoice Generator'};
     const normalized = api.validateClientData(input);
     const records = await api.fetchClients({includeArchived:true});
     const norm = v => String(v || '').trim().replace(/\s+/g,' ').toLowerCase();
+    if (existingInvoiceId) {
+        const {fetchInvoiceLinks} = await import('./finance-cloud.js');
+        const link = (await fetchInvoiceLinks()).find(l => l.invoiceId === existingInvoiceId);
+        if (link) {
+            const linked = records.find(c => c.id === link.clientId);
+            if (!linked || norm(linked.fullName) !== norm(input.fullName) || (selectedClientId && selectedClientId !== linked.id)) throw new Error('This invoice is already linked to a different client. Restore the original billing client.');
+            return { ...linked, existingInvoiceLink: true };
+        }
+    }
     const chosen = records.find(c => c.id === selectedClientId || c.id === pendingClientId);
     if (chosen) {
         if (chosen.status === 'archived' || norm(chosen.fullName) !== norm(input.fullName)) throw new Error('Client selection has changed. Start a new invoice or select the correct client.');
@@ -591,7 +612,7 @@ async function resolveBillingClient(data) {
     }
     const matches = await api.findDuplicateClients(normalized);
     if (matches.length) throw new Error('Possible existing client: ' + matches.map(c => c.fullName + ' (' + c.clientCode + ')').join(', ') + '. Select the registered client from suggestions, or review the Client Directory before saving.');
-    if (!window.confirm('Register ' + input.fullName + ' as a new active client and save this invoice?')) return null;
+    // Saving an invoice for a new client authorizes registration.
     pendingClientId = pendingClientId || api.generateClientId();
     const client = await api.createClient(normalized, pendingClientId);
     selectedClientId = client.id;
@@ -1212,11 +1233,7 @@ async function saveInvoice(event) {
         );
 
         let saved;
-        let billingClient = null;
-        if (!isEditing) {
-            billingClient = await resolveBillingClient(data);
-            if (!billingClient) return;
-        }
+        const billingClient = await resolveBillingClient(data, isEditing ? editingId : null);
 
         if (isEditing) {
 
@@ -1279,7 +1296,7 @@ async function saveInvoice(event) {
         if (billingClient) {
             try {
                 const {linkInvoice} = await import('./finance-cloud.js');
-                await linkInvoice(saved.id, billingClient.id);
+                if (!billingClient.existingInvoiceLink) await linkInvoice(saved.id, billingClient.id);
                 message('Invoice ' + saved.invoiceNo + ' saved and linked to ' + billingClient.clientCode + '.');
             } catch (linkError) {
                 console.error('Invoice association failed:', linkError);
@@ -1402,6 +1419,8 @@ async function loadInvoice(id) {
 
     const data = normalize(record);
 
+    selectedClientId = null;
+    pendingClientId = null;
     originalRecord = record;
     editingId = String(record.id);
     loadedSnapshot = JSON.stringify(record);
@@ -2280,6 +2299,13 @@ export async function initialiseInvoiceSystem(user) {
 
     await syncCloudData();
 
+    // Remove obsolete browser-only storage notice after cloud sync succeeds.
+    document.querySelectorAll(".storage-notice").forEach(notice => {
+        if (notice.textContent.includes("Cloud synchronisation is not yet enabled")) {
+            notice.remove();
+        }
+    });
+
     insertLegacyFields();
 
     loadPaymentSettings();
@@ -2305,7 +2331,7 @@ export async function initialiseInvoiceSystem(user) {
    END OF PROFESSIONAL CLOUD INVOICE MANAGEMENT SYSTEM
 
    MNM LEGAL ASSOCIATES
-   Version 5.0
+   Version 6.0
    Justice, Integrity & Excellence
    ========================================================= */
 
