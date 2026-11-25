@@ -4,6 +4,10 @@
 
 
 
+
+
+
+
 /* =========================================================
    MNM LEGAL ASSOCIATES
    HEARING CALENDAR — APPLICATION STYLESHEET
@@ -3148,6 +3152,19 @@ input[type="checkbox"] {
 @page {
     size: A4 portrait;
     margin: 13mm 12mm;
+
+    /* Explicit page-margin content replaces browser print metadata. */
+    @top-left { content: " "; }
+    @top-center { content: " "; }
+    @top-right { content: " "; }
+    @bottom-left { content: " "; }
+    @bottom-center { content: " "; }
+    @bottom-right {
+        content: counter(page) "/" counter(pages);
+        font-family: Arial, sans-serif;
+        font-size: 8pt;
+        color: #333333;
+    }
 }
 
 @media print {
@@ -3215,9 +3232,10 @@ input[type="checkbox"] {
 
     .print-header img,
     .cause-list-print-header img {
-        width: 30mm;
-        height: 30mm;
-        margin-bottom: 3mm;
+        width: 36mm;
+        height: 36mm;
+        object-fit: contain;
+        margin: 0 auto 3mm;
     }
 
     .print-header h1,
